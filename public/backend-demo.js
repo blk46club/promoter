@@ -22,12 +22,12 @@ function seed() {
   const POS = ["nhiệt tình", "nói chuyện mượt", "giữ vibe cả bàn", "thông minh, tinh ý", "nói tiếng anh tốt", "nhảy cháy"];
   const idols = {};
   const specs = [
-    ["IDOL MẪU 01", "168", "49", "84", "60", "90", ["pha cocktail", "nhảy"], ["giữ bàn đông người"]],
-    ["IDOL MẪU 02", "165", "47", "82", "58", "88", ["hát", "tiếng anh"], ["khách nước ngoài"]],
-    ["IDOL MẪU 03", "170", "51", "86", "61", "91", ["nhảy", "dj cơ bản"], ["khuấy vibe cuối đêm"]],
-    ["IDOL MẪU 04", "162", "45", "80", "57", "86", ["tiếng trung"], ["khách doanh nhân"]],
-    ["IDOL MẪU 05", "167", "48", "83", "59", "89", ["pha shot", "game uống"], ["sinh nhật"]],
-    ["IDOL MẪU 06", "164", "46", "81", "58", "87", ["tiếng hàn"], []],
+    ["PROMOTER MẪU 01", "168", "49", "84", "60", "90", ["pha cocktail", "nhảy"], ["giữ bàn đông người"]],
+    ["PROMOTER MẪU 02", "165", "47", "82", "58", "88", ["hát", "tiếng anh"], ["khách nước ngoài"]],
+    ["PROMOTER MẪU 03", "170", "51", "86", "61", "91", ["nhảy", "dj cơ bản"], ["khuấy vibe cuối đêm"]],
+    ["PROMOTER MẪU 04", "162", "45", "80", "57", "86", ["tiếng trung"], ["khách doanh nhân"]],
+    ["PROMOTER MẪU 05", "167", "48", "83", "59", "89", ["pha shot", "game uống"], ["sinh nhật"]],
+    ["PROMOTER MẪU 06", "164", "46", "81", "58", "87", ["tiếng hàn"], []],
   ];
   specs.forEach(([name, h, w, b, wa, hi, talents, forte], k) => {
     const id = "demo" + (k + 1);

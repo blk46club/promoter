@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="lineup idol blk46. pick'em up, đặt bàn, gặp nhau ở 46 mã mây.">
-<title>BLK46 Idol Lineup</title>
+<meta name="description" content="lineup promoter blk46. pick'em up, đặt bàn, gặp nhau ở 46 mã mây.">
+<title>BLK46 Promoter Lineup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&family=Yellowtail&display=swap">
@@ -304,8 +304,8 @@ img{max-width:100%}
 
 <main class="wrap" id="app">
   <section class="hero">
-    <div class="eyebrow">46 mã mây · bảng idol</div>
-    <h1 class="display">IDOL <span class="y">LINEUP</span></h1>
+    <div class="eyebrow">46 mã mây · bảng promoter</div>
+    <h1 class="display">PROMOTER <span class="y">LINEUP</span></h1>
     <p class="lede">đang tải bảng xếp hạng…</p>
   </section>
 </main>
@@ -418,7 +418,7 @@ window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
 
 /* ---------- shared bits ---------- */
 function banner(){
-  if(__backend.mode==="demo"&&!S.demoHidden)return `<div class="banner" data-kind="warn">bản chạy thử: dữ liệu chỉ lưu trên trình duyệt này, máy khác không thấy. idol đang hiện là dữ liệu mẫu. <button class="ghostbtn" style="padding:2px 8px;margin-left:6px" onclick="this.parentElement.remove()">ẩn</button></div>`;
+  if(__backend.mode==="demo"&&!S.demoHidden)return `<div class="banner" data-kind="warn">bản chạy thử: dữ liệu chỉ lưu trên trình duyệt này, máy khác không thấy. promoter đang hiện là dữ liệu mẫu. <button class="ghostbtn" style="padding:2px 8px;margin-left:6px" onclick="this.parentElement.remove()">ẩn</button></div>`;
   if(S.dbMissing)return `<div class="banner" data-kind="warn">chưa kết nối được dữ liệu. tải lại trang sau vài giây.</div>`;
   if(S.stale)return `<div class="banner">chưa kết nối được dữ liệu, số liệu có thể chưa mới. trang sẽ tự cập nhật khi kết nối lại.</div>`;
   return "";
@@ -441,7 +441,7 @@ const MIN_FOR_STATS=3;
 function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.5?"A":s>=4.0?"B":s>=3.5?"C":"D"}
 function statVals(r){const t=r.statRate||{},top=r.statTop||{};return STATS.map(([k,l])=>[l,top[k]?Math.min(10,Math.round(10*(t[k]||0)/top[k])):0])}
 function spotHTML(r,ghost){
-  const i=r?r.idol:{stageName:"[TÊN IDOL]"};
+  const i=r?r.idol:{stageName:"[TÊN PROMOTER]"};
   const p=r?photosOf(i):{};const pid=p.full||p.close||p.side||"";const side=p.side&&p.side!==pid?p.side:"";
   const sh=i.show||{};
   const bio=[];
@@ -495,10 +495,10 @@ function renderLineup(){
         <button class="chip" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
       </div>
     </div>
-    ${empty?`<div class="empty"><b>chưa có idol nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện. khung bên dưới là ví dụ bố cục, không phải người thật.</span></div>`:""}
+    ${empty?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện. khung bên dưới là ví dụ bố cục, không phải người thật.</span></div>`:""}
     <div class="stage">
       <div class="spot" id="spot">${spotHTML(cur,!cur)}</div>
-      <div class="roster" role="group" aria-label="danh sách idol, dùng phím mũi tên để đổi">${tiles}</div>
+      <div class="roster" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${tiles}</div>
     </div>
     <p class="note" style="padding-block:6px 40px">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán (${PRIOR_N} lượt ảo), nên 1 lượt 5 sao không vượt được 40 lượt 4,8. S từ 4,8 · A từ 4,5 · B từ 4,0 · C từ 3,5.</p>
   </section>`;
@@ -535,7 +535,7 @@ function renderLineup(){
 function renderIdol(id){
   const rows=computeBoard();const r=rows.find(x=>x.idol.id===id);
   if(!r){
-    app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy hồ sơ này.":"đang tải hồ sơ…"}</b>${S.loaded.idols?"<span>có thể idol đã nghỉ, hoặc chưa ký đồng ý hiển thị.</span>":""}</div>`;return;
+    app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy hồ sơ này.":"đang tải hồ sơ…"}</b>${S.loaded.idols?"<span>có thể promoter đã nghỉ, hoặc chưa ký đồng ý hiển thị.</span>":""}</div>`;return;
   }
   const i=r.idol,sh=i.show||{};
   const specs=[];
@@ -620,7 +620,7 @@ function renderTable(bid){
   app.innerHTML=`${banner()}
   <section class="rate">
     <div class="tablebar"><span>bàn <b>${esc(b.table||"—")}</b></span><span>${esc(b.guestName||"")}</span><span class="codelock">mã bàn <b>${esc(b.code)}</b> ✓</span></div>
-    ${ids.length>1?`<div class="tags" role="group" aria-label="chọn idol để đánh giá">${ids.map(id=>{const x=idolById(id);return `<button class="chip idolsw" data-id="${esc(id)}" aria-pressed="${id===R.idolId}" ${done.has(id)?"disabled":""}>${done.has(id)?"✓ ":""}${esc(x.stageName)}</button>`}).join("")}</div>`:""}
+    ${ids.length>1?`<div class="tags" role="group" aria-label="chọn promoter để đánh giá">${ids.map(id=>{const x=idolById(id);return `<button class="chip idolsw" data-id="${esc(id)}" aria-pressed="${id===R.idolId}" ${done.has(id)?"disabled":""}>${done.has(id)?"✓ ":""}${esc(x.stageName)}</button>`}).join("")}</div>`:""}
     <div class="rate-head">
       <div class="rate-face">${cid?`<img src="${esc(cid)}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}<b class="g-${g==="?"?"x":g}">${g}</b></div>
       <div><div class="eyebrow">đánh giá</div><h1 class="display rate-name">${esc(i.stageName)}</h1>
@@ -634,7 +634,7 @@ function renderTable(bid){
     </div>
     <div class="step"><h3><span>2</span> nhắn ${esc(i.stageName)}</h3>
       <textarea id="comment" maxlength="280" placeholder="một câu là đủ. không bắt buộc.">${esc(R.comment)}</textarea>
-      <p class="note" style="margin:0">lời nhắn gửi riêng cho idol, không hiện công khai.</p>
+      <p class="note" style="margin:0">lời nhắn gửi riêng cho promoter, không hiện công khai.</p>
     </div>
     <div class="step"><h3><span>3</span> tip <span class="muted" style="font-family:var(--body);font-size:13px;text-transform:none;color:var(--concrete)">(cộng vào bill)</span></h3>
       <div class="tags tipset">${TIP_PRESETS.map(v=>`<button class="chip tipbtn" data-v="${v}" aria-pressed="${!R.tipCustom&&R.tip===v}">${vnd(v)}</button>`).join("")}</div>
@@ -667,7 +667,7 @@ async function submitRating(b){
     try{await db.submitReview(redKey(b.code,R.idolId),reviewId,
       {idolId:R.idolId,bookingId:b.id,code:b.code,table:b.table||"",stars:R.stars,negTags:neg,comment:(R.comment||"").trim().slice(0,280),tip:R.tip||0,tipAdded:false,createdAt:now},
       {idolId:R.idolId,stars:R.stars,tags:pos,createdAt:now})}
-    catch(e){if(e&&e.code==="used")return fail("bàn này đã đánh giá idol này rồi.");throw e}
+    catch(e){if(e&&e.code==="used")return fail("bàn này đã đánh giá promoter này rồi.");throw e}
     S.redeemed[redKey(b.code,R.idolId)]={reviewId,at:now};
     const left=(b.idolIds||[]).filter(id=>idolById(id)&&!ratedSet(b).has(id));
     if(left.length)resetRate(b.id,left[0]);else{R.busy=false;R.done=true}
@@ -683,11 +683,11 @@ function renderBook(idolId){
   const B=S.book;
   if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],guestName:"",phone:"",date:todayStr(),time:"",guests:"",note:"",err:"",busy:false,done:false})}
   const i=idolById(idolId);
-  if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy idol này.":"đang tải…"}</b></div>`;return}
-  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi số ${esc(B.phone)} để xác nhận bàn và idol. see you out there.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
+  if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
+  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi số ${esc(B.phone)} để xác nhận bàn và promoter. see you out there.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
   const pub=S.idols.filter(isPublic);
-  app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi idol</a>
+  app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi promoter</a>
   <section class="rate">
     <div class="rate-head"><div class="rate-face">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}</div>
       <div><div class="eyebrow">đặt bàn cùng</div><h1 class="display rate-name">${esc(i.stageName)}</h1></div></div>
@@ -700,7 +700,7 @@ function renderBook(idolId){
         <label class="f">giờ đến *<input id="b_time" type="time" required value="${esc(B.time)}"></label>
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" value="${esc(B.guests)}"></label>
       </div>
-      <div class="checks"><span class="muted">idol cho bàn (chọn thêm nếu muốn)</span>
+      <div class="checks"><span class="muted">promoter cho bàn (chọn thêm nếu muốn)</span>
         <div class="tags">${pub.map(x=>`<button type="button" class="chip bidol" data-id="${esc(x.id)}" aria-pressed="${B.idolIds.includes(x.id)}">${esc(x.stageName)}</button>`).join("")}</div></div>
       <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
       <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
@@ -753,7 +753,7 @@ function bookingCard(b){
     <div class="bk-main">
       <div class="rowbtns"><b>${esc(b.guestName||"(chưa có tên)")}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
         <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}</div>
-      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">chưa chọn idol</span>`}</div>
+      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">chưa chọn promoter</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
       <div class="rowbtns">
@@ -761,7 +761,7 @@ function bookingCard(b){
         ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn<input id="seat_${esc(b.id)}" maxlength="10" value="${esc(b.table||"")}" style="width:80px"></label><button class="cta" data-bseat="${esc(b.id)}">khách đã đến · tạo mã bàn</button>`:""}
         ${b.status==="seated"&&!allRated?`<a class="cta" href="#table-${esc(b.id)}">mở màn đánh giá</a>`:""}
         ${b.status!=="cancelled"&&b.status!=="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">sửa</button><button class="ghostbtn danger" data-bcancel="${esc(b.id)}">huỷ</button>`:""}
-        ${b.status==="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">đổi idol, bàn</button>`:""}
+        ${b.status==="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">đổi promoter, bàn</button>`:""}
       </div>
     </div></div>`;
 }
@@ -769,7 +769,7 @@ async function bookPatch(btn,id,patch){btn.disabled=true;try{await S.db.doc("boo
 async function seatBooking(btn,id){
   const b=S.bookings.find(x=>x.id===id);if(!b)return;
   const table=(document.getElementById("seat_"+id)||{}).value||b.table||"";
-  if(!(b.idolIds||[]).length){btn.textContent="chọn idol cho bàn trước";return}
+  if(!(b.idolIds||[]).length){btn.textContent="chọn promoter cho bàn trước";return}
   btn.disabled=true;btn.textContent="đang tạo mã…";
   try{
     const have=new Set(S.bills.map(x=>x.code));let c;do{c=mkCode()}while(have.has(c));
@@ -790,8 +790,8 @@ function drawBookForm(){
       <label class="f">số người<input id="k_guests" inputmode="numeric" maxlength="3" value="${esc(e.guests||"")}"></label>
       <label class="f">bàn<input id="k_table" maxlength="10" value="${esc(e.table||"")}"></label>
     </div>
-    <div class="checks"><span class="muted">idol đặt trước cho bàn *</span>
-      <div class="tags">${pub.map(x=>`<button type="button" class="chip kidol" data-id="${esc(x.id)}" aria-pressed="${(e.idolIds||[]).includes(x.id)}">${esc(x.stageName)}</button>`).join("")||`<span class="muted">chưa có hồ sơ idol nào.</span>`}</div></div>
+    <div class="checks"><span class="muted">promoter đặt trước cho bàn *</span>
+      <div class="tags">${pub.map(x=>`<button type="button" class="chip kidol" data-id="${esc(x.id)}" aria-pressed="${(e.idolIds||[]).includes(x.id)}">${esc(x.stageName)}</button>`).join("")||`<span class="muted">chưa có hồ sơ promoter nào.</span>`}</div></div>
     <label class="f">ghi chú<input id="k_note" maxlength="160" value="${esc(e.note||"")}"></label>
     <div class="err" id="kErr" role="alert"></div>
     <div class="rowbtns"><button class="cta" type="submit" id="kSave">${e.id?"lưu":"tạo đặt bàn"}</button></div>
@@ -801,7 +801,7 @@ function drawBookForm(){
   document.getElementById("bkForm").onsubmit=async ev=>{
     ev.preventDefault();const err=document.getElementById("kErr");const btn=document.getElementById("kSave");
     const name=val("k_name");if(!name){err.textContent="cần tên khách.";return}
-    if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một idol cho bàn.";return}
+    if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một promoter cho bàn.";return}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
     const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:val("k_date"),time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
@@ -834,7 +834,7 @@ function renderAdmin(){
   <section class="admin">
     <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display admin-title">QUẢN LÝ</h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
     <div class="subtabs" role="tablist">
-      ${[["bookings","đặt bàn"],["idols","hồ sơ idol"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
+      ${[["bookings","đặt bàn"],["idols","hồ sơ promoter"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
     </div>
     <div class="panel" id="panel"></div>
   </section>`;
@@ -848,7 +848,7 @@ function adminIdols(p){
   const list=S.idols.slice().sort((a,b)=>String(a.stageName).localeCompare(String(b.stageName)));
   p.innerHTML=`
     ${__backend.mode==="demo"?`<div class="rowbtns"><span class="pill warn">bản chạy thử</span><button class="ghostbtn" id="demoClear">xoá dữ liệu mẫu</button><button class="ghostbtn" id="demoReset">nạp lại dữ liệu mẫu</button></div>`:""}
-    <div class="rowbtns"><button class="cta" id="newIdol">thêm idol</button><span class="note">idol chỉ hiện công khai khi đã tick cả hai ô đồng ý và đang làm.</span></div>
+    <div class="rowbtns"><button class="cta" id="newIdol">thêm promoter</button><span class="note">promoter chỉ hiện công khai khi đã tick cả hai ô đồng ý và đang làm.</span></div>
     <div id="formSlot"></div>
     ${list.length?`<div class="table"><table><thead><tr><th></th><th>tên</th><th>team</th><th>hiển thị</th><th class="num">sao</th><th class="num">lượt</th><th>trạng thái</th><th></th></tr></thead><tbody>
     ${list.map(i=>{const r=byId[i.id];const sh=i.show||{};return `<tr>
@@ -858,7 +858,7 @@ function adminIdols(p){
       <td class="num">${r&&r.n?fmt1(r.avg):"—"}</td><td class="num">${r?r.n:0}</td>
       <td>${isPublic(i)?`<span class="pill">đang hiện</span>`:i.active===false?`<span class="pill off">nghỉ</span>`:`<span class="pill warn">chưa đồng ý</span>`}</td>
       <td><button class="ghostbtn" data-edit="${esc(i.id)}">sửa</button></td></tr>`}).join("")}
-    </tbody></table></div>`:`<div class="empty"><b>chưa có hồ sơ nào.</b><span>bấm "thêm idol". cần có giấy đồng ý ký tay của từng người trước khi bật hiển thị.</span></div>`}`;
+    </tbody></table></div>`:`<div class="empty"><b>chưa có hồ sơ nào.</b><span>bấm "thêm promoter". cần có giấy đồng ý ký tay của từng người trước khi bật hiển thị.</span></div>`}`;
   document.getElementById("newIdol").onclick=()=>{S.editing={};drawForm()};
   const dc=document.getElementById("demoClear");if(dc){let armed=false;dc.onclick=()=>{if(!armed){armed=true;dc.textContent="bấm lần nữa để xoá hết";return}__backend.clearDemo()}}
   const dr=document.getElementById("demoReset");if(dr)dr.onclick=()=>__backend.resetDemo();
@@ -890,8 +890,8 @@ function drawForm(){
     </div>
     <div class="consent"><strong>đồng ý hiển thị</strong>
       <div class="checks">
-        <label><input type="checkbox" id="c_s" ${c.signed?"checked":""}> idol đã ký giấy đồng ý cho quán hiển thị ảnh và các thông tin đã tick ở trên, và biết có thể rút lại bất cứ lúc nào</label>
-        <label><input type="checkbox" id="c_a" ${c.adult?"checked":""}> đã kiểm tra giấy tờ, idol đủ 18 tuổi</label>
+        <label><input type="checkbox" id="c_s" ${c.signed?"checked":""}> promoter đã ký giấy đồng ý cho quán hiển thị ảnh và các thông tin đã tick ở trên, và biết có thể rút lại bất cứ lúc nào</label>
+        <label><input type="checkbox" id="c_a" ${c.adult?"checked":""}> đã kiểm tra giấy tờ, promoter đủ 18 tuổi</label>
         <label><input type="checkbox" id="c_act" ${e.active!==false?"checked":""}> đang làm ở quán</label>
       </div>
     </div>
@@ -946,7 +946,7 @@ function adminReviews(p){
   const rv=S.reviews.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,300);
   const pend=rv.reduce((a,r)=>{const n=S.notes[r.id];return a+(n&&n.tip&&!n.tipAdded?n.tip:0)},0);
   p.innerHTML=rv.length?`<div class="rowbtns"><span class="pill warn">tip chờ cộng vào bill: ${vnd(pend)}</span><span class="note">sao từ 3 trở xuống, tag góp ý, lời nhắn và tip chỉ hiện ở đây. ẩn một lượt thì nó không còn tính vào điểm.</span></div>
-  <div class="table"><table><thead><tr><th>lúc</th><th>idol</th><th class="num">sao</th><th>tag</th><th>lời nhắn cho idol</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
+  <div class="table"><table><thead><tr><th>lúc</th><th>promoter</th><th class="num">sao</th><th>tag</th><th>lời nhắn cho promoter</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
   ${rv.map(r=>{const m=S.mod[r.id]||{};const n=S.notes[r.id]||{};const tags=[...(r.tags||[]),...(n.negTags||[])];return `<tr style="${m.hidden?"opacity:.45":""}">
     <td class="muted">${ago(r.createdAt)}</td><td><b>${esc(name[r.idolId]||"(đã xoá)")}</b></td>
     <td class="num" style="color:${r.stars<=3?"#ff6a6f":"inherit"}">${r.stars}</td>
