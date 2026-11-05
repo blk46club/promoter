@@ -7,7 +7,7 @@
 <title>BLK46 Idol Lineup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&family=Yellowtail&display=swap">
 <style>
 /* Layout: collectible lineup cards on stark black, zine-paper grain; top 3 flip to acid yellow. Single dark world by design (brand default is black). */
 :root{
@@ -15,7 +15,7 @@
   --card:#0e0e0c;
   --card-2:#171713;
   --paper:#F0ECE1;
-  --acid:#EDD029;
+  --acid:#EDD029;--idol-pink:#FF5FA2;
   --concrete:#8a8880;
   --line:rgba(240,236,225,.14);
   --bad:#E20810;
@@ -42,7 +42,8 @@ header.top .wrap{display:flex;align-items:center;gap:16px;padding-block:12px;fle
 .mark{font-weight:700;letter-spacing:.02em;font-size:14px;text-decoration:none}
 .mark{display:inline-flex;align-items:center;gap:10px}
 .mark img{height:18px;width:auto;display:block}
-.mark span{font-weight:500;color:var(--concrete);letter-spacing:.08em}
+/* chữ idol cạnh logo: hồng, kiểu chữ ký. màu riêng của trang idol, không thuộc bảng màu chính BLK46 */
+.mark span{font-family:"Yellowtail",cursive;font-weight:400;font-size:24px;line-height:1;color:var(--idol-pink);letter-spacing:0;transform:translateY(1px)}
 nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 nav.tabs a{text-decoration:none;padding:6px 12px;border:1px solid transparent;font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
 nav.tabs a[aria-current="page"]{border-color:var(--acid);color:var(--acid)}
