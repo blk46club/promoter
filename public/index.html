@@ -686,7 +686,6 @@ function renderBook(idolId){
   if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
   if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi số ${esc(B.phone)} để xác nhận bàn và promoter. see you out there.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
-  const pub=S.idols.filter(isPublic);
   app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi promoter</a>
   <section class="rate">
     <div class="rate-head"><div class="rate-face">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}</div>
@@ -700,21 +699,18 @@ function renderBook(idolId){
         <label class="f">giờ đến *<input id="b_time" type="time" required value="${esc(B.time)}"></label>
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" value="${esc(B.guests)}"></label>
       </div>
-      <div class="checks"><span class="muted">promoter cho bàn (chọn thêm nếu muốn)</span>
-        <div class="tags">${pub.map(x=>`<button type="button" class="chip bidol" data-id="${esc(x.id)}" aria-pressed="${B.idolIds.includes(x.id)}">${esc(x.stageName)}</button>`).join("")}</div></div>
       <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
       <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
       <div><button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"đang gửi…":"gửi yêu cầu đặt bàn"}</button></div>
     </form>
   </section>`;
   const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.date=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
-  app.querySelectorAll(".bidol").forEach(x=>x.onclick=()=>{sync();const id=x.dataset.id;B.idolIds=B.idolIds.includes(id)?B.idolIds.filter(y=>y!==id):[...B.idolIds,id];if(!B.idolIds.length)B.idolIds=[idolId];render()});
   document.getElementById("bookForm").onsubmit=async ev=>{
     ev.preventDefault();sync();
     const phone=B.phone.replace(/\D/g,"");
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
     B.busy=true;B.err="";render();
-    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:B.idolIds.slice(0,6),note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
+    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
     catch(e){B.busy=false;B.err="chưa gửi được, kiểm tra lại thông tin rồi thử lại.";render()}
   };
 }
