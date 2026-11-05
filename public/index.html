@@ -207,6 +207,21 @@ h2.sec{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--
 .reviews{display:grid;gap:10px}
 .rv{border-left:2px solid var(--line);padding:4px 0 4px 12px;display:grid;gap:2px}
 .rv p{margin:0}
+/* tab đánh giá: khách mới xem đánh giá cũ. không có tip (tip chỉ nằm trong notes, khách không đọc được) */
+.rvfeed{display:grid;gap:12px;margin-top:16px}
+.rvcard{display:grid;grid-template-columns:52px 1fr;gap:12px;background:var(--card);border:1px solid var(--line);padding:12px}
+.rvcard .face{width:52px;aspect-ratio:3/4;background:var(--card-2);overflow:hidden;display:grid;place-items:center;font-family:var(--display);color:var(--concrete)}
+.rvcard .face img{width:100%;height:100%;object-fit:cover;display:block}
+.rvcard .top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.rvcard .who{font-family:var(--display);text-transform:uppercase;font-size:18px;text-decoration:none}
+.rvcard .who:hover{color:var(--acid)}
+.rvcard .stars{color:var(--acid);letter-spacing:.05em}
+.rvcard p{margin:6px 0 0}
+.rvcard .tags{margin-top:8px}
+.rvsum{display:flex;gap:24px;align-items:baseline;flex-wrap:wrap}
+.rvsum .big{font-family:var(--display);font-size:44px;line-height:1;color:var(--acid)}
+/* điện thoại: thu logo + chữ promoter để menu khách (lineup · đánh giá) vẫn nằm 1 dòng */
+@media (max-width:480px){.mark img{height:14px}.mark span{font-size:19px}.mark{gap:8px}nav.tabs a{padding:6px 8px;letter-spacing:.04em}}
 .cta{display:inline-flex;align-items:center;gap:8px;background:var(--acid);color:var(--ink);border:0;padding:12px 18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px;text-decoration:none;cursor:pointer}
 .cta:hover{filter:brightness(1.08)}
 .cta[disabled]{opacity:.4;cursor:not-allowed}
@@ -297,6 +312,7 @@ img{max-width:100%}
     <a class="mark" href="#lineup" aria-label="BLK46 promoter, về lineup"><img src="brand/blk46.svg" alt="BLK46®" width="128" height="18"><span>promoter</span></a>
     <nav class="tabs" aria-label="chuyển trang">
       <a href="#lineup" data-tab="lineup">lineup</a>
+      <a href="#reviews" data-tab="reviews">đánh giá</a>
       <a href="#admin" data-tab="admin" id="adminTab" hidden>quản lý</a>
     </nav>
   </div>
@@ -329,7 +345,8 @@ const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
   idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},
   loaded:{idols:false,reviews:false,bookings:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
-  rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",err:"",busy:false,done:false}};
+  rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false},
+  rv:{idol:"",limit:30}};
 
 const app=document.getElementById("app");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -397,6 +414,7 @@ function route(){
   if(h.startsWith("idol-")||h.startsWith("book-"))return {view:"book",id:h.slice(5)};
   if(h.startsWith("table-"))return {view:"table",id:h.slice(6)};
   if(h==="admin")return {view:"admin"};
+  if(h==="reviews")return {view:"reviews"};
   return {view:"lineup"};
 }
 function setTabs(v){
@@ -405,13 +423,14 @@ function setTabs(v){
     if(on)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
   });
   document.getElementById("adminTab").hidden=!S.canEdit;
-  document.querySelector("nav.tabs").hidden=!S.canEdit||v==="table";
+  document.querySelector("nav.tabs").hidden=v==="table";
 }
 function render(){
   const r=route();setTabs(r.view);
   if(r.view==="book")return renderBook(r.id);
   if(r.view==="table")return renderTable(r.id);
   if(r.view==="admin")return renderAdmin();
+  if(r.view==="reviews")return renderReviews();
   return renderLineup();
 }
 window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
@@ -593,7 +612,7 @@ const vnd=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
 const redKey=(code,idolId)=>code+"_"+idolId;
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fmtDate=s=>{if(!s)return "";const [y,m,d]=s.split("-");return `${d}.${m}`};
-function resetRate(bid,idolId){Object.assign(S.rate,{bid,idolId,stars:0,tags:[],comment:"",tip:0,tipCustom:"",err:"",busy:false,done:false})}
+function resetRate(bid,idolId){Object.assign(S.rate,{bid,idolId,stars:0,tags:[],comment:"",pub:"",tip:0,tipCustom:"",err:"",busy:false,done:false})}
 function idolById(id){return S.idols.find(x=>x.id===id)}
 function ratedSet(b){const s=new Set();(b.idolIds||[]).forEach(id=>{const r=S.redeemed[redKey(b.code,id)];if(r&&r.reviewId)s.add(id)});return s}
 function tableTips(b){let t=0;Object.values(S.notes).forEach(n=>{if(n.bookingId===b.id)t+=n.tip||0});return t}
@@ -632,11 +651,15 @@ function renderTable(bid){
       ${R.stars?`<div class="tags">${tagSet.map(t=>`<button class="chip tagbtn" data-t="${esc(t)}" aria-pressed="${R.tags.includes(t)}">${esc(t)}</button>`).join("")}</div>
       ${R.stars<=3?`<p class="note" style="margin:0">phần góp ý này chỉ quản lý đọc, không hiện công khai.</p>`:`<p class="note" style="margin:0">tag khen cộng vào chỉ số của ${esc(i.stageName)} trên lineup.</p>`}`:""}
     </div>
-    <div class="step"><h3><span>2</span> nhắn ${esc(i.stageName)}</h3>
+    <div class="step"><h3><span>2</span> nhận xét công khai</h3>
+      <textarea id="pubComment" maxlength="200" placeholder="khách sau sẽ đọc câu này. không bắt buộc.">${esc(R.pub)}</textarea>
+      <p class="note" style="margin:0">hiện ở tab đánh giá cho khách khác xem, không kèm tên hay số bàn của bạn.</p>
+    </div>
+    <div class="step"><h3><span>3</span> nhắn riêng ${esc(i.stageName)}</h3>
       <textarea id="comment" maxlength="280" placeholder="một câu là đủ. không bắt buộc.">${esc(R.comment)}</textarea>
       <p class="note" style="margin:0">lời nhắn gửi riêng cho promoter, không hiện công khai.</p>
     </div>
-    <div class="step"><h3><span>3</span> tip <span class="muted" style="font-family:var(--body);font-size:13px;text-transform:none;color:var(--concrete)">(cộng vào bill)</span></h3>
+    <div class="step"><h3><span>4</span> tip <span class="muted" style="font-family:var(--body);font-size:13px;text-transform:none;color:var(--concrete)">(cộng vào bill)</span></h3>
       <div class="tags tipset">${TIP_PRESETS.map(v=>`<button class="chip tipbtn" data-v="${v}" aria-pressed="${!R.tipCustom&&R.tip===v}">${vnd(v)}</button>`).join("")}</div>
       <label class="f" style="max-width:280px">số khác, bạn tự gõ (đồng)<input id="tipCustom" inputmode="numeric" maxlength="10" placeholder="ví dụ 3.000.000" value="${R.tipCustom?esc((+R.tipCustom).toLocaleString("vi-VN")):""}"></label>
       <p class="note" style="margin:0">bấm lại ô đang chọn để bỏ tip. tối đa ${vnd(TIP_MAX)}.</p>
@@ -652,6 +675,7 @@ function renderTable(bid){
   app.querySelectorAll(".starbtn").forEach(x=>x.onclick=()=>{const s=+x.dataset.s;if(!R.stars||(s<=3)!==(R.stars<=3))R.tags=[];R.stars=s;render()});
   app.querySelectorAll(".tagbtn").forEach(x=>x.onclick=()=>{const t=x.dataset.t;R.tags=R.tags.includes(t)?R.tags.filter(y=>y!==t):[...R.tags,t];x.setAttribute("aria-pressed",R.tags.includes(t))});
   const cm=document.getElementById("comment");cm.oninput=()=>{R.comment=cm.value};
+  const pc=document.getElementById("pubComment");pc.oninput=()=>{R.pub=pc.value};
   app.querySelectorAll(".tipbtn").forEach(x=>x.onclick=()=>{const v=+x.dataset.v;const off=!R.tipCustom&&R.tip===v;R.tip=off?0:v;R.tipCustom="";document.getElementById("tipCustom").value="";app.querySelectorAll(".tipbtn").forEach(y=>y.setAttribute("aria-pressed",!off&&y===x));refreshSend()});
   const tc=document.getElementById("tipCustom");
   tc.oninput=()=>{let v=tc.value.replace(/\D/g,"").replace(/^0+/,"").slice(0,8);if(v&&+v>TIP_MAX)v=String(TIP_MAX);tc.value=v?(+v).toLocaleString("vi-VN"):"";R.tipCustom=v;R.tip=v?+v:0;app.querySelectorAll(".tipbtn").forEach(y=>y.setAttribute("aria-pressed",false));refreshSend()};
@@ -666,7 +690,7 @@ async function submitRating(b){
     const pos=R.tags.filter(t=>POS_TAGS.includes(t)).slice(0,6),neg=R.tags.filter(t=>NEG_TAGS.includes(t)).slice(0,6);
     try{await db.submitReview(redKey(b.code,R.idolId),reviewId,
       {idolId:R.idolId,bookingId:b.id,code:b.code,table:b.table||"",stars:R.stars,negTags:neg,comment:(R.comment||"").trim().slice(0,280),tip:R.tip||0,tipAdded:false,createdAt:now},
-      {idolId:R.idolId,stars:R.stars,tags:pos,createdAt:now})}
+      {idolId:R.idolId,stars:R.stars,tags:pos,comment:(R.pub||"").trim().slice(0,200),createdAt:now})}
     catch(e){if(e&&e.code==="used")return fail("bàn này đã đánh giá promoter này rồi.");throw e}
     S.redeemed[redKey(b.code,R.idolId)]={reviewId,at:now};
     const left=(b.idolIds||[]).filter(id=>idolById(id)&&!ratedSet(b).has(id));
@@ -676,6 +700,32 @@ async function submitRating(b){
     if(e&&e.code==="quota_exceeded")return fail("kho dữ liệu đã đầy. báo quản lý dọn bớt dữ liệu cũ.");
     fail("chưa gửi được, mạng đang chập chờn. bấm gửi lại.");
   }
+}
+
+/* ---------- tab đánh giá ---------- */
+function renderReviews(){
+  const V=S.rv;
+  const pub=S.idols.filter(isPublic),pubIds=new Set(pub.map(i=>i.id));
+  const all=visibleReviews(true).filter(r=>pubIds.has(r.idolId)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(V.idol&&!pubIds.has(V.idol))V.idol="";
+  const list=V.idol?all.filter(r=>r.idolId===V.idol):all;
+  const n=list.length,avg=n?list.reduce((a,r)=>a+r.stars,0)/n:0,withText=list.filter(r=>r.comment).length;
+  const shown=list.slice(0,V.limit);
+  const card=r=>{const i=idolById(r.idolId);const c=coverId(i);
+    return `<article class="rvcard"><div class="face">${c?`<img src="${esc(c)}" alt="" loading="lazy" onerror="this.remove()">`:esc(initials(i.stageName))}</div>
+      <div><div class="top"><a class="who" href="#book-${esc(i.id)}">${esc(i.stageName)}</a><span class="stars" aria-label="${r.stars} sao">${starStr(r.stars)}</span><span class="muted">${ago(r.createdAt||Date.now())}</span></div>
+      ${r.comment?`<p>${esc(r.comment)}</p>`:""}
+      ${(r.tags||[]).length?`<div class="tags">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</div></article>`};
+  app.innerHTML=`${banner()}<section>
+    <div class="hero" style="padding-bottom:8px"><div class="eyebrow">khách trước nói gì</div><h1 class="display admin-title">ĐÁNH GIÁ</h1>
+      <div class="rvsum"><div><span class="big">${n?fmt1(avg):"—"}</span> <span class="muted">sao trung bình</span></div><div class="muted">${n} lượt chấm · ${withText} nhận xét</div></div></div>
+    ${pub.length>1?`<div class="tags" role="group" aria-label="lọc theo promoter"><button class="chip rvf" data-id="" aria-pressed="${!V.idol}">tất cả</button>${pub.map(i=>`<button class="chip rvf" data-id="${esc(i.id)}" aria-pressed="${V.idol===i.id}">${esc(i.stageName)}</button>`).join("")}</div>`:""}
+    ${shown.length?`<div class="rvfeed">${shown.map(card).join("")}</div>`:`<div class="empty" style="margin-top:16px"><b>${S.loaded.reviews?"chưa có đánh giá nào.":"đang tải…"}</b></div>`}
+    ${list.length>shown.length?`<div style="margin-top:16px"><button class="ghostbtn" id="rvMore">xem thêm (${list.length-shown.length})</button></div>`:""}
+    <p class="note" style="padding-block:16px 40px">đánh giá từ khách đã ngồi bàn, mỗi bàn chấm mỗi promoter một lần. quán ẩn những lượt vi phạm.</p>
+  </section>`;
+  app.querySelectorAll(".rvf").forEach(x=>x.onclick=()=>{V.idol=x.dataset.id;V.limit=30;render()});
+  const more=document.getElementById("rvMore");if(more)more.onclick=()=>{V.limit+=30;render()};
 }
 
 /* ---------- khách đặt bàn từ lineup ---------- */
@@ -942,11 +992,12 @@ function adminReviews(p){
   const rv=S.reviews.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,300);
   const pend=rv.reduce((a,r)=>{const n=S.notes[r.id];return a+(n&&n.tip&&!n.tipAdded?n.tip:0)},0);
   p.innerHTML=rv.length?`<div class="rowbtns"><span class="pill warn">tip chờ cộng vào bill: ${vnd(pend)}</span><span class="note">sao từ 3 trở xuống, tag góp ý, lời nhắn và tip chỉ hiện ở đây. ẩn một lượt thì nó không còn tính vào điểm.</span></div>
-  <div class="table"><table><thead><tr><th>lúc</th><th>promoter</th><th class="num">sao</th><th>tag</th><th>lời nhắn cho promoter</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
+  <div class="table"><table><thead><tr><th>lúc</th><th>promoter</th><th class="num">sao</th><th>tag</th><th>nhận xét công khai</th><th>lời nhắn cho promoter</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
   ${rv.map(r=>{const m=S.mod[r.id]||{};const n=S.notes[r.id]||{};const tags=[...(r.tags||[]),...(n.negTags||[])];return `<tr style="${m.hidden?"opacity:.45":""}">
     <td class="muted">${ago(r.createdAt)}</td><td><b>${esc(name[r.idolId]||"(đã xoá)")}</b></td>
     <td class="num" style="color:${r.stars<=3?"#ff6a6f":"inherit"}">${r.stars}</td>
     <td><div class="tags">${tags.map(t=>`<span class="tag${NEG_TAGS.includes(t)?" bad":""}">${esc(t)}</span>`).join("")}</div></td>
+    <td>${esc(r.comment||"")}</td>
     <td>${esc(n.comment||"")}</td>
     <td class="num">${n.tip?vnd(n.tip):"—"}</td><td class="muted">${esc(n.table||"")}${n.code?` · ${esc(n.code)}`:""}</td>
     <td><div class="rowbtns">${n.tip?`<button class="ghostbtn" data-tip="${esc(r.id)}" data-v="${n.tipAdded?1:0}">${n.tipAdded?"✓ đã cộng":"đã cộng vào bill"}</button>`:""}<button class="ghostbtn" data-hide="${esc(r.id)}" data-h="${m.hidden?1:0}">${m.hidden?"hiện lại":"ẩn"}</button></div></td></tr>`}).join("")}
