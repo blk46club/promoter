@@ -372,10 +372,14 @@ function computeBoard(){
   });
   rows.sort((a,b)=>(b.n?1:0)-(a.n?1:0)||b.score-a.score||b.n-a.n||String(a.idol.stageName).localeCompare(String(b.idol.stageName)));
   rows.forEach((r,k)=>r.rank=r.n?k+1:null);
-  // mốc 10 điểm của mỗi chỉ số = số tag đó của idol đang dẫn đầu tag đó
+  // tỉ lệ khen của mỗi tag = số lượt có tag đó ÷ số lượt chấm (cộng dồn từ đầu).
+  // mốc 10 điểm = tỉ lệ cao nhất trong các idol đủ MIN_FOR_STATS lượt,
+  // để 1 lượt chấm 100% không kéo mốc của cả quán.
+  const rate=(r,k)=>r.statN?(r.statTags[k]||0)/r.statN:0;
+  const pool=rows.some(r=>r.statN>=MIN_FOR_STATS)?rows.filter(r=>r.statN>=MIN_FOR_STATS):rows;
   const top={};
-  for(const r of rows)for(const [k] of STATS)top[k]=Math.max(top[k]||0,r.statTags[k]||0);
-  rows.forEach(r=>r.statTop=top);
+  for(const r of pool)for(const [k] of STATS)top[k]=Math.max(top[k]||0,rate(r,k));
+  rows.forEach(r=>{r.statTop=top;r.statRate=Object.fromEntries(STATS.map(([k])=>[k,rate(r,k)]))});
   return rows;
 }
 
@@ -427,7 +431,7 @@ function specLine(i){
 const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH"],["nhảy cháy","NHẢY"]];
 const MIN_FOR_STATS=3;
 function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.5?"A":s>=4.0?"B":s>=3.5?"C":"D"}
-function statVals(r){const t=r.statTags||{},top=r.statTop||{};return STATS.map(([k,l])=>[l,top[k]?Math.min(10,Math.round(10*(t[k]||0)/top[k])):0])}
+function statVals(r){const t=r.statRate||{},top=r.statTop||{};return STATS.map(([k,l])=>[l,top[k]?Math.min(10,Math.round(10*(t[k]||0)/top[k])):0])}
 function spotHTML(r,ghost){
   const i=r?r.idol:{stageName:"[TÊN IDOL]"};
   const p=r?photosOf(i):{};const pid=p.full||p.close||p.side||"";const side=p.side&&p.side!==pid?p.side:"";
