@@ -38,11 +38,14 @@ function seed() {
     };
   });
   const reviews = {};
+  // nhận xét mẫu, chỉ để thử giao diện
+  const SAMPLE_COMMENTS = ["[nhận xét mẫu] giữ vibe cả bàn tới cuối.", "[nhận xét mẫu] nói chuyện dễ chịu, gọi đồ nhanh.", "[nhận xét mẫu] bạn nước ngoài của mình rất thích.", "[nhận xét mẫu] lần sau đặt lại."];
   let n = 0;
   const pattern = [[5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 5, 4], [5, 4, 5, 5, 4, 5, 4], [5, 5, 4, 5, 5, 5, 5, 5, 5], [4, 4, 5, 3, 4], [5, 5], []];
   pattern.forEach((stars, k) => stars.forEach((s, j) => {
     const id = "seed" + (n++);
-    reviews[id] = { idolId: "demo" + (k + 1), stars: s, tags: POS.filter((_, t) => ((t + 1) * (k + 2) + j) % 5 < 1 + ((t + k) % 4)), createdAt: now - j * 3600e3 };
+    const comment = SAMPLE_COMMENTS[(n * 7) % SAMPLE_COMMENTS.length];
+    reviews[id] = { idolId: "demo" + (k + 1), stars: s, tags: POS.filter((_, t) => ((t + 1) * (k + 2) + j) % 5 < 1 + ((t + k) % 4)), comment: j % 3 === 0 ? comment : "", createdAt: now - j * 3600e3 };
   }));
   return { idols, reviews, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {} };
 }
