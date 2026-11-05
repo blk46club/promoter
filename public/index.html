@@ -339,9 +339,18 @@ const isPublic=i=>i.public===true||!!(i.active!==false&&i.consent&&i.consent.sig
 
 /* ---------- scoring ---------- */
 function monthStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).getTime()}
-function visibleReviews(){
-  const from=S.period==="month"?monthStart():0;
+function visibleReviews(all){
+  const from=!all&&S.period==="month"?monthStart():0;
   return S.reviews.filter(r=>!(S.mod[r.id]&&S.mod[r.id].hidden)&&(r.createdAt||0)>=from);
+}
+// chỉ số kỹ năng luôn cộng dồn mọi lượt chấm từ đầu, không theo nút "tháng này"
+function allTimeTags(){
+  const out={};
+  for(const r of visibleReviews(true)){
+    const o=(out[r.idolId]=out[r.idolId]||{n:0,tags:{}});o.n++;
+    for(const t of (r.tags||[]))if(POS_TAGS.includes(t))o.tags[t]=(o.tags[t]||0)+1;
+  }
+  return out;
 }
 function computeBoard(){
   const rv=visibleReviews();
@@ -349,6 +358,7 @@ function computeBoard(){
   const mean=rv.length?total/rv.length:4.5;
   const by={};
   for(const r of rv){(by[r.idolId]=by[r.idolId]||[]).push(r)}
+  const at=allTimeTags();
   const rows=S.idols.filter(isPublic).map(i=>{
     const list=by[i.id]||[];
     const n=list.length,sum=list.reduce((a,r)=>a+r.stars,0);
@@ -357,7 +367,8 @@ function computeBoard(){
     const avg=n?sum/n:0;
     const score=(PRIOR_N*mean+sum)/(PRIOR_N+n);
     const topTags=Object.entries(tags).sort((a,b)=>b[1]-a[1]);
-    return {idol:i,n,avg,score,dist,topTags,neg,list:list.slice().sort((a,b)=>b.createdAt-a.createdAt)};
+    const a=at[i.id]||{n:0,tags:{}};
+    return {idol:i,n,avg,score,dist,topTags,neg,statN:a.n,statTags:a.tags,list:list.slice().sort((a,b)=>b.createdAt-a.createdAt)};
   });
   rows.sort((a,b)=>(b.n?1:0)-(a.n?1:0)||b.score-a.score||b.n-a.n||String(a.idol.stageName).localeCompare(String(b.idol.stageName)));
   rows.forEach((r,k)=>r.rank=r.n?k+1:null);
@@ -412,7 +423,7 @@ function specLine(i){
 const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH"],["nhảy cháy","NHẢY"]];
 const MIN_FOR_STATS=3;
 function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.5?"A":s>=4.0?"B":s>=3.5?"C":"D"}
-function statVals(r){const t=Object.fromEntries(r.topTags);return STATS.map(([k,l])=>[l,r.n?Math.min(10,Math.round(10*(t[k]||0)/r.n)):0])}
+function statVals(r){const t=r.statTags||{};return STATS.map(([k,l])=>[l,r.statN?Math.min(10,Math.round(10*(t[k]||0)/r.statN)):0])}
 function spotHTML(r,ghost){
   const i=r?r.idol:{stageName:"[TÊN IDOL]"};
   const p=r?photosOf(i):{};const pid=p.full||p.close||p.side||"";const side=p.side&&p.side!==pid?p.side:"";
@@ -427,7 +438,7 @@ function spotHTML(r,ghost){
   const g=ghost?"?":grade(r);
   const hp=r&&r.n?Math.round(r.avg/5*100):0;
   const stats=r?statVals(r):STATS.map(([,l])=>[l,0]);
-  const enough=r&&r.n>=MIN_FOR_STATS;
+  const enough=r&&r.statN>=MIN_FOR_STATS;
   return `<div class="spot-portrait">
       <div class="slash" aria-hidden="true"></div>
       ${pid?`<img src="${esc(pid)}" alt="${esc(i.stageName)}" onerror="this.remove()">`:`<div class="ph" aria-hidden="true">${ghost?"?":esc(initials(i.stageName))}</div>`}
@@ -442,7 +453,7 @@ function spotHTML(r,ghost){
       <div class="statgrid" aria-label="chỉ số từ tag khen của khách">
         ${stats.map(([l,v])=>`<div class="stat"><span class="stat-l">${l}</span><span class="segs" aria-label="${v} trên 10">${Array.from({length:10},(_,k)=>`<i class="${k<v?"on":""}"></i>`).join("")}</span></div>`).join("")}
       </div>
-      <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?"chỉ số = tỉ lệ lượt chấm có tag đó, thang 10.":`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
+      <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?`chỉ số = tỉ lệ lượt chấm có tag đó, cộng dồn ${r.statN} lượt từ đầu, thang 10.`:`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
       ${(i.forte||[]).length?`<div class="special"><span class="stat-l">SỞ TRƯỜNG</span><div class="forte">${i.forte.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${(i.talents||[]).length?`<div class="special"><span class="stat-l">KỸ NĂNG ĐẶC BIỆT</span><div class="talents">${i.talents.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${ghost?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
