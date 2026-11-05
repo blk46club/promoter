@@ -7,7 +7,7 @@
 <title>BLK46 Idol Lineup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&family=Yellowtail&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&family=Yellowtail&family=Playfair+Display:ital,wght@1,900&display=swap">
 <style>
 /* Layout: collectible lineup cards on stark black, zine-paper grain; top 3 flip to acid yellow. Single dark world by design (brand default is black). */
 :root{
@@ -96,7 +96,9 @@ h1.display .y{color:var(--acid)}
 /* select screen */
 .select{padding-block:20px 0;display:grid;gap:14px}
 .select-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.sel-title{font-size:clamp(48px,9vw,104px);padding-bottom:.08em}
+.sel-title{margin:0;font-size:clamp(46px,15vw,104px);line-height:.95;padding-bottom:.18em;white-space:nowrap;font-weight:400}
+.sel-title .st-a{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:900;letter-spacing:-.01em;color:var(--paper)}
+.sel-title .st-b{font-family:"Yellowtail",cursive;font-size:1.3em;line-height:.6;margin-left:.06em;color:var(--idol-pink);text-shadow:0 0 .18em rgba(255,95,162,.55);display:inline-block;transform:translateY(.04em)}
 .stage{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:18px;align-items:start}
 @media (max-width:900px){.stage{grid-template-columns:1fr}.roster{order:-1;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));padding-inline:4px}}
 .spot{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:0;background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden;min-width:0;
@@ -482,7 +484,7 @@ function renderLineup(){
   ${banner()}
   <section class="select">
     <div class="select-head">
-      <h1 class="display sel-title">PICK'EM <span class="y">UP</span></h1>
+      <h1 class="sel-title" aria-label="pick'em up"><span class="st-a" aria-hidden="true">PICK'EM</span><span class="st-b" aria-hidden="true">up</span></h1>
       <div class="controls" role="group" aria-label="khoảng thời gian" style="padding:0">
         <button class="chip" id="pMonth" aria-pressed="${S.period==="month"}">tháng này</button>
         <button class="chip" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
