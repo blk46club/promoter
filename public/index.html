@@ -372,6 +372,10 @@ function computeBoard(){
   });
   rows.sort((a,b)=>(b.n?1:0)-(a.n?1:0)||b.score-a.score||b.n-a.n||String(a.idol.stageName).localeCompare(String(b.idol.stageName)));
   rows.forEach((r,k)=>r.rank=r.n?k+1:null);
+  // mốc 10 điểm của mỗi chỉ số = số tag đó của idol đang dẫn đầu tag đó
+  const top={};
+  for(const r of rows)for(const [k] of STATS)top[k]=Math.max(top[k]||0,r.statTags[k]||0);
+  rows.forEach(r=>r.statTop=top);
   return rows;
 }
 
@@ -423,7 +427,7 @@ function specLine(i){
 const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH"],["nhảy cháy","NHẢY"]];
 const MIN_FOR_STATS=3;
 function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.5?"A":s>=4.0?"B":s>=3.5?"C":"D"}
-function statVals(r){const t=r.statTags||{};return STATS.map(([k,l])=>[l,r.statN?Math.min(10,Math.round(10*(t[k]||0)/r.statN)):0])}
+function statVals(r){const t=r.statTags||{},top=r.statTop||{};return STATS.map(([k,l])=>[l,top[k]?Math.min(10,Math.round(10*(t[k]||0)/top[k])):0])}
 function spotHTML(r,ghost){
   const i=r?r.idol:{stageName:"[TÊN IDOL]"};
   const p=r?photosOf(i):{};const pid=p.full||p.close||p.side||"";const side=p.side&&p.side!==pid?p.side:"";
@@ -453,7 +457,7 @@ function spotHTML(r,ghost){
       <div class="statgrid" aria-label="chỉ số từ tag khen của khách">
         ${stats.map(([l,v])=>`<div class="stat"><span class="stat-l">${l}</span><span class="segs" aria-label="${v} trên 10">${Array.from({length:10},(_,k)=>`<i class="${k<v?"on":""}"></i>`).join("")}</span></div>`).join("")}
       </div>
-      <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?`chỉ số = tỉ lệ lượt chấm có tag đó, cộng dồn ${r.statN} lượt từ đầu, thang 10.`:`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
+      <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?"chỉ số = tỉ lệ lượt chọn tag của khách":`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
       ${(i.forte||[]).length?`<div class="special"><span class="stat-l">SỞ TRƯỜNG</span><div class="forte">${i.forte.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${(i.talents||[]).length?`<div class="special"><span class="stat-l">KỸ NĂNG ĐẶC BIỆT</span><div class="talents">${i.talents.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${ghost?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
