@@ -40,7 +40,9 @@ button,input,textarea,select{font:inherit;color:inherit}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
 .mark{font-weight:700;letter-spacing:.02em;font-size:14px;text-decoration:none}
-.mark sup{font-size:9px}
+.mark{display:inline-flex;align-items:center;gap:10px}
+.mark img{height:18px;width:auto;display:block}
+.mark span{font-weight:500;color:var(--concrete);letter-spacing:.08em}
 nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 nav.tabs a{text-decoration:none;padding:6px 12px;border:1px solid transparent;font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
 nav.tabs a[aria-current="page"]{border-color:var(--acid);color:var(--acid)}
@@ -284,7 +286,7 @@ img{max-width:100%}
 
 <header class="top">
   <div class="wrap">
-    <a class="mark" href="#lineup">BLK46<sup>®</sup> idol</a>
+    <a class="mark" href="#lineup" aria-label="BLK46 idol, về lineup"><img src="brand/blk46.svg" alt="BLK46®" width="128" height="18"><span>idol</span></a>
     <nav class="tabs" aria-label="chuyển trang">
       <a href="#lineup" data-tab="lineup">lineup</a>
       <a href="#admin" data-tab="admin" id="adminTab" hidden>quản lý</a>
