@@ -207,6 +207,10 @@ h2.sec{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--
 .reviews{display:grid;gap:10px}
 .rv{border-left:2px solid var(--line);padding:4px 0 4px 12px;display:grid;gap:2px}
 .rv p{margin:0}
+.tblcfg{border:1px solid var(--line);padding:8px 12px;margin:12px 0}
+.tblcfg summary{cursor:pointer;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.tblcfg textarea{width:100%}
+select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line);padding:6px 8px;font:inherit;min-width:110px}
 /* tab đánh giá: khách mới xem đánh giá cũ. không có tip (tip chỉ nằm trong notes, khách không đọc được) */
 .rvfeed{display:grid;gap:12px;margin-top:16px}
 .rvcard{display:grid;grid-template-columns:52px 1fr;gap:12px;background:var(--card);border:1px solid var(--line);padding:12px}
@@ -778,6 +782,20 @@ const okTime=v=>/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 document.addEventListener("input",e=>{const t=e.target;if(t&&t.matches&&t.matches("input[data-time]")){const f=fmtTime(t.value);if(f!==t.value)t.value=f}});
 
 /* ---------- quản lý: đặt bàn ---------- */
+/* sơ đồ bàn: danh sách số bàn hợp lệ (venue/tables). chỉ chọn bàn trong danh sách mới tạo được mã */
+const parseTables=t=>[...new Set(String(t||"").split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean).map(x=>x.slice(0,10)))];
+const busyTables=exceptId=>new Set(S.bookings.filter(b=>b.status==="seated"&&b.id!==exceptId&&b.table&&!(b.code&&(b.idolIds||[]).length&&(b.idolIds||[]).every(id=>ratedSet(b).has(id)))).map(b=>String(b.table).toUpperCase()));
+// Sơ đồ bàn BLK46 (theo ảnh sơ đồ anh Minh gửi 05/11/2026): V hàng trên, C giữa, D hai bên DJ, SV.
+const DEFAULT_TABLES=["V1","V2","V3","V4","V5","V6","C1","C2","C3","C4","C5","C6","C7","C8","C9","C10","D1","D2","SV1","SV2","SV3","SV4"];
+const TABLE_ZONES=[["SV","khu SV"],["V","khu V"],["C","khu C"],["D","khu D"]];
+const tableZone=t=>{const z=TABLE_ZONES.find(([p])=>new RegExp("^"+p+"\\d").test(t));return z?z[1]:"khác"};
+function tableSelect(id,cur,exceptId,optional){
+  const list=S.tables||[];const busy=busyTables(exceptId);const c=String(cur||"").toUpperCase();
+  if(!list.length)return `<span class="pill warn">chưa có danh sách bàn</span>`;
+  const opt=t=>`<option value="${esc(t)}" ${t===c?"selected":""} ${busy.has(t)&&t!==c?"disabled":""}>${esc(t)}${busy.has(t)&&t!==c?" · đang có khách":""}</option>`;
+  const groups=[];list.forEach(t=>{const z=tableZone(t);let g=groups.find(x=>x[0]===z);if(!g)groups.push(g=[z,[]]);g[1].push(t)});
+  return `<select id="${id}" class="tsel"><option value="">${optional?"chưa xếp bàn":"chọn bàn"}</option>${groups.map(([z,ts])=>`<optgroup label="${esc(z)}">${ts.map(opt).join("")}</optgroup>`).join("")}</select>`;
+}
 const STATUS={requested:["chờ xác nhận","warn"],confirmed:["đã xác nhận",""],seated:["đang ngồi",""],cancelled:["đã huỷ","off"]};
 function adminBookings(p){
   const f=S.bookFilter||"today";const td=todayStr();
@@ -790,6 +808,10 @@ function adminBookings(p){
   <div class="rowbtns"><button class="cta" id="newBook">tạo đặt bàn</button>
     ${[["today","hôm nay"],["upcoming","sắp tới"],["all","tất cả"]].map(([k,l])=>`<button class="chip" data-bf="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}
     ${reqN?`<span class="pill warn">${reqN} yêu cầu chờ xác nhận</span>`:""}</div>
+  <details class="tblcfg" ${(S.tables||[]).length?"":"open"}><summary>sơ đồ bàn · ${(S.tables||[]).length?`${S.tables.length} bàn`:"chưa nhập"}</summary>
+    <p class="note" style="margin:6px 0">gõ đúng số bàn như trên sơ đồ ở quán, cách nhau bằng dấu phẩy hoặc xuống dòng. quản lý chỉ tạo được mã bàn khi chọn bàn trong danh sách này.</p>
+    <textarea id="tblList" rows="3" placeholder="V1, V2, C1, C2, D1, SV1…">${esc((S.tables||[]).join(", "))}</textarea>
+    <div class="rowbtns"><button class="ghostbtn" id="tblSave">lưu sơ đồ bàn</button><span class="muted" id="tblMsg"></span></div></details>
   <div id="bookSlot"></div>
   ${list.length?`<div class="bookings">${list.map(bookingCard).join("")}</div>`:`<div class="empty"><b>không có đặt bàn nào ${f==="today"?"hôm nay":""}.</b><span>bấm "tạo đặt bàn" khi khách nhắn đặt, hoặc chờ yêu cầu khách gửi từ lineup.</span></div>`}`;
   p.querySelectorAll("[data-bf]").forEach(x=>x.onclick=()=>{S.bookFilter=x.dataset.bf;render()});
@@ -798,6 +820,8 @@ function adminBookings(p){
   p.querySelectorAll("[data-bconfirm]").forEach(x=>x.onclick=()=>bookPatch(x,x.dataset.bconfirm,{status:"confirmed"}));
   p.querySelectorAll("[data-bcancel]").forEach(x=>{let armed=false;x.onclick=()=>{if(!armed){armed=true;x.textContent="bấm lần nữa để huỷ";return}bookPatch(x,x.dataset.bcancel,{status:"cancelled"})}});
   p.querySelectorAll("[data-bseat]").forEach(x=>x.onclick=()=>seatBooking(x,x.dataset.bseat));
+  const ts=document.getElementById("tblSave");if(ts)ts.onclick=async()=>{const list=parseTables(document.getElementById("tblList").value);const m=document.getElementById("tblMsg");ts.disabled=true;
+    try{await S.db.doc("venue/tables").set({list,updatedAt:Date.now()});m.textContent=`đã lưu ${list.length} bàn`}catch(_){m.textContent="chưa lưu được, thử lại"}ts.disabled=false};
   if(S.bookEdit)drawBookForm();
 }
 function bookingCard(b){
@@ -815,7 +839,7 @@ function bookingCard(b){
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
       <div class="rowbtns">
         ${b.status==="requested"?`<button class="ghostbtn" data-bconfirm="${esc(b.id)}">xác nhận</button>`:""}
-        ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn<input id="seat_${esc(b.id)}" maxlength="10" value="${esc(b.table||"")}" style="width:80px"></label><button class="cta" data-bseat="${esc(b.id)}">khách đã đến · tạo mã bàn</button>`:""}
+        ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn${tableSelect("seat_"+b.id,b.table,b.id)}</label><button class="cta" data-bseat="${esc(b.id)}" ${(S.tables||[]).length?"":"disabled"}>khách đã đến · tạo mã bàn</button>`:""}
         ${b.status==="seated"&&!allRated?`<a class="cta" href="#table-${esc(b.id)}">mở màn đánh giá</a>`:""}
         ${b.status!=="cancelled"&&b.status!=="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">sửa</button><button class="ghostbtn danger" data-bcancel="${esc(b.id)}">huỷ</button>`:""}
         ${b.status==="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">đổi promoter, bàn</button>`:""}
@@ -825,7 +849,9 @@ function bookingCard(b){
 async function bookPatch(btn,id,patch){btn.disabled=true;try{await S.db.doc("bookings/"+id).update({...patch,updatedAt:Date.now()})}catch(_){btn.disabled=false;btn.textContent="chưa lưu được, thử lại"}}
 async function seatBooking(btn,id){
   const b=S.bookings.find(x=>x.id===id);if(!b)return;
-  const table=(document.getElementById("seat_"+id)||{}).value||b.table||"";
+  const table=((document.getElementById("seat_"+id)||{}).value||"").toUpperCase();
+  if(!(S.tables||[]).includes(table)){btn.textContent="chọn số bàn trên sơ đồ trước";return}
+  if(busyTables(id).has(table)){btn.textContent="bàn "+table+" đang có khách";return}
   if(!(b.idolIds||[]).length){btn.textContent="chọn promoter cho bàn trước";return}
   btn.disabled=true;btn.textContent="đang tạo mã…";
   try{
@@ -845,7 +871,7 @@ function drawBookForm(){
       <label class="f">ngày *<input id="k_date" type="date" required value="${esc(e.date||todayStr())}"></label>
       <label class="f">giờ đến<input id="k_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time value="${esc(e.time||"")}"></label>
       <label class="f">số người<input id="k_guests" inputmode="numeric" maxlength="3" value="${esc(e.guests||"")}"></label>
-      <label class="f">bàn<input id="k_table" maxlength="10" value="${esc(e.table||"")}"></label>
+      <label class="f">bàn${tableSelect("k_table",e.table,e.id,true)}</label>
     </div>
     <div class="checks"><span class="muted">promoter đặt trước cho bàn *</span>
       <div class="tags">${pub.map(x=>`<button type="button" class="chip kidol" data-id="${esc(x.id)}" aria-pressed="${(e.idolIds||[]).includes(x.id)}">${esc(x.stageName)}</button>`).join("")||`<span class="muted">chưa có hồ sơ promoter nào.</span>`}</div></div>
@@ -860,6 +886,7 @@ function drawBookForm(){
     const name=val("k_name");if(!name){err.textContent="cần tên khách.";return}
     if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một promoter cho bàn.";return}
     if(val("k_time")&&!okTime(val("k_time"))){err.textContent="giờ đến chưa đúng, gõ kiểu 22:30.";return}
+    if(e.status==="seated"&&!(S.tables||[]).includes(val("k_table").toUpperCase())){err.textContent="bàn đang ngồi phải là số bàn trên sơ đồ.";return}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
     const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:val("k_date"),time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
@@ -1040,6 +1067,7 @@ render();
     db.collection("bills").onSnapshot(s=>{S.bills=s.docs.map(d=>d.data());soon()},()=>{});
     db.collection("bookings").onSnapshot(s=>{S.bookings=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.bookings=true;soon()},()=>{S.loaded.bookings=true});
     db.collection("notes").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.notes=m;soon()},()=>{});
+    db.collection("venue").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="tables");S.tables=d?(d.data().list||[]):DEFAULT_TABLES.slice();S.loaded.tables=true;soon()},()=>{S.tables=DEFAULT_TABLES.slice();S.loaded.tables=true});
     db.collection("redeemed").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.redeemed=m;soon()},()=>{});
   }
   render();

@@ -40,6 +40,8 @@ service cloud.firestore {
 
     // Lời nhắn, tag góp ý, tip: chỉ quản lý.
     match /notes/{id} { allow read, write: if isStaff(); }
+    // Sơ đồ bàn (venue/tables { list: [...] }): chỉ quản lý.
+    match /venue/{id} { allow read, write: if isStaff(); }
     match /bills/{id} { allow read, write: if isStaff(); }
     match /redeemed/{id} { allow read, write: if isStaff(); }
 
