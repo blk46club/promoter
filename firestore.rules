@@ -47,7 +47,7 @@ service cloud.firestore {
     match /bookings/{id} {
       allow read, update, delete: if isStaff();
       allow create: if isStaff() || (
-        request.resource.data.keys().hasOnly(['guestName','phone','date','time','guests','table','idolIds','note','status','source','code','createdAt']) &&
+        request.resource.data.keys().hasOnly(['salutation','guestName','phone','date','time','guests','table','idolIds','note','status','source','code','createdAt']) &&
         request.resource.data.status == 'requested' &&
         request.resource.data.source == 'web' &&
         request.resource.data.code == '' &&
@@ -59,7 +59,8 @@ service cloud.firestore {
         request.resource.data.guests is string && request.resource.data.guests.size() <= 3 &&
         request.resource.data.note is string && request.resource.data.note.size() <= 160 &&
         request.resource.data.idolIds is list && request.resource.data.idolIds.size() >= 1 && request.resource.data.idolIds.size() <= 6 &&
-        request.resource.data.createdAt is number
+        request.resource.data.createdAt is number &&
+        (!('salutation' in request.resource.data) || request.resource.data.salutation in ['Mr','Miss'])
       );
     }
   }

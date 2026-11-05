@@ -250,6 +250,8 @@ textarea{width:100%;background:var(--card);border:1px solid var(--line);padding:
 .ok{color:var(--good);font-size:13px}
 .done{padding-block:48px;display:grid;gap:12px}
 .done .display{font-size:clamp(44px,9vw,96px)}
+/* GIỮ CHỖ: nhỏ hơn 30% và đủ line-height để dấu Ữ, Ỗ không đè dòng "đã gửi yêu cầu" */
+.done .display.done-hold{font-size:clamp(31px,6.3vw,67px);line-height:1.2}
 
 .rate-head{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:end}
 .rate-face{position:relative;aspect-ratio:3/4;background:var(--acid);overflow:hidden;transform:skewX(-6deg);border:2px solid var(--acid)}
@@ -286,7 +288,7 @@ th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--conc
 td.num{font-variant-numeric:tabular-nums}
 form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);padding:16px}
 .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-label.f{display:grid;gap:4px;font-size:12px;color:var(--concrete);min-width:0}
+label.f,div.f{display:grid;gap:4px;font-size:12px;color:var(--concrete);min-width:0}
 label.f input,label.f select{background:var(--ink);border:1px solid var(--line);padding:8px;color:var(--paper);width:100%}
 .checks{display:grid;gap:8px;font-size:13px}
 .checks label{display:flex;gap:8px;align-items:flex-start}
@@ -732,10 +734,10 @@ function renderReviews(){
 /* ---------- khách đặt bàn từ lineup ---------- */
 function renderBook(idolId){
   const B=S.book;
-  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],guestName:"",phone:"",date:todayStr(),time:"",guests:"",note:"",err:"",busy:false,done:false})}
+  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",date:todayStr(),time:"",guests:"",note:"",err:"",busy:false,done:false})}
   const i=idolById(idolId);
   if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
-  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi số ${esc(B.phone)} để xác nhận bàn và promoter. see you out there.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
+  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(B.guestName)} để xác nhận thông tin bàn đặt. hẹn gặp quý khách ở quán sớm nhất.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
   app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi promoter</a>
   <section class="rate">
@@ -744,6 +746,7 @@ function renderBook(idolId){
     
     <form class="idol" id="bookForm">
       <div class="fields">
+        <div class="f"><span>danh xưng *</span><div class="tags" role="radiogroup" aria-label="danh xưng">${["Mr","Miss"].map(t=>`<button type="button" class="chip bsal" role="radio" data-v="${t}" aria-checked="${B.salutation===t}" aria-pressed="${B.salutation===t}">${t}</button>`).join("")}</div></div>
         <label class="f">tên bạn *<input id="b_name" required maxlength="40" value="${esc(B.guestName)}"></label>
         <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" value="${esc(B.phone)}"></label>
         <label class="f">ngày *<input id="b_date" type="date" required value="${esc(B.date)}"></label>
@@ -756,12 +759,14 @@ function renderBook(idolId){
     </form>
   </section>`;
   const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.date=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
+  app.querySelectorAll(".bsal").forEach(x=>x.onclick=()=>{sync();B.salutation=x.dataset.v;B.err="";render()});
   document.getElementById("bookForm").onsubmit=async ev=>{
     ev.preventDefault();sync();
     const phone=B.phone.replace(/\D/g,"");
+    if(!B.salutation){B.err="chọn danh xưng Mr hoặc Miss.";return render()}
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
     B.busy=true;B.err="";render();
-    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
+    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({salutation:B.salutation,guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
     catch(e){B.busy=false;B.err="chưa gửi được, kiểm tra lại thông tin rồi thử lại.";render()}
   };
 }
@@ -798,7 +803,7 @@ function bookingCard(b){
   return `<div class="bk">
     <div class="bk-time"><b>${esc(b.time||"--:--")}</b><span>${esc(fmtDate(b.date))}</span></div>
     <div class="bk-main">
-      <div class="rowbtns"><b>${esc(b.guestName||"(chưa có tên)")}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
+      <div class="rowbtns"><b>${b.salutation?esc(b.salutation)+" ":""}${esc(b.guestName||"(chưa có tên)")}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
         <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}</div>
       <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">chưa chọn promoter</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
@@ -854,6 +859,7 @@ function drawBookForm(){
     const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:val("k_date"),time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
       status:e.status==="requested"?"confirmed":(e.status||"confirmed"),source:e.source||"admin",code:e.code||"",createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
     if(e.seatedAt)body.seatedAt=e.seatedAt;
+    if(e.salutation)body.salutation=e.salutation;
     try{await S.db.doc("bookings/"+id).set(body);S.bookEdit=null;render()}catch(_){btn.disabled=false;btn.textContent=e.id?"lưu":"tạo đặt bàn";err.textContent="chưa lưu được, thử lại."}
   };
 }
