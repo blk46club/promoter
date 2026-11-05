@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Quản lý = email đã đăng nhập nằm trong config/staff.emails
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    function isStaff() {
+      return signedIn() &&
+        request.auth.token.email.lower() in
+          get(/databases/$(database)/documents/config/staff).data.emails;
+    }
+
+    // Danh sách quản lý: người đã đăng nhập đọc được để biết mình có quyền không.
+    // Chỉ sửa trong Firebase console.
+    match /config/{doc} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Hồ sơ công khai: khách chỉ đọc được idol đã bật hiển thị.
+    match /idols/{id} {
+      allow read: if resource.data.public == true || isStaff();
+      allow write: if isStaff();
+    }
+    // Hồ sơ đầy đủ (số đo bị ẩn, giấy đồng ý): chỉ quản lý.
+    match /idolsPrivate/{id} {
+      allow read, write: if isStaff();
+    }
+
+    // Điểm sao và tag khen: công khai để tính bảng xếp hạng. Chỉ tablet của quán ghi.
+    match /reviews/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    // Ẩn review rác: công khai để mọi người tính cùng một điểm.
+    match /moderation/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Lời nhắn, tag góp ý, tip: chỉ quản lý.
+    match /notes/{id} { allow read, write: if isStaff(); }
+    match /bills/{id} { allow read, write: if isStaff(); }
+    match /redeemed/{id} { allow read, write: if isStaff(); }
+
+    // Đặt bàn: khách gửi yêu cầu (chỉ tạo mới, đúng khuôn), quản lý đọc và xử lý.
+    match /bookings/{id} {
+      allow read, update, delete: if isStaff();
+      allow create: if isStaff() || (
+        request.resource.data.keys().hasOnly(['guestName','phone','date','time','guests','table','idolIds','note','status','source','code','createdAt']) &&
+        request.resource.data.status == 'requested' &&
+        request.resource.data.source == 'web' &&
+        request.resource.data.code == '' &&
+        request.resource.data.table == '' &&
+        request.resource.data.guestName is string && request.resource.data.guestName.size() > 0 && request.resource.data.guestName.size() <= 40 &&
+        request.resource.data.phone is string && request.resource.data.phone.matches('^[0-9]{9,11}$') &&
+        request.resource.data.date is string && request.resource.data.date.size() == 10 &&
+        request.resource.data.time is string && request.resource.data.time.size() <= 5 &&
+        request.resource.data.guests is string && request.resource.data.guests.size() <= 3 &&
+        request.resource.data.note is string && request.resource.data.note.size() <= 160 &&
+        request.resource.data.idolIds is list && request.resource.data.idolIds.size() >= 1 && request.resource.data.idolIds.size() <= 6 &&
+        request.resource.data.createdAt is number
+      );
+    }
+  }
+}

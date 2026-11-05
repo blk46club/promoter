@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isStaff() {
+      return request.auth != null && request.auth.token.email != null &&
+        request.auth.token.email.lower() in
+          firestore.get(/databases/(default)/documents/config/staff).data.emails;
+    }
+    // Ảnh idol: ai cũng xem được, chỉ quản lý tải lên. Tối đa 10 MB, chỉ ảnh.
+    match /idols/{file} {
+      allow read: if true;
+      allow write: if isStaff() &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+      allow delete: if isStaff();
+    }
+  }
+}
