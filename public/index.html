@@ -750,7 +750,7 @@ function renderBook(idolId){
         <label class="f">tên bạn *<input id="b_name" required maxlength="40" value="${esc(B.guestName)}"></label>
         <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" value="${esc(B.phone)}"></label>
         <label class="f">ngày *<input id="b_date" type="date" required value="${esc(B.date)}"></label>
-        <label class="f">giờ đến *<input id="b_time" type="time" required value="${esc(B.time)}"></label>
+        <label class="f">giờ đến *<input id="b_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time required value="${esc(B.time)}"></label>
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" value="${esc(B.guests)}"></label>
       </div>
       <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
@@ -764,6 +764,7 @@ function renderBook(idolId){
     ev.preventDefault();sync();
     const phone=B.phone.replace(/\D/g,"");
     if(!B.salutation){B.err="chọn danh xưng Mr hoặc Miss.";return render()}
+    if(!okTime(B.time)){B.err="giờ đến chưa đúng, gõ kiểu 22:30.";return render()}
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
     B.busy=true;B.err="";render();
     try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({salutation:B.salutation,guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
@@ -771,6 +772,10 @@ function renderBook(idolId){
   };
 }
 const val=id=>{const el=document.getElementById(id);return el?el.value.trim():""};
+/* ô giờ: gõ liền 4 số (2230) là ra 22:30, khỏi bấm sang ô phút. gõ 9 → 09 */
+const fmtTime=v=>{let d=String(v||"").replace(/\D/g,"");if(d&&+d[0]>2)d="0"+d;d=d.slice(0,4);return d.length>2?d.slice(0,2)+":"+d.slice(2):d};
+const okTime=v=>/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.matches&&t.matches("input[data-time]")){const f=fmtTime(t.value);if(f!==t.value)t.value=f}});
 
 /* ---------- quản lý: đặt bàn ---------- */
 const STATUS={requested:["chờ xác nhận","warn"],confirmed:["đã xác nhận",""],seated:["đang ngồi",""],cancelled:["đã huỷ","off"]};
@@ -838,7 +843,7 @@ function drawBookForm(){
       <label class="f">tên khách *<input id="k_name" required maxlength="40" value="${esc(e.guestName||"")}"></label>
       <label class="f">số điện thoại<input id="k_phone" inputmode="tel" maxlength="12" value="${esc(e.phone||"")}"></label>
       <label class="f">ngày *<input id="k_date" type="date" required value="${esc(e.date||todayStr())}"></label>
-      <label class="f">giờ đến<input id="k_time" type="time" value="${esc(e.time||"")}"></label>
+      <label class="f">giờ đến<input id="k_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time value="${esc(e.time||"")}"></label>
       <label class="f">số người<input id="k_guests" inputmode="numeric" maxlength="3" value="${esc(e.guests||"")}"></label>
       <label class="f">bàn<input id="k_table" maxlength="10" value="${esc(e.table||"")}"></label>
     </div>
@@ -854,6 +859,7 @@ function drawBookForm(){
     ev.preventDefault();const err=document.getElementById("kErr");const btn=document.getElementById("kSave");
     const name=val("k_name");if(!name){err.textContent="cần tên khách.";return}
     if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một promoter cho bàn.";return}
+    if(val("k_time")&&!okTime(val("k_time"))){err.textContent="giờ đến chưa đúng, gõ kiểu 22:30.";return}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
     const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:val("k_date"),time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
