@@ -180,6 +180,8 @@ h1.display .y{color:var(--acid)}
 .angle input{font-size:12px;max-width:100%}
 .back{display:inline-block;margin-top:20px;font-size:13px;text-decoration:none;color:var(--concrete)}
 .back:hover{color:var(--acid)}
+.back.back-swap{font-size:17px;color:#fff}
+.back.back-swap:hover{color:var(--acid)}
 .pname{font-family:var(--display);font-size:clamp(48px,8vw,96px);line-height:.9;text-transform:uppercase;margin:6px 0 8px;overflow-wrap:anywhere}
 .ranktag{font-family:var(--display);font-size:22px;color:var(--acid)}
 .specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:18px 0}
@@ -683,7 +685,7 @@ function renderBook(idolId){
   if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi số ${esc(B.phone)} để xác nhận bàn và idol. see you out there.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
   const pub=S.idols.filter(isPublic);
-  app.innerHTML=`${banner()}<a class="back" href="#lineup">← đổi idol</a>
+  app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi idol</a>
   <section class="rate">
     <div class="rate-head"><div class="rate-face">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}</div>
       <div><div class="eyebrow">đặt bàn cùng</div><h1 class="display rate-name">${esc(i.stageName)}</h1></div></div>
