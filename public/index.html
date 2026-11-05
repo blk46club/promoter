@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="lineup idol blk46. chọn idol, đặt bàn, gặp nhau ở 46 mã mây.">
+<title>BLK46 Idol Lineup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&display=swap">
+<style>
+/* Layout: collectible lineup cards on stark black, zine-paper grain; top 3 flip to acid yellow. Single dark world by design (brand default is black). */
+:root{
+  --ink:#000000;
+  --card:#0e0e0c;
+  --card-2:#171713;
+  --paper:#F0ECE1;
+  --acid:#EDD029;
+  --concrete:#8a8880;
+  --line:rgba(240,236,225,.14);
+  --bad:#E20810;
+  --good:#7fd18b;
+  --display:"Anton","BT Brik","Impact","Arial Narrow",sans-serif;
+  --body:"Be Vietnam Pro","Helvetica Now Text","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--ink);color:var(--paper)}
+body{font-family:var(--body);font-size:15px;line-height:1.55;min-height:100vh;position:relative}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.09;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:inherit}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.mark{font-weight:700;letter-spacing:.02em;font-size:14px;text-decoration:none}
+.mark sup{font-size:9px}
+nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.tabs a{text-decoration:none;padding:6px 12px;border:1px solid transparent;font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+nav.tabs a[aria-current="page"]{border-color:var(--acid);color:var(--acid)}
+nav.tabs a:hover{color:var(--acid)}
+
+.banner{margin-top:16px;padding:10px 14px;border:1px dashed var(--concrete);color:var(--concrete);font-size:13px}
+.banner[data-kind="warn"]{border-color:var(--acid);color:var(--acid)}
+
+/* hero */
+.hero{padding-block:36px 20px;display:grid;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--concrete);font-weight:500}
+h1.display{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:clamp(56px,11vw,132px);line-height:.86;letter-spacing:-.005em;margin:0;text-wrap:balance}
+h1.display .y{color:var(--acid)}
+.lede{max-width:60ch;color:var(--paper);opacity:.85;margin:0}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-block:8px 20px}
+.chip{border:1px solid var(--line);background:transparent;padding:6px 12px;font-size:13px;cursor:pointer;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.chip:hover{border-color:var(--paper)}
+.note{font-size:12px;color:var(--concrete);max-width:70ch}
+
+/* lineup grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding-bottom:48px}
+@media (max-width:520px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.card{position:relative;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);text-decoration:none;color:var(--paper);min-width:0;transition:transform .18s ease,border-color .18s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--paper)}
+.card.top{background:var(--acid);color:var(--ink);border-color:var(--acid)}
+.card.top .muted{color:rgba(0,0,0,.62)}
+.card.top .tag{border-color:rgba(0,0,0,.35)}
+.card.ghost{opacity:.55;pointer-events:none;border-style:dashed}
+.card .rank{position:absolute;top:6px;left:10px;z-index:2;font-family:var(--display);font-size:56px;line-height:1;color:var(--paper);text-shadow:0 2px 0 rgba(0,0,0,.6)}
+.card.top .rank{color:var(--ink);text-shadow:none;background:var(--acid);padding:0 6px 2px}
+.photo{aspect-ratio:3/4;width:100%;max-width:100%;background:var(--card-2);position:relative;overflow:hidden}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.15) contrast(1.05)}
+.photo .ph{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:64px;color:rgba(240,236,225,.16);
+  background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(240,236,225,.04) 14px 15px)}
+.card .body{padding:12px 12px 14px;display:grid;gap:6px;min-width:0}
+.name{font-family:var(--display);font-size:26px;line-height:1;text-transform:uppercase;letter-spacing:.01em;overflow-wrap:anywhere}
+.muted{color:var(--concrete);font-size:12px}
+.statline{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.score{display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums}
+.score b{font-family:var(--display);font-weight:400;font-size:28px;line-height:1}
+.stars{letter-spacing:1px;font-size:13px}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:11px;border:1px solid var(--line);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.tag.bad{border-color:var(--bad);color:#ff6a6f}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--card-2);border:1px solid var(--line)}
+.pill.warn{border-color:var(--acid);color:var(--acid)}
+.pill.off{color:var(--concrete)}
+
+/* select screen */
+.select{padding-block:20px 0;display:grid;gap:14px}
+.select-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sel-title{font-size:clamp(48px,9vw,104px);padding-bottom:.08em}
+.stage{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:18px;align-items:start}
+@media (max-width:900px){.stage{grid-template-columns:1fr}.roster{order:-1;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));padding-inline:4px}}
+.spot{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:0;background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden;min-width:0;
+  background-image:repeating-linear-gradient(115deg,transparent 0 22px,rgba(240,236,225,.035) 22px 23px)}
+@media (max-width:560px){.spot{grid-template-columns:1fr}}
+.spot-portrait{position:relative;min-height:420px;height:100%;max-width:100%;overflow:hidden}
+@media (max-width:560px){.spot-portrait{aspect-ratio:1/1;min-height:0;height:auto}}
+.spot-portrait .slash{position:absolute;inset:-10% 30% -10% -40%;background:var(--acid);transform:skewX(-14deg);opacity:.92}
+.spot-portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+.spot-portrait .ph{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:120px;color:rgba(0,0,0,.35)}
+.grade{position:absolute;right:10px;bottom:6px;font-family:var(--display);font-size:96px;line-height:1;color:var(--paper);-webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink)}
+.grade.g-S{color:var(--acid)}
+.grade.g-x{color:var(--concrete)}
+.spot-info{padding:18px 18px 20px;display:grid;gap:12px;align-content:start;min-width:0}
+.spot-name{font-family:var(--display);font-size:clamp(40px,5.2vw,72px);line-height:.9;text-transform:uppercase;overflow-wrap:anywhere}
+.hp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.hp-l,.stat-l{font-family:var(--display);font-size:14px;letter-spacing:.08em;color:var(--concrete)}
+.hp-bar{height:14px;background:var(--ink);border:1px solid var(--paper);transform:skewX(-14deg);overflow:hidden}
+.hp-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#fff3a0)}
+.hp-v{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.hp-v small{font-family:var(--body);font-size:11px;color:var(--concrete);margin-left:4px}
+.bio{display:flex;gap:18px;flex-wrap:wrap;margin:0;border-block:1px solid var(--line);padding-block:8px}
+.bio div{display:grid}
+.bio dt{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--concrete)}
+.bio dd{margin:0;font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.statgrid{display:grid;grid-template-columns:1fr;gap:7px}
+@media (max-width:380px){.statgrid{grid-template-columns:1fr}}
+.forte{display:flex;gap:6px;flex-wrap:wrap}
+.forte span{border:1px solid var(--acid);color:var(--acid);padding:3px 10px;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.stat{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center}
+.segs{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
+.segs i{height:9px;background:var(--card-2);transform:skewX(-14deg)}
+.segs i.on{background:var(--acid)}
+.special{display:grid;gap:6px}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;min-width:0}
+.tile{position:relative;aspect-ratio:1/1;background:var(--card-2);border:2px solid var(--line);padding:0;cursor:pointer;overflow:hidden;display:block;transform:skewX(-6deg)}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:skewX(6deg) scale(1.15);filter:grayscale(.55) brightness(.8);transition:filter .15s}
+.tile .ti{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:30px;color:rgba(240,236,225,.3);transform:skewX(6deg)}
+.tile .tr{position:absolute;left:4px;top:2px;font-family:var(--display);font-size:18px;color:var(--paper);text-shadow:2px 2px 0 var(--ink);transform:skewX(6deg)}
+.tile.top .tr{color:var(--acid)}
+.tile .tn{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:skewX(6deg)}
+.tile .p1{display:none;position:absolute;right:3px;top:2px;background:var(--acid);color:var(--ink);font-family:var(--display);font-size:12px;padding:0 4px;transform:skewX(6deg)}
+.tile:hover img,.tile[aria-pressed="true"] img{filter:none}
+.tile[aria-pressed="true"]{border-color:var(--acid);box-shadow:0 0 0 2px var(--acid),0 0 18px rgba(237,208,41,.45);animation:blink 1s steps(2,end) infinite}
+.tile[aria-pressed="true"] .p1{display:block}
+.tile.ghost{cursor:default;border-style:dashed;opacity:.5}
+@keyframes blink{50%{box-shadow:0 0 0 2px var(--paper),0 0 6px rgba(237,208,41,.2)}}
+.spot.anim .spot-portrait img,.spot.anim .spot-portrait .ph{animation:slidein .32s cubic-bezier(.2,.9,.3,1.2)}
+.spot.anim .slash{animation:slash .28s ease-out}
+.spot.anim .spot-name{animation:stamp .26s ease-out}
+.spot.anim .segs i.on{animation:fill .4s ease-out backwards}
+@keyframes slidein{from{transform:translateX(-30%);opacity:0}to{transform:none;opacity:1}}
+@keyframes slash{from{transform:skewX(-14deg) translateX(-60%)}to{transform:skewX(-14deg)}}
+@keyframes stamp{from{transform:scale(1.25);opacity:0}to{transform:none;opacity:1}}
+@keyframes fill{from{opacity:0}}
+
+/* profile */
+.profile{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:28px;padding-block:28px 56px}
+@media (max-width:820px){.profile{grid-template-columns:1fr}}
+.profile .photo{border:1px solid var(--line)}
+.gallery{display:grid;gap:8px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+@media (max-width:820px){.gallery{position:static}}
+.galmain{position:relative}
+.galcap{position:absolute;left:0;bottom:0;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:4px 8px}
+.galthumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.galthumbs button{background:var(--card);border:1px solid var(--line);padding:0;cursor:pointer;display:grid;text-align:left}
+.galthumbs button[aria-pressed="true"]{border-color:var(--acid);outline:2px solid var(--acid)}
+.galthumbs img{aspect-ratio:1/1;width:100%;object-fit:cover;display:block}
+.galthumbs span{font-size:11px;padding:4px 6px;text-transform:uppercase;letter-spacing:.1em}
+.angles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.angles{grid-template-columns:1fr}}
+.angle{border:1px dashed var(--line);padding:8px;display:grid;gap:6px;font-size:12px;color:var(--concrete);min-width:0}
+.angle img{width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--card-2)}
+.angle .blank{width:100%;aspect-ratio:3/4;background:var(--card-2);display:grid;place-items:center;font-size:11px}
+.angle input{font-size:12px;max-width:100%}
+.back{display:inline-block;margin-top:20px;font-size:13px;text-decoration:none;color:var(--concrete)}
+.back:hover{color:var(--acid)}
+.pname{font-family:var(--display);font-size:clamp(48px,8vw,96px);line-height:.9;text-transform:uppercase;margin:6px 0 8px;overflow-wrap:anywhere}
+.ranktag{font-family:var(--display);font-size:22px;color:var(--acid)}
+.specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:18px 0}
+.specs div{padding:12px 0;display:grid;gap:2px}
+.specs div+div{border-left:1px solid var(--line);padding-left:14px}
+.specs dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--concrete)}
+.specs dd{margin:0;font-family:var(--display);font-size:30px;line-height:1.05;font-variant-numeric:tabular-nums}
+.specs dd small{font-family:var(--body);font-size:12px;color:var(--concrete);margin-left:3px}
+h2.sec{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--concrete);font-weight:500;margin:22px 0 10px}
+.talents{display:flex;gap:6px;flex-wrap:wrap}
+.talents span{background:var(--paper);color:var(--ink);padding:4px 10px;font-weight:500;font-size:13px}
+.summary{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center}
+.big{font-family:var(--display);font-size:84px;line-height:.9;font-variant-numeric:tabular-nums}
+.dist{display:grid;gap:4px;font-size:12px;font-variant-numeric:tabular-nums}
+.dist .row{display:grid;grid-template-columns:16px minmax(0,1fr) 28px;gap:8px;align-items:center}
+.bar{height:6px;background:var(--card-2);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--acid)}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{border:1px solid var(--acid);color:var(--acid);padding:6px 10px;font-size:12px;display:grid;line-height:1.2}
+.badge b{font-family:var(--display);font-weight:400;font-size:18px}
+.reviews{display:grid;gap:10px}
+.rv{border-left:2px solid var(--line);padding:4px 0 4px 12px;display:grid;gap:2px}
+.rv p{margin:0}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--acid);color:var(--ink);border:0;padding:12px 18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px;text-decoration:none;cursor:pointer}
+.cta:hover{filter:brightness(1.08)}
+.cta[disabled]{opacity:.4;cursor:not-allowed}
+.ghostbtn{background:transparent;border:1px solid var(--line);padding:8px 14px;cursor:pointer;font-size:13px}
+.ghostbtn:hover{border-color:var(--paper)}
+.ghostbtn.danger:hover{border-color:var(--bad);color:#ff6a6f}
+
+/* rate */
+.rate{max-width:640px;padding-block:28px 64px;display:grid;gap:22px}
+.step{display:grid;gap:10px}
+.step h3{margin:0;font-family:var(--display);font-weight:400;font-size:30px;text-transform:uppercase;line-height:1}
+.step h3 span{color:var(--acid)}
+.codeinput{font-family:var(--display);font-size:40px;letter-spacing:.2em;text-transform:uppercase;background:transparent;border:0;border-bottom:2px solid var(--paper);padding:4px 0;width:100%;max-width:320px}
+.codeinput::placeholder{color:rgba(240,236,225,.25)}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pick{background:var(--card);border:1px solid var(--line);padding:0;cursor:pointer;text-align:left;display:grid}
+.pick .photo{aspect-ratio:1/1}
+.pick span{padding:6px 8px;font-size:12px;font-weight:700;text-transform:uppercase;overflow-wrap:anywhere}
+.pick[aria-pressed="true"]{border-color:var(--acid);outline:2px solid var(--acid)}
+.starrow{display:flex;gap:6px}
+.starbtn{background:transparent;border:0;font-size:44px;line-height:1;cursor:pointer;color:var(--card-2);padding:0 2px;-webkit-text-stroke:1px var(--concrete)}
+.starbtn.on{color:var(--acid);-webkit-text-stroke:0}
+.starlabel{font-family:var(--display);font-size:22px;text-transform:uppercase;min-height:1.2em}
+textarea{width:100%;background:var(--card);border:1px solid var(--line);padding:10px;min-height:90px;resize:vertical}
+.err{color:#ff6a6f;font-size:13px;min-height:1em}
+.ok{color:var(--good);font-size:13px}
+.done{padding-block:48px;display:grid;gap:12px}
+.done .display{font-size:clamp(44px,9vw,96px)}
+
+.rate-head{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:end}
+.rate-face{position:relative;aspect-ratio:3/4;background:var(--acid);overflow:hidden;transform:skewX(-6deg);border:2px solid var(--acid)}
+.rate-face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:skewX(6deg) scale(1.15)}
+.rate-face span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:36px;color:rgba(0,0,0,.4);transform:skewX(6deg)}
+.rate-face b{position:absolute;right:4px;bottom:0;font-family:var(--display);font-weight:400;font-size:36px;line-height:1;color:var(--paper);-webkit-text-stroke:1px var(--ink);text-shadow:2px 2px 0 var(--ink);transform:skewX(6deg)}
+.rate-face b.g-S{color:var(--acid)}
+h1.display.rate-name{font-size:clamp(44px,8vw,80px);line-height:1.25;margin:0 0 2px;overflow-wrap:anywhere}
+.rate-head .eyebrow{display:block;margin-bottom:2px}
+.tipline{font-size:14px}.tipline b{font-family:var(--display);font-weight:400;font-size:24px;color:var(--acid);margin-left:4px}
+.tablebar{display:flex;gap:16px;flex-wrap:wrap;align-items:center;border:1px solid var(--line);padding:10px 14px;font-size:14px}
+.tablebar b{font-family:var(--display);font-weight:400;font-size:22px;margin-left:4px}
+.codelock{margin-left:auto;color:var(--good)}
+.codelock b{color:var(--paper);letter-spacing:.12em}
+.bookings{display:grid;gap:10px}
+.bk{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;border:1px solid var(--line);background:var(--card);padding:12px}
+.bk-time{display:grid;align-content:start}
+.bk-time b{font-family:var(--display);font-weight:400;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.bk-time span{font-size:12px;color:var(--concrete)}
+.bk-main{display:grid;gap:8px;min-width:0}
+.bk-idols{display:flex;gap:6px;flex-wrap:wrap}
+.bk-idol{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:2px 8px 2px 2px;font-size:12px;font-weight:700;text-transform:uppercase}
+.bk-idol img{width:24px;height:24px;object-fit:cover}
+.bk-idol.ok{border-color:var(--good);color:var(--good)}
+.bk-code{font-size:13px}.bk-code b{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.12em;color:var(--acid);margin-left:4px}
+/* admin */
+.admin{padding-block:24px 64px;display:grid;gap:18px}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap}
+.panel{display:grid;gap:14px}
+.table{overflow-x:auto;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--concrete);font-weight:500}
+td.num{font-variant-numeric:tabular-nums}
+form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);padding:16px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:12px;color:var(--concrete);min-width:0}
+label.f input,label.f select{background:var(--ink);border:1px solid var(--line);padding:8px;color:var(--paper);width:100%}
+.checks{display:grid;gap:8px;font-size:13px}
+.checks label{display:flex;gap:8px;align-items:flex-start}
+.consent{border:1px solid var(--acid);padding:12px;display:grid;gap:8px}
+.consent strong{color:var(--acid);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.codecell{border:1px solid var(--line);padding:10px;display:grid;gap:2px}
+.codecell b{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:.12em}
+.codecell.used{opacity:.4}
+.thumb{width:44px;height:58px;object-fit:cover;background:var(--card-2);display:block}
+.empty{border:1px dashed var(--line);padding:28px;display:grid;gap:8px;color:var(--concrete)}
+.empty b{color:var(--paper)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+body{margin:0}
+img{max-width:100%}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#lineup">BLK46<sup>®</sup> idol</a>
+    <nav class="tabs" aria-label="chuyển trang">
+      <a href="#lineup" data-tab="lineup">lineup</a>
+      <a href="#admin" data-tab="admin" id="adminTab" hidden>quản lý</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <section class="hero">
+    <div class="eyebrow">46 mã mây · bảng idol</div>
+    <h1 class="display">IDOL <span class="y">LINEUP</span></h1>
+    <p class="lede">đang tải bảng xếp hạng…</p>
+  </section>
+</main>
+
+<script type="module">
+import { claude as __claude, backend as __backend } from "./backend-loader.js";
+window.claude = __claude;
+(function(){
+"use strict";
+
+/* ---------- config ---------- */
+const POS_TAGS=["nhiệt tình","nói chuyện mượt","giữ vibe cả bàn","thông minh, tinh ý","nói tiếng anh tốt","nhảy cháy"];
+const NEG_TAGS=["chậm","ít để ý bàn","tư vấn sai món","thái độ chưa ổn","ép gọi thêm"];
+const STAR_WORDS=["","tệ","chưa ổn","tạm","ổn","đỉnh"];
+const PRIOR_N=5;          // Bayesian prior: số lượt "ảo" kéo điểm về trung bình quán
+const BADGE_AT=5;         // số lượt tag để thành huy hiệu
+const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+/* ---------- state ---------- */
+const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
+  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},
+  loaded:{idols:false,reviews:false,bookings:false},stale:false,dbMissing:false,
+  period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
+  rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",err:"",busy:false,done:false}};
+
+const app=document.getElementById("app");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rid=(n=12)=>{const a="abcdefghijkmnpqrstuvwxyz23456789";let s="";const r=crypto.getRandomValues(new Uint8Array(n));for(const x of r)s+=a[x%a.length];return s};
+const mkCode=()=>{let s="";const r=crypto.getRandomValues(new Uint8Array(6));for(const x of r)s+=CODE_ABC[x%CODE_ABC.length];return s};
+const fmt1=n=>n.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1});
+const starStr=n=>{const f=Math.round(n);return "★".repeat(f)+"☆".repeat(5-f)};
+const ago=t=>{const d=(Date.now()-t)/1000;if(d<3600)return Math.max(1,Math.round(d/60))+" phút trước";if(d<86400)return Math.round(d/3600)+" giờ trước";return Math.round(d/86400)+" ngày trước"};
+const ANGLES=[["close","cận"],["full","toàn thân"],["side","nghiêng"]];
+const photosOf=i=>{const p=Object.assign({},i.photos||{});if(!p.close&&i.photoId)p.close=i.photoId;return p};
+const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||""};
+const photoSrc=i=>coverId(i)?(""+coverId(i)):"";
+const initials=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const isPublic=i=>i.public===true||!!(i.active!==false&&i.consent&&i.consent.signed&&i.consent.adult);
+
+/* ---------- scoring ---------- */
+function monthStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).getTime()}
+function visibleReviews(){
+  const from=S.period==="month"?monthStart():0;
+  return S.reviews.filter(r=>!(S.mod[r.id]&&S.mod[r.id].hidden)&&(r.createdAt||0)>=from);
+}
+function computeBoard(){
+  const rv=visibleReviews();
+  const total=rv.reduce((a,r)=>a+(r.stars||0),0);
+  const mean=rv.length?total/rv.length:4.5;
+  const by={};
+  for(const r of rv){(by[r.idolId]=by[r.idolId]||[]).push(r)}
+  const rows=S.idols.filter(isPublic).map(i=>{
+    const list=by[i.id]||[];
+    const n=list.length,sum=list.reduce((a,r)=>a+r.stars,0);
+    const dist=[0,0,0,0,0,0];const tags={};const neg={};
+    for(const r of list){dist[r.stars]++;for(const t of (r.tags||[])){if(POS_TAGS.includes(t))tags[t]=(tags[t]||0)+1;else neg[t]=(neg[t]||0)+1}}
+    const avg=n?sum/n:0;
+    const score=(PRIOR_N*mean+sum)/(PRIOR_N+n);
+    const topTags=Object.entries(tags).sort((a,b)=>b[1]-a[1]);
+    return {idol:i,n,avg,score,dist,topTags,neg,list:list.slice().sort((a,b)=>b.createdAt-a.createdAt)};
+  });
+  rows.sort((a,b)=>(b.n?1:0)-(a.n?1:0)||b.score-a.score||b.n-a.n||String(a.idol.stageName).localeCompare(String(b.idol.stageName)));
+  rows.forEach((r,k)=>r.rank=r.n?k+1:null);
+  return rows;
+}
+
+/* ---------- routing ---------- */
+function route(){
+  const h=(location.hash||"#lineup").slice(1);
+  if(h.startsWith("idol-")||h.startsWith("book-"))return {view:"book",id:h.slice(5)};
+  if(h.startsWith("table-"))return {view:"table",id:h.slice(6)};
+  if(h==="admin")return {view:"admin"};
+  return {view:"lineup"};
+}
+function setTabs(v){
+  document.querySelectorAll("nav.tabs a").forEach(a=>{
+    const on=a.dataset.tab===v||(v==="book"&&a.dataset.tab==="lineup");
+    if(on)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
+  });
+  document.getElementById("adminTab").hidden=!S.canEdit;
+  document.querySelector("nav.tabs").hidden=!S.canEdit||v==="table";
+}
+function render(){
+  const r=route();setTabs(r.view);
+  if(r.view==="book")return renderBook(r.id);
+  if(r.view==="table")return renderTable(r.id);
+  if(r.view==="admin")return renderAdmin();
+  return renderLineup();
+}
+window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
+
+/* ---------- shared bits ---------- */
+function banner(){
+  if(__backend.mode==="demo"&&!S.demoHidden)return `<div class="banner" data-kind="warn">bản chạy thử: dữ liệu chỉ lưu trên trình duyệt này, máy khác không thấy. idol đang hiện là dữ liệu mẫu. <button class="ghostbtn" style="padding:2px 8px;margin-left:6px" onclick="this.parentElement.remove()">ẩn</button></div>`;
+  if(S.dbMissing)return `<div class="banner" data-kind="warn">chưa kết nối được dữ liệu. tải lại trang sau vài giây.</div>`;
+  if(S.stale)return `<div class="banner">chưa kết nối được dữ liệu, số liệu có thể chưa mới. trang sẽ tự cập nhật khi kết nối lại.</div>`;
+  return "";
+}
+function photoBox(i,big){
+  const src=photoSrc(i);
+  return `<div class="photo">${src?`<img src="${esc(src)}" alt="${esc(i.stageName)}" loading="lazy" onerror="this.remove()">`:""}<div class="ph" aria-hidden="true"${src?' style="z-index:-1"':""}>${esc(initials(i.stageName))}</div></div>`;
+}
+function specLine(i){
+  const sh=i.show||{};const out=[];
+  if(sh.height&&i.height)out.push(`${esc(i.height)} cm`);
+  if(sh.weight&&i.weight)out.push(`${esc(i.weight)} kg`);
+  if(sh.measurements&&i.bust&&i.waist&&i.hip)out.push(`${esc(i.bust)}-${esc(i.waist)}-${esc(i.hip)}`);
+  return out.join(" · ");
+}
+
+/* ---------- lineup ---------- */
+const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH"],["nhảy cháy","NHẢY"]];
+const MIN_FOR_STATS=3;
+function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.5?"A":s>=4.0?"B":s>=3.5?"C":"D"}
+function statVals(r){const t=Object.fromEntries(r.topTags);return STATS.map(([k,l])=>[l,r.n?Math.min(10,Math.round(10*(t[k]||0)/r.n)):0])}
+function spotHTML(r,ghost){
+  const i=r?r.idol:{stageName:"[TÊN IDOL]"};
+  const p=r?photosOf(i):{};const pid=p.full||p.close||p.side||"";
+  const sh=i.show||{};
+  const bio=[];
+  if(ghost){bio.push(["cao","—"],["nặng","—"],["số đo","—"])}
+  else{
+    if(sh.height&&i.height)bio.push(["cao",i.height+" cm"]);
+    if(sh.weight&&i.weight)bio.push(["nặng",i.weight+" kg"]);
+    if(sh.measurements&&i.bust&&i.waist&&i.hip)bio.push(["số đo",i.bust+"-"+i.waist+"-"+i.hip]);
+  }
+  const g=ghost?"?":grade(r);
+  const hp=r&&r.n?Math.round(r.avg/5*100):0;
+  const stats=r?statVals(r):STATS.map(([,l])=>[l,0]);
+  const enough=r&&r.n>=MIN_FOR_STATS;
+  return `<div class="spot-portrait">
+      <div class="slash" aria-hidden="true"></div>
+      ${pid?`<img src="${esc(pid)}" alt="${esc(i.stageName)}" onerror="this.remove()">`:`<div class="ph" aria-hidden="true">${ghost?"?":esc(initials(i.stageName))}</div>`}
+      <div class="grade g-${g==="?"?"x":g}" aria-label="hạng ${g}">${g}</div>
+    </div>
+    <div class="spot-info">
+      <div class="eyebrow">${ghost?"ví dụ bố cục":r.rank?`#${r.rank} · ${S.period==="month"?"tháng này":"từ đầu"}`:"chưa có hạng"}${i.team?` · team ${esc(i.team)}`:""}</div>
+      <div class="spot-name">${esc(i.stageName)}</div>
+      <div class="hp"><span class="hp-l">SAO</span><div class="hp-bar"><i style="width:${hp}%"></i></div><span class="hp-v">${r&&r.n?fmt1(r.avg):"—"}<small>/5 · ${r?r.n:0} lượt</small></span></div>
+      ${bio.length?`<dl class="bio">${bio.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`:""}
+      <div class="statgrid" aria-label="chỉ số từ tag khen của khách">
+        ${stats.map(([l,v])=>`<div class="stat"><span class="stat-l">${l}</span><span class="segs" aria-label="${v} trên 10">${Array.from({length:10},(_,k)=>`<i class="${k<v?"on":""}"></i>`).join("")}</span></div>`).join("")}
+      </div>
+      <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?"chỉ số = tỉ lệ lượt chấm có tag đó, thang 10.":`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
+      ${(i.forte||[]).length?`<div class="special"><span class="stat-l">SỞ TRƯỜNG</span><div class="forte">${i.forte.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
+      ${(i.talents||[]).length?`<div class="special"><span class="stat-l">KỸ NĂNG ĐẶC BIỆT</span><div class="talents">${i.talents.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
+      ${ghost?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
+    </div>`;
+}
+function renderLineup(){
+  const rows=computeBoard();
+  const loading=!S.loaded.idols&&!S.dbMissing;
+  const empty=!loading&&!rows.length;
+  if(!rows.find(r=>r.idol.id===S.sel))S.sel=rows[0]?rows[0].idol.id:null;
+  const cur=rows.find(r=>r.idol.id===S.sel);
+  const tiles=rows.length?rows.map((r,k)=>{const i=r.idol;const cid=coverId(i);return `<button class="tile${r.rank&&r.rank<=3?" top":""}" data-id="${esc(i.id)}" aria-pressed="${i.id===S.sel}" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}">
+      ${cid?`<img src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:`<span class="ti">${esc(initials(i.stageName))}</span>`}
+      ${r.rank?`<span class="tr">${r.rank}</span>`:""}<span class="tn">${esc(i.stageName)}</span><span class="p1" aria-hidden="true">P1</span></button>`}).join("")
+    :Array.from({length:8},()=>`<div class="tile ghost" aria-hidden="true"><span class="ti">?</span></div>`).join("");
+  app.innerHTML=`
+  ${banner()}
+  <section class="select">
+    <div class="select-head">
+      <h1 class="display sel-title">CHỌN <span class="y">IDOL</span></h1>
+      <div class="controls" role="group" aria-label="khoảng thời gian" style="padding:0">
+        <button class="chip" id="pMonth" aria-pressed="${S.period==="month"}">tháng này</button>
+        <button class="chip" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
+      </div>
+    </div>
+    ${empty?`<div class="empty"><b>chưa có idol nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện. khung bên dưới là ví dụ bố cục, không phải người thật.</span></div>`:""}
+    <div class="stage">
+      <div class="spot" id="spot">${spotHTML(cur,!cur)}</div>
+      <div class="roster" role="group" aria-label="danh sách idol, dùng phím mũi tên để đổi">${tiles}</div>
+    </div>
+    <p class="note" style="padding-block:6px 40px">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán (${PRIOR_N} lượt ảo), nên 1 lượt 5 sao không vượt được 40 lượt 4,8. S từ 4,8 · A từ 4,5 · B từ 4,0 · C từ 3,5.</p>
+  </section>`;
+  document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
+  document.getElementById("pAll").onclick=()=>{S.period="all";render()};
+  const spot=document.getElementById("spot");
+  const show=(id,anim)=>{
+    const r=rows.find(x=>x.idol.id===id);if(!r)return;
+    spot.innerHTML=spotHTML(r,false);
+    if(anim){spot.classList.remove("anim");void spot.offsetWidth;spot.classList.add("anim")}
+    const sr=document.getElementById("spotRate");if(sr)sr.onclick=()=>{S.rate.idolId=id};
+  };
+  const sr=document.getElementById("spotRate");if(sr&&cur)sr.onclick=()=>{S.rate.idolId=cur.idol.id};
+  const tilesEl=[...app.querySelectorAll(".tile[data-id]")];
+  const pick=(b,focus)=>{
+    if(S.sel===b.dataset.id)return;
+    S.sel=b.dataset.id;tilesEl.forEach(x=>x.setAttribute("aria-pressed",x===b));show(S.sel,true);if(focus)b.focus();
+  };
+  tilesEl.forEach((b,k)=>{
+    b.onclick=()=>{if(S.sel===b.dataset.id&&matchMedia("(hover:hover)").matches){location.hash="book-"+b.dataset.id;return}pick(b)};
+    b.onmouseenter=()=>pick(b);
+    b.onkeydown=e=>{
+      const cols=Math.max(1,Math.round(b.parentElement.clientWidth/b.offsetWidth));
+      const d={ArrowRight:1,ArrowLeft:-1,ArrowDown:cols,ArrowUp:-cols}[e.key];
+      if(d){e.preventDefault();const n=tilesEl[Math.min(tilesEl.length-1,Math.max(0,k+d))];pick(n,true)}
+      if(e.key==="Enter"){e.preventDefault();location.hash="book-"+b.dataset.id}
+    };
+  });
+}
+/* ---------- idol profile ---------- */
+function renderIdol(id){
+  const rows=computeBoard();const r=rows.find(x=>x.idol.id===id);
+  if(!r){
+    app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy hồ sơ này.":"đang tải hồ sơ…"}</b>${S.loaded.idols?"<span>có thể idol đã nghỉ, hoặc chưa ký đồng ý hiển thị.</span>":""}</div>`;return;
+  }
+  const i=r.idol,sh=i.show||{};
+  const specs=[];
+  if(sh.height&&i.height)specs.push(`<div><dt>chiều cao</dt><dd>${esc(i.height)}<small>cm</small></dd></div>`);
+  if(sh.weight&&i.weight)specs.push(`<div><dt>cân nặng</dt><dd>${esc(i.weight)}<small>kg</small></dd></div>`);
+  if(sh.measurements&&i.bust&&i.waist&&i.hip)specs.push(`<div><dt>số đo</dt><dd>${esc(i.bust)}-${esc(i.waist)}-${esc(i.hip)}</dd></div>`);
+  const maxD=Math.max(1,...r.dist.slice(1));
+  const badges=r.topTags.filter(([,c])=>c>=BADGE_AT);
+  const comments=r.list.filter(x=>x.comment).slice(0,8);
+  app.innerHTML=`${banner()}
+  <a class="back" href="#lineup">← về lineup</a>
+  <section class="profile">
+    <div>${galleryHTML(i)}</div>
+    <div>
+      <div class="ranktag">${r.rank?`#${r.rank} ${S.period==="month"?"tháng này":"từ đầu"}`:"chưa có hạng"}</div>
+      <h1 class="pname">${esc(i.stageName)}</h1>
+      ${i.team?`<div class="muted">team ${esc(i.team)}</div>`:""}
+      ${specs.length?`<dl class="specs" style="grid-template-columns:repeat(${specs.length},minmax(0,1fr))">${specs.join("")}</dl>`:""}
+      ${(i.forte||[]).length?`<h2 class="sec">sở trường</h2><div class="forte">${i.forte.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}
+      ${(i.talents||[]).length?`<h2 class="sec">tài năng · năng khiếu</h2><div class="talents">${i.talents.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}
+      <h2 class="sec">khách chấm</h2>
+      <div class="summary">
+        <div><div class="big">${r.n?fmt1(r.avg):"—"}</div><div class="muted">${r.n} lượt · ${S.period==="month"?"tháng này":"từ đầu"}</div></div>
+        <div class="dist">${[5,4,3,2,1].map(s=>`<div class="row"><span>${s}</span><div class="bar"><i style="width:${(r.dist[s]/maxD*100).toFixed(0)}%"></i></div><span>${r.dist[s]}</span></div>`).join("")}</div>
+      </div>
+      ${badges.length?`<h2 class="sec">huy hiệu (từ ${BADGE_AT} lượt khen trở lên)</h2><div class="badges">${badges.map(([t,c])=>`<div class="badge"><b>${c}×</b>${esc(t)}</div>`).join("")}</div>`
+        :(r.topTags.length?`<h2 class="sec">được khen</h2><div class="tags">${r.topTags.map(([t,c])=>`<span class="tag">${esc(t)} ×${c}</span>`).join("")}</div>`:"")}
+      ${comments.length?`<h2 class="sec">khách nói gì</h2><div class="reviews">${comments.map(c=>`<div class="rv"><span class="stars" aria-label="${c.stars} sao">${starStr(c.stars)}</span><p>${esc(c.comment)}</p><span class="muted">${ago(c.createdAt)}</span></div>`).join("")}</div>`:""}
+      <div style="margin-top:24px"><a class="cta" href="#rate" data-pick="${esc(i.id)}" id="rateThis">chấm ${esc(i.stageName)}</a></div>
+    </div>
+  </section>`;
+  document.getElementById("rateThis").onclick=()=>{S.rate.idolId=i.id};
+  const main=document.getElementById("galMain");
+  app.querySelectorAll(".galthumbs button").forEach(b=>b.onclick=()=>{
+    app.querySelectorAll(".galthumbs button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    if(main){main.src=""+b.dataset.asset;main.alt=b.dataset.alt;main.style.objectPosition=b.dataset.pos}
+    const cap=document.getElementById("galCap");if(cap)cap.textContent=b.dataset.label;
+  });
+}
+function galleryHTML(i){
+  const p=photosOf(i);const shots=ANGLES.filter(([k])=>p[k]);
+  if(!shots.length)return photoBox(i,true);
+  const pos=k=>k==="full"?"50% 20%":"50% 30%";
+  const [k0,l0]=shots[0];
+  return `<div class="gallery">
+    <div class="photo galmain"><img id="galMain" src="${esc(p[k0])}" alt="${esc(i.stageName)}, góc ${esc(l0)}" style="object-position:${pos(k0)}" onerror="this.style.visibility='hidden'"><span class="galcap" id="galCap">${esc(l0)}</span></div>
+    ${shots.length>1?`<div class="galthumbs" role="group" aria-label="chọn góc ảnh">${shots.map(([k,l],n)=>`<button type="button" aria-pressed="${n===0}" data-asset="${esc(p[k])}" data-label="${esc(l)}" data-alt="${esc(i.stageName)}, góc ${esc(l)}" data-pos="${pos(k)}"><img src="${esc(p[k])}" alt="" loading="lazy"><span>${esc(l)}</span></button>`).join("")}</div>`:""}
+  </div>`;
+}
+
+/* ---------- đánh giá trên tablet (theo bàn) ---------- */
+const TIP_PRESETS=[500000,1000000,2000000];
+const TIP_MAX=50000000;
+const vnd=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
+const redKey=(code,idolId)=>code+"_"+idolId;
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fmtDate=s=>{if(!s)return "";const [y,m,d]=s.split("-");return `${d}.${m}`};
+function resetRate(bid,idolId){Object.assign(S.rate,{bid,idolId,stars:0,tags:[],comment:"",tip:0,tipCustom:"",err:"",busy:false,done:false})}
+function idolById(id){return S.idols.find(x=>x.id===id)}
+function ratedSet(b){const s=new Set();(b.idolIds||[]).forEach(id=>{const r=S.redeemed[redKey(b.code,id)];if(r&&r.reviewId)s.add(id)});return s}
+function tableTips(b){let t=0;Object.values(S.notes).forEach(n=>{if(n.bookingId===b.id)t+=n.tip||0});return t}
+function renderTable(bid){
+  const R=S.rate;
+  if(!S.canEdit){app.innerHTML=`${banner()}<div class="empty" style="margin-top:28px"><b>màn này chỉ mở trên tablet của quán.</b><span>quản lý <a href="#admin">đăng nhập</a> trên tablet trước.</span></div>`;return}
+  const b=S.bookings.find(x=>x.id===bid);
+  if(!b){app.innerHTML=`${banner()}<div class="empty" style="margin-top:28px"><b>${S.loaded.bookings?"không tìm thấy bàn này.":"đang tải…"}</b></div>`;return}
+  if(!b.code){app.innerHTML=`${banner()}<div class="empty" style="margin-top:28px"><b>bàn này chưa có mã.</b><span>vào quản lý, bấm "khách đã đến · tạo mã bàn" trước.</span></div><p><a class="back" href="#admin">← về quản lý</a></p>`;return}
+  const ids=(b.idolIds||[]).filter(id=>idolById(id));
+  const done=ratedSet(b);
+  if(R.bid!==bid||!ids.includes(R.idolId)||(done.has(R.idolId)&&!R.done))resetRate(bid,ids.find(id=>!done.has(id))||ids[0]);
+  const allDone=ids.length&&ids.every(id=>done.has(id));
+  if(allDone||R.done&&ids.every(id=>done.has(id))){
+    const tip=tableTips(b);
+    app.innerHTML=`<section class="done"><div class="eyebrow">bàn ${esc(b.table||"")} · ${esc(b.guestName||"")}</div><h1 class="display">CẢM ƠN<span class="y">.</span></h1>
+    <p class="lede">${tip?`tip ${vnd(tip)} sẽ được cộng vào bill khi bạn thanh toán. `:""}keep it loud. see you out there.</p>
+    <p class="note" style="margin-top:40px">dành cho nhân viên: <a href="#admin">về quản lý</a></p></section>`;return;
+  }
+  const i=idolById(R.idolId);const rows=computeBoard();const r=rows.find(x=>x.idol.id===R.idolId)||{n:0};
+  const cid=coverId(i);const g=grade(r);
+  const tagSet=R.stars&&R.stars<=3?NEG_TAGS:POS_TAGS;
+  const ready=!R.busy&&R.stars;
+  app.innerHTML=`${banner()}
+  <section class="rate">
+    <div class="tablebar"><span>bàn <b>${esc(b.table||"—")}</b></span><span>${esc(b.guestName||"")}</span><span class="codelock">mã bàn <b>${esc(b.code)}</b> ✓</span></div>
+    ${ids.length>1?`<div class="tags" role="group" aria-label="chọn idol để đánh giá">${ids.map(id=>{const x=idolById(id);return `<button class="chip idolsw" data-id="${esc(id)}" aria-pressed="${id===R.idolId}" ${done.has(id)?"disabled":""}>${done.has(id)?"✓ ":""}${esc(x.stageName)}</button>`}).join("")}</div>`:""}
+    <div class="rate-head">
+      <div class="rate-face">${cid?`<img src="${esc(cid)}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}<b class="g-${g==="?"?"x":g}">${g}</b></div>
+      <div><div class="eyebrow">đánh giá</div><h1 class="display rate-name">${esc(i.stageName)}</h1>
+      <div class="muted">${r.n?`${fmt1(r.avg)} sao · ${r.n} lượt`:"chưa có lượt chấm, bạn là người đầu tiên"}</div></div>
+    </div>
+    <div class="step"><h3><span>1</span> chấm sao</h3>
+      <div class="starrow" role="radiogroup" aria-label="số sao">${[1,2,3,4,5].map(s=>`<button class="starbtn${R.stars>=s?" on":""}" data-s="${s}" role="radio" aria-checked="${R.stars===s}" aria-label="${s} sao">★</button>`).join("")}</div>
+      <div class="starlabel" style="color:${R.stars&&R.stars<=3?"#ff6a6f":"var(--acid)"}">${STAR_WORDS[R.stars]||""}</div>
+      ${R.stars?`<div class="tags">${tagSet.map(t=>`<button class="chip tagbtn" data-t="${esc(t)}" aria-pressed="${R.tags.includes(t)}">${esc(t)}</button>`).join("")}</div>
+      ${R.stars<=3?`<p class="note" style="margin:0">phần góp ý này chỉ quản lý đọc, không hiện công khai.</p>`:`<p class="note" style="margin:0">tag khen cộng vào chỉ số của ${esc(i.stageName)} trên lineup.</p>`}`:""}
+    </div>
+    <div class="step"><h3><span>2</span> nhắn ${esc(i.stageName)}</h3>
+      <textarea id="comment" maxlength="280" placeholder="một câu là đủ. không bắt buộc.">${esc(R.comment)}</textarea>
+      <p class="note" style="margin:0">lời nhắn gửi riêng cho idol, không hiện công khai.</p>
+    </div>
+    <div class="step"><h3><span>3</span> tip <span class="muted" style="font-family:var(--body);font-size:13px;text-transform:none;color:var(--concrete)">(cộng vào bill)</span></h3>
+      <div class="tags tipset">${TIP_PRESETS.map(v=>`<button class="chip tipbtn" data-v="${v}" aria-pressed="${!R.tipCustom&&R.tip===v}">${vnd(v)}</button>`).join("")}</div>
+      <label class="f" style="max-width:280px">số khác, bạn tự gõ (đồng)<input id="tipCustom" inputmode="numeric" maxlength="10" placeholder="ví dụ 3.000.000" value="${R.tipCustom?esc((+R.tipCustom).toLocaleString("vi-VN")):""}"></label>
+      <p class="note" style="margin:0">bấm lại ô đang chọn để bỏ tip. tối đa ${vnd(TIP_MAX)}.</p>
+      <div class="tipline" id="tipline">${R.tip?`cộng vào bill: <b>${vnd(R.tip)}</b>`:"không cộng thêm"}</div>
+    </div>
+    <div class="err" id="err" role="alert">${esc(R.err)}</div>
+    <div><button class="cta" id="send" ${ready?"":"disabled"}>${R.busy?"đang gửi…":R.tip?`gửi đánh giá · tip ${vnd(R.tip)}`:"gửi đánh giá"}</button></div>
+  </section>`;
+  const sendBtn=document.getElementById("send");
+  const refreshSend=()=>{sendBtn.disabled=!(!R.busy&&R.stars);sendBtn.textContent=R.tip?`gửi đánh giá · tip ${vnd(R.tip)}`:"gửi đánh giá";
+    document.getElementById("tipline").innerHTML=R.tip?`cộng vào bill: <b>${vnd(R.tip)}</b>`:"không cộng thêm"};
+  app.querySelectorAll(".idolsw").forEach(x=>x.onclick=()=>{resetRate(bid,x.dataset.id);render()});
+  app.querySelectorAll(".starbtn").forEach(x=>x.onclick=()=>{const s=+x.dataset.s;if(!R.stars||(s<=3)!==(R.stars<=3))R.tags=[];R.stars=s;render()});
+  app.querySelectorAll(".tagbtn").forEach(x=>x.onclick=()=>{const t=x.dataset.t;R.tags=R.tags.includes(t)?R.tags.filter(y=>y!==t):[...R.tags,t];x.setAttribute("aria-pressed",R.tags.includes(t))});
+  const cm=document.getElementById("comment");cm.oninput=()=>{R.comment=cm.value};
+  app.querySelectorAll(".tipbtn").forEach(x=>x.onclick=()=>{const v=+x.dataset.v;const off=!R.tipCustom&&R.tip===v;R.tip=off?0:v;R.tipCustom="";document.getElementById("tipCustom").value="";app.querySelectorAll(".tipbtn").forEach(y=>y.setAttribute("aria-pressed",!off&&y===x));refreshSend()});
+  const tc=document.getElementById("tipCustom");
+  tc.oninput=()=>{let v=tc.value.replace(/\D/g,"").replace(/^0+/,"").slice(0,8);if(v&&+v>TIP_MAX)v=String(TIP_MAX);tc.value=v?(+v).toLocaleString("vi-VN"):"";R.tipCustom=v;R.tip=v?+v:0;app.querySelectorAll(".tipbtn").forEach(y=>y.setAttribute("aria-pressed",false));refreshSend()};
+  sendBtn.onclick=()=>submitRating(b);
+}
+async function submitRating(b){
+  const R=S.rate;const db=S.db;if(!db)return;
+  R.busy=true;R.err="";render();
+  const fail=m=>{R.busy=false;R.err=m;render()};
+  try{
+    const reviewId="r"+rid(14);const now=Date.now();
+    const pos=R.tags.filter(t=>POS_TAGS.includes(t)).slice(0,6),neg=R.tags.filter(t=>NEG_TAGS.includes(t)).slice(0,6);
+    try{await db.submitReview(redKey(b.code,R.idolId),reviewId,
+      {idolId:R.idolId,bookingId:b.id,code:b.code,table:b.table||"",stars:R.stars,negTags:neg,comment:(R.comment||"").trim().slice(0,280),tip:R.tip||0,tipAdded:false,createdAt:now},
+      {idolId:R.idolId,stars:R.stars,tags:pos,createdAt:now})}
+    catch(e){if(e&&e.code==="used")return fail("bàn này đã đánh giá idol này rồi.");throw e}
+    S.redeemed[redKey(b.code,R.idolId)]={reviewId,at:now};
+    const left=(b.idolIds||[]).filter(id=>idolById(id)&&!ratedSet(b).has(id));
+    if(left.length)resetRate(b.id,left[0]);else{R.busy=false;R.done=true}
+    render();window.scrollTo(0,0);
+  }catch(e){
+    if(e&&e.code==="quota_exceeded")return fail("kho dữ liệu đã đầy. báo quản lý dọn bớt dữ liệu cũ.");
+    fail("chưa gửi được, mạng đang chập chờn. bấm gửi lại.");
+  }
+}
+
+/* ---------- khách đặt bàn từ lineup ---------- */
+function renderBook(idolId){
+  const B=S.book;
+  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],guestName:"",phone:"",date:todayStr(),time:"",guests:"",note:"",err:"",busy:false,done:false})}
+  const i=idolById(idolId);
+  if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy idol này.":"đang tải…"}</b></div>`;return}
+  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi số ${esc(B.phone)} để xác nhận bàn và idol. see you out there.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
+  const can=!!S.db;
+  const pub=S.idols.filter(isPublic);
+  app.innerHTML=`${banner()}<a class="back" href="#lineup">← đổi idol</a>
+  <section class="rate">
+    <div class="rate-head"><div class="rate-face">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}</div>
+      <div><div class="eyebrow">đặt bàn cùng</div><h1 class="display rate-name">${esc(i.stageName)}</h1></div></div>
+    
+    <form class="idol" id="bookForm">
+      <div class="fields">
+        <label class="f">tên bạn *<input id="b_name" required maxlength="40" value="${esc(B.guestName)}"></label>
+        <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" value="${esc(B.phone)}"></label>
+        <label class="f">ngày *<input id="b_date" type="date" required value="${esc(B.date)}"></label>
+        <label class="f">giờ đến *<input id="b_time" type="time" required value="${esc(B.time)}"></label>
+        <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" value="${esc(B.guests)}"></label>
+      </div>
+      <div class="checks"><span class="muted">idol cho bàn (chọn thêm nếu muốn)</span>
+        <div class="tags">${pub.map(x=>`<button type="button" class="chip bidol" data-id="${esc(x.id)}" aria-pressed="${B.idolIds.includes(x.id)}">${esc(x.stageName)}</button>`).join("")}</div></div>
+      <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
+      <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
+      <div><button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"đang gửi…":"gửi yêu cầu đặt bàn"}</button></div>
+    </form>
+  </section>`;
+  const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.date=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
+  app.querySelectorAll(".bidol").forEach(x=>x.onclick=()=>{sync();const id=x.dataset.id;B.idolIds=B.idolIds.includes(id)?B.idolIds.filter(y=>y!==id):[...B.idolIds,id];if(!B.idolIds.length)B.idolIds=[idolId];render()});
+  document.getElementById("bookForm").onsubmit=async ev=>{
+    ev.preventDefault();sync();
+    const phone=B.phone.replace(/\D/g,"");
+    if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
+    B.busy=true;B.err="";render();
+    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:B.idolIds.slice(0,6),note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
+    catch(e){B.busy=false;B.err="chưa gửi được, kiểm tra lại thông tin rồi thử lại.";render()}
+  };
+}
+const val=id=>{const el=document.getElementById(id);return el?el.value.trim():""};
+
+/* ---------- quản lý: đặt bàn ---------- */
+const STATUS={requested:["chờ xác nhận","warn"],confirmed:["đã xác nhận",""],seated:["đang ngồi",""],cancelled:["đã huỷ","off"]};
+function adminBookings(p){
+  const f=S.bookFilter||"today";const td=todayStr();
+  let list=S.bookings.slice();
+  if(f==="today")list=list.filter(b=>b.date===td);
+  else if(f==="upcoming")list=list.filter(b=>b.date>=td&&b.status!=="cancelled");
+  list.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const reqN=S.bookings.filter(b=>b.status==="requested").length;
+  p.innerHTML=`
+  <div class="rowbtns"><button class="cta" id="newBook">tạo đặt bàn</button>
+    ${[["today","hôm nay"],["upcoming","sắp tới"],["all","tất cả"]].map(([k,l])=>`<button class="chip" data-bf="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}
+    ${reqN?`<span class="pill warn">${reqN} yêu cầu chờ xác nhận</span>`:""}</div>
+  <div id="bookSlot"></div>
+  ${list.length?`<div class="bookings">${list.map(bookingCard).join("")}</div>`:`<div class="empty"><b>không có đặt bàn nào ${f==="today"?"hôm nay":""}.</b><span>bấm "tạo đặt bàn" khi khách nhắn đặt, hoặc chờ yêu cầu khách gửi từ lineup.</span></div>`}`;
+  p.querySelectorAll("[data-bf]").forEach(x=>x.onclick=()=>{S.bookFilter=x.dataset.bf;render()});
+  document.getElementById("newBook").onclick=()=>{S.bookEdit={date:td,idolIds:[]};drawBookForm()};
+  p.querySelectorAll("[data-bedit]").forEach(x=>x.onclick=()=>{S.bookEdit=JSON.parse(JSON.stringify(S.bookings.find(b=>b.id===x.dataset.bedit)));drawBookForm();document.getElementById("bookSlot").scrollIntoView({block:"start"})});
+  p.querySelectorAll("[data-bconfirm]").forEach(x=>x.onclick=()=>bookPatch(x,x.dataset.bconfirm,{status:"confirmed"}));
+  p.querySelectorAll("[data-bcancel]").forEach(x=>{let armed=false;x.onclick=()=>{if(!armed){armed=true;x.textContent="bấm lần nữa để huỷ";return}bookPatch(x,x.dataset.bcancel,{status:"cancelled"})}});
+  p.querySelectorAll("[data-bseat]").forEach(x=>x.onclick=()=>seatBooking(x,x.dataset.bseat));
+  if(S.bookEdit)drawBookForm();
+}
+function bookingCard(b){
+  const [st,cls]=STATUS[b.status]||["",""];
+  const idols=(b.idolIds||[]).map(id=>idolById(id)).filter(Boolean);
+  const done=b.code?ratedSet(b):new Set();const tip=b.code?tableTips(b):0;
+  const allRated=b.code&&idols.length&&idols.every(i=>done.has(i.id));
+  return `<div class="bk">
+    <div class="bk-time"><b>${esc(b.time||"--:--")}</b><span>${esc(fmtDate(b.date))}</span></div>
+    <div class="bk-main">
+      <div class="rowbtns"><b>${esc(b.guestName||"(chưa có tên)")}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
+        <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}</div>
+      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">chưa chọn idol</span>`}</div>
+      ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
+      ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
+      <div class="rowbtns">
+        ${b.status==="requested"?`<button class="ghostbtn" data-bconfirm="${esc(b.id)}">xác nhận</button>`:""}
+        ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn<input id="seat_${esc(b.id)}" maxlength="10" value="${esc(b.table||"")}" style="width:80px"></label><button class="cta" data-bseat="${esc(b.id)}">khách đã đến · tạo mã bàn</button>`:""}
+        ${b.status==="seated"&&!allRated?`<a class="cta" href="#table-${esc(b.id)}">mở màn đánh giá</a>`:""}
+        ${b.status!=="cancelled"&&b.status!=="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">sửa</button><button class="ghostbtn danger" data-bcancel="${esc(b.id)}">huỷ</button>`:""}
+        ${b.status==="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">đổi idol, bàn</button>`:""}
+      </div>
+    </div></div>`;
+}
+async function bookPatch(btn,id,patch){btn.disabled=true;try{await S.db.doc("bookings/"+id).update({...patch,updatedAt:Date.now()})}catch(_){btn.disabled=false;btn.textContent="chưa lưu được, thử lại"}}
+async function seatBooking(btn,id){
+  const b=S.bookings.find(x=>x.id===id);if(!b)return;
+  const table=(document.getElementById("seat_"+id)||{}).value||b.table||"";
+  if(!(b.idolIds||[]).length){btn.textContent="chọn idol cho bàn trước";return}
+  btn.disabled=true;btn.textContent="đang tạo mã…";
+  try{
+    const have=new Set(S.bills.map(x=>x.code));let c;do{c=mkCode()}while(have.has(c));
+    await S.db.doc("bills/"+c).set({code:c,bookingId:id,createdAt:Date.now()});
+    await S.db.doc("bookings/"+id).update({status:"seated",code:c,table:String(table).trim().slice(0,10),seatedAt:Date.now(),updatedAt:Date.now()});
+  }catch(_){btn.disabled=false;btn.textContent="chưa tạo được, thử lại"}
+}
+function drawBookForm(){
+  const slot=document.getElementById("bookSlot");if(!slot)return;
+  const e=S.bookEdit||{};const pub=S.idols.filter(i=>i.active!==false);
+  slot.innerHTML=`<form class="idol" id="bkForm">
+    <div class="rowbtns" style="justify-content:space-between"><b>${e.id?"sửa đặt bàn":"đặt bàn mới"}</b><button type="button" class="ghostbtn" id="bkClose">đóng</button></div>
+    <div class="fields">
+      <label class="f">tên khách *<input id="k_name" required maxlength="40" value="${esc(e.guestName||"")}"></label>
+      <label class="f">số điện thoại<input id="k_phone" inputmode="tel" maxlength="12" value="${esc(e.phone||"")}"></label>
+      <label class="f">ngày *<input id="k_date" type="date" required value="${esc(e.date||todayStr())}"></label>
+      <label class="f">giờ đến<input id="k_time" type="time" value="${esc(e.time||"")}"></label>
+      <label class="f">số người<input id="k_guests" inputmode="numeric" maxlength="3" value="${esc(e.guests||"")}"></label>
+      <label class="f">bàn<input id="k_table" maxlength="10" value="${esc(e.table||"")}"></label>
+    </div>
+    <div class="checks"><span class="muted">idol đặt trước cho bàn *</span>
+      <div class="tags">${pub.map(x=>`<button type="button" class="chip kidol" data-id="${esc(x.id)}" aria-pressed="${(e.idolIds||[]).includes(x.id)}">${esc(x.stageName)}</button>`).join("")||`<span class="muted">chưa có hồ sơ idol nào.</span>`}</div></div>
+    <label class="f">ghi chú<input id="k_note" maxlength="160" value="${esc(e.note||"")}"></label>
+    <div class="err" id="kErr" role="alert"></div>
+    <div class="rowbtns"><button class="cta" type="submit" id="kSave">${e.id?"lưu":"tạo đặt bàn"}</button></div>
+  </form>`;
+  document.getElementById("bkClose").onclick=()=>{S.bookEdit=null;slot.innerHTML=""};
+  slot.querySelectorAll(".kidol").forEach(x=>x.onclick=()=>{const id=x.dataset.id;const a=e.idolIds||(e.idolIds=[]);const k=a.indexOf(id);if(k>=0)a.splice(k,1);else a.push(id);x.setAttribute("aria-pressed",k<0)});
+  document.getElementById("bkForm").onsubmit=async ev=>{
+    ev.preventDefault();const err=document.getElementById("kErr");const btn=document.getElementById("kSave");
+    const name=val("k_name");if(!name){err.textContent="cần tên khách.";return}
+    if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một idol cho bàn.";return}
+    btn.disabled=true;btn.textContent="đang lưu…";
+    const id=e.id||("b"+rid(12));
+    const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:val("k_date"),time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
+      status:e.status==="requested"?"confirmed":(e.status||"confirmed"),source:e.source||"admin",code:e.code||"",createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
+    if(e.seatedAt)body.seatedAt=e.seatedAt;
+    try{await S.db.doc("bookings/"+id).set(body);S.bookEdit=null;render()}catch(_){btn.disabled=false;btn.textContent=e.id?"lưu":"tạo đặt bàn";err.textContent="chưa lưu được, thử lại."}
+  };
+}
+
+/* ---------- admin ---------- */
+function renderAdmin(){
+  if(!S.canEdit){
+    app.innerHTML=`<section class="admin"><div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý</div><h1 class="display" style="font-size:clamp(44px,8vw,88px)">ĐĂNG <span class="y">NHẬP</span></h1></div>
+    ${S.authEmail?`<div class="banner" data-kind="warn">tài khoản ${esc(S.authEmail)} chưa có trong danh sách quản lý. nhờ chủ quán thêm email này vào config/staff.</div>`:""}
+    ${__backend.mode==="demo"?`<div class="banner">bản chạy thử: gõ email và mật khẩu bất kỳ để vào.</div>`:""}
+    <form class="idol" id="loginForm" style="max-width:420px">
+      <label class="f">email<input id="l_email" type="email" autocomplete="username" required></label>
+      <label class="f">mật khẩu<input id="l_pass" type="password" autocomplete="current-password" required></label>
+      <div class="err" id="lErr" role="alert"></div>
+      <div class="rowbtns"><button class="cta" type="submit" id="lBtn">đăng nhập</button>${S.authEmail?`<button type="button" class="ghostbtn" id="lOut">đăng xuất</button>`:""}</div>
+    </form></section>`;
+    document.getElementById("loginForm").onsubmit=async ev=>{ev.preventDefault();const b=document.getElementById("lBtn");b.disabled=true;b.textContent="đang vào…";
+      try{await __backend.login(val("l_email"),document.getElementById("l_pass").value);location.reload()}
+      catch(_){b.disabled=false;b.textContent="đăng nhập";document.getElementById("lErr").textContent="sai email hoặc mật khẩu."}};
+    const lo=document.getElementById("lOut");if(lo)lo.onclick=async()=>{await __backend.logout();location.reload()};
+    return;
+  }
+  const t=S.adminTab;
+  app.innerHTML=`${banner()}
+  <section class="admin">
+    <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display" style="font-size:clamp(44px,8vw,88px)">QUẢN <span class="y">LÝ</span></h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
+    <div class="subtabs" role="tablist">
+      ${[["bookings","đặt bàn"],["idols","hồ sơ idol"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
+    </div>
+    <div class="panel" id="panel"></div>
+  </section>`;
+  app.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{S.adminTab=b.dataset.at;S.editing=null;render()});
+  document.getElementById("adminOut").onclick=async()=>{await __backend.logout();location.reload()};
+  const p=document.getElementById("panel");
+  if(t==="bookings")adminBookings(p);else if(t==="idols")adminIdols(p);else adminReviews(p);
+}
+function adminIdols(p){
+  const board=computeBoard();const byId={};board.forEach(r=>byId[r.idol.id]=r);
+  const list=S.idols.slice().sort((a,b)=>String(a.stageName).localeCompare(String(b.stageName)));
+  p.innerHTML=`
+    ${__backend.mode==="demo"?`<div class="rowbtns"><span class="pill warn">bản chạy thử</span><button class="ghostbtn" id="demoClear">xoá dữ liệu mẫu</button><button class="ghostbtn" id="demoReset">nạp lại dữ liệu mẫu</button></div>`:""}
+    <div class="rowbtns"><button class="cta" id="newIdol">thêm idol</button><span class="note">idol chỉ hiện công khai khi đã tick cả hai ô đồng ý và đang làm.</span></div>
+    <div id="formSlot"></div>
+    ${list.length?`<div class="table"><table><thead><tr><th></th><th>tên</th><th>team</th><th>hiển thị</th><th class="num">sao</th><th class="num">lượt</th><th>trạng thái</th><th></th></tr></thead><tbody>
+    ${list.map(i=>{const r=byId[i.id];const sh=i.show||{};return `<tr>
+      <td>${coverId(i)?`<img class="thumb" src="${esc(coverId(i))}" alt="" onerror="this.style.visibility='hidden'">`:`<div class="thumb"></div>`}</td>
+      <td><b>${esc(i.stageName)}</b></td><td>${esc(i.team||"")}</td>
+      <td class="muted">${[sh.height&&"cao",sh.weight&&"nặng",sh.measurements&&"số đo"].filter(Boolean).join(", ")||"ẩn hết"}</td>
+      <td class="num">${r&&r.n?fmt1(r.avg):"—"}</td><td class="num">${r?r.n:0}</td>
+      <td>${isPublic(i)?`<span class="pill">đang hiện</span>`:i.active===false?`<span class="pill off">nghỉ</span>`:`<span class="pill warn">chưa đồng ý</span>`}</td>
+      <td><button class="ghostbtn" data-edit="${esc(i.id)}">sửa</button></td></tr>`}).join("")}
+    </tbody></table></div>`:`<div class="empty"><b>chưa có hồ sơ nào.</b><span>bấm "thêm idol". cần có giấy đồng ý ký tay của từng người trước khi bật hiển thị.</span></div>`}`;
+  document.getElementById("newIdol").onclick=()=>{S.editing={};drawForm()};
+  const dc=document.getElementById("demoClear");if(dc){let armed=false;dc.onclick=()=>{if(!armed){armed=true;dc.textContent="bấm lần nữa để xoá hết";return}__backend.clearDemo()}}
+  const dr=document.getElementById("demoReset");if(dr)dr.onclick=()=>__backend.resetDemo();
+  p.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{S.editing=JSON.parse(JSON.stringify(S.idols.find(x=>x.id===b.dataset.edit)||{}));drawForm()});
+  if(S.editing)drawForm();
+}
+function drawForm(){
+  const slot=document.getElementById("formSlot");if(!slot)return;
+  const e=S.editing||{};const sh=e.show||{height:true,weight:true,measurements:true};const c=e.consent||{};
+  slot.innerHTML=`<form class="idol" id="idolForm">
+    <div class="rowbtns" style="justify-content:space-between"><b>${e.id?"sửa hồ sơ":"hồ sơ mới"}</b><button type="button" class="ghostbtn" id="closeForm">đóng</button></div>
+    <div class="fields">
+      <label class="f">tên hiển thị *<input id="f_name" required maxlength="40" value="${esc(e.stageName||"")}"></label>
+      <label class="f">team<input id="f_team" maxlength="40" value="${esc(e.team||"")}"></label>
+      <label class="f">chiều cao (cm)<input id="f_h" inputmode="numeric" maxlength="3" value="${esc(e.height||"")}"></label>
+      <label class="f">cân nặng (kg)<input id="f_w" inputmode="numeric" maxlength="3" value="${esc(e.weight||"")}"></label>
+      <label class="f">vòng 1 (cm)<input id="f_b" inputmode="numeric" maxlength="3" value="${esc(e.bust||"")}"></label>
+      <label class="f">vòng 2 (cm)<input id="f_wa" inputmode="numeric" maxlength="3" value="${esc(e.waist||"")}"></label>
+      <label class="f">vòng 3 (cm)<input id="f_hi" inputmode="numeric" maxlength="3" value="${esc(e.hip||"")}"></label>
+    </div>
+    <div class="checks"><span class="muted">ảnh 3 góc (jpg, png). ảnh cận làm ảnh bìa trên thẻ lineup.</span></div>
+    <div class="angles">${ANGLES.map(([k,l])=>{const pid=photosOf(e)[k];return `<label class="angle">${pid?`<img src="${esc(pid)}" alt="" onerror="this.style.visibility='hidden'">`:`<div class="blank">chưa có ảnh</div>`}<b style="color:var(--paper)">góc ${esc(l)}</b><input id="f_ph_${k}" type="file" accept="image/*"></label>`}).join("")}</div>
+    <label class="f">tài năng, năng khiếu (cách nhau bằng dấu phẩy)<input id="f_tal" maxlength="200" value="${esc((e.talents||[]).join(", "))}" placeholder="pha cocktail, nhảy, tiếng anh"></label>
+    <label class="f">sở trường (cách nhau bằng dấu phẩy, tối đa 4)<input id="f_forte" maxlength="160" value="${esc((e.forte||[]).join(", "))}" placeholder="giữ bàn đông người, khách nước ngoài"></label>
+    <div class="checks"><span class="muted">cho khách thấy:</span>
+      <label><input type="checkbox" id="s_h" ${sh.height?"checked":""}> chiều cao</label>
+      <label><input type="checkbox" id="s_w" ${sh.weight?"checked":""}> cân nặng</label>
+      <label><input type="checkbox" id="s_m" ${sh.measurements?"checked":""}> số đo 3 vòng</label>
+    </div>
+    <div class="consent"><strong>đồng ý hiển thị</strong>
+      <div class="checks">
+        <label><input type="checkbox" id="c_s" ${c.signed?"checked":""}> idol đã ký giấy đồng ý cho quán hiển thị ảnh và các thông tin đã tick ở trên, và biết có thể rút lại bất cứ lúc nào</label>
+        <label><input type="checkbox" id="c_a" ${c.adult?"checked":""}> đã kiểm tra giấy tờ, idol đủ 18 tuổi</label>
+        <label><input type="checkbox" id="c_act" ${e.active!==false?"checked":""}> đang làm ở quán</label>
+      </div>
+    </div>
+    <div class="err" id="formErr" role="alert"></div>
+    <div class="rowbtns"><button class="cta" type="submit" id="saveIdol">lưu hồ sơ</button>${e.id?`<button type="button" class="ghostbtn danger" id="delIdol">xoá hồ sơ</button><span class="muted" id="delNote"></span>`:""}</div>
+  </form>`;
+  document.getElementById("closeForm").onclick=()=>{S.editing=null;slot.innerHTML=""};
+  document.getElementById("idolForm").onsubmit=saveIdol;
+  const del=document.getElementById("delIdol");
+  if(del){let armed=false;del.onclick=async()=>{
+    if(!armed){armed=true;del.textContent="bấm lần nữa để xoá";document.getElementById("delNote").textContent="lượt chấm cũ vẫn giữ.";return}
+    try{await S.db.doc("idols/"+e.id).delete();S.editing=null;render()}catch(_){document.getElementById("formErr").textContent="chưa xoá được, thử lại."}
+  }}
+}
+async function saveIdol(ev){
+  ev.preventDefault();
+  const v=id=>document.getElementById(id).value.trim();
+  const ck=id=>document.getElementById(id).checked;
+  const err=document.getElementById("formErr");const btn=document.getElementById("saveIdol");
+  const num=x=>x.replace(/\D/g,"");
+  const name=v("f_name");if(!name){err.textContent="cần tên hiển thị.";return}
+  const e=S.editing||{};const id=e.id||("i"+rid(10));
+  btn.disabled=true;btn.textContent="đang lưu…";err.textContent="";
+  const photos=photosOf(e);
+  const files=ANGLES.map(([k])=>[k,document.getElementById("f_ph_"+k).files[0]]).filter(([,f])=>f);
+  try{
+    if(files.length&&!S.assets){err.textContent="tài khoản này không tải ảnh lên được.";btn.disabled=false;btn.textContent="lưu hồ sơ";return}
+    for(const [k,f] of files){
+      btn.textContent="đang tải ảnh "+(ANGLES.find(a=>a[0]===k)||[,k])[1]+"…";
+      const up=await S.assets.upload(f,f.type?undefined:{type:"image/jpeg"});photos[k]=up.id;
+    }
+    btn.textContent="đang lưu…";
+    const prevConsent=e.consent||{};
+    const signed=ck("c_s"),adult=ck("c_a");
+    const body={id,stageName:name.slice(0,40),team:v("f_team").slice(0,40),
+      height:num(v("f_h")),weight:num(v("f_w")),bust:num(v("f_b")),waist:num(v("f_wa")),hip:num(v("f_hi")),
+      talents:v("f_tal").split(",").map(s=>s.trim()).filter(Boolean).slice(0,12),
+      forte:v("f_forte").split(",").map(s=>s.trim()).filter(Boolean).slice(0,4),
+      show:{height:ck("s_h"),weight:ck("s_w"),measurements:ck("s_m")},
+      consent:{signed,adult,at:(signed&&adult)?(prevConsent.signed&&prevConsent.adult?prevConsent.at:Date.now()):null},
+      active:ck("c_act"),photos,createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
+    await S.db.doc("idols/"+id).set(body);
+    S.editing=null;render();
+  }catch(x){
+    btn.disabled=false;btn.textContent="lưu hồ sơ";
+    err.textContent=x&&x.code==="type_not_allowed"?"định dạng ảnh không hỗ trợ, dùng jpg hoặc png.":(x&&x.code==="too_large"?"ảnh quá nặng, tối đa 20 MB.":"chưa lưu được, thử lại.");
+  }
+}
+function modSet(id,patch){const cur=S.mod[id]||{};return S.db.doc("moderation/"+id).set({hidden:!!cur.hidden,...patch,at:Date.now()})}
+function adminReviews(p){
+  const name={};S.idols.forEach(i=>name[i.id]=i.stageName);
+  const rv=S.reviews.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,300);
+  const pend=rv.reduce((a,r)=>{const n=S.notes[r.id];return a+(n&&n.tip&&!n.tipAdded?n.tip:0)},0);
+  p.innerHTML=rv.length?`<div class="rowbtns"><span class="pill warn">tip chờ cộng vào bill: ${vnd(pend)}</span><span class="note">sao từ 3 trở xuống, tag góp ý, lời nhắn và tip chỉ hiện ở đây. ẩn một lượt thì nó không còn tính vào điểm.</span></div>
+  <div class="table"><table><thead><tr><th>lúc</th><th>idol</th><th class="num">sao</th><th>tag</th><th>lời nhắn cho idol</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
+  ${rv.map(r=>{const m=S.mod[r.id]||{};const n=S.notes[r.id]||{};const tags=[...(r.tags||[]),...(n.negTags||[])];return `<tr style="${m.hidden?"opacity:.45":""}">
+    <td class="muted">${ago(r.createdAt)}</td><td><b>${esc(name[r.idolId]||"(đã xoá)")}</b></td>
+    <td class="num" style="color:${r.stars<=3?"#ff6a6f":"inherit"}">${r.stars}</td>
+    <td><div class="tags">${tags.map(t=>`<span class="tag${NEG_TAGS.includes(t)?" bad":""}">${esc(t)}</span>`).join("")}</div></td>
+    <td>${esc(n.comment||"")}</td>
+    <td class="num">${n.tip?vnd(n.tip):"—"}</td><td class="muted">${esc(n.table||"")}${n.code?` · ${esc(n.code)}`:""}</td>
+    <td><div class="rowbtns">${n.tip?`<button class="ghostbtn" data-tip="${esc(r.id)}" data-v="${n.tipAdded?1:0}">${n.tipAdded?"✓ đã cộng":"đã cộng vào bill"}</button>`:""}<button class="ghostbtn" data-hide="${esc(r.id)}" data-h="${m.hidden?1:0}">${m.hidden?"hiện lại":"ẩn"}</button></div></td></tr>`}).join("")}
+  </tbody></table></div>`:`<div class="empty"><b>chưa có đánh giá nào.</b><span>khi khách đánh giá trên tablet lúc tính tiền, nó hiện ở đây ngay, kèm tip cần cộng vào bill.</span></div>`;
+  p.querySelectorAll("[data-hide]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await modSet(b.dataset.hide,{hidden:b.dataset.h!=="1"})}catch(_){b.disabled=false}});
+  p.querySelectorAll("[data-tip]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await S.db.doc("notes/"+b.dataset.tip).update({tipAdded:b.dataset.v!=="1"})}catch(_){b.disabled=false}});
+}
+
+/* ---------- boot ---------- */
+render();
+(async function boot(){
+  const cl=window.claude;
+  if(!cl||!cl.use){S.dbMissing=true;S.loaded.idols=true;render();return}
+  const [db,user,assets]=await Promise.all([cl.use("db"),cl.use("user"),cl.use("assets")]);
+  S.db=db;S.user=user;S.assets=assets;
+  if(user){try{S.canEdit=await user.canEdit()}catch(_){}try{S.canWrite=await user.can("data.write")}catch(_){}try{S.authEmail=await user.email()}catch(_){}}
+  if(!db){S.dbMissing=true;S.loaded.idols=true;render();return}
+  const timer=setTimeout(()=>{S.stale=true;render()},10000);
+  const settle=snap=>{if(!snap.metadata.fromCache){clearTimeout(timer);if(S.stale){S.stale=false}}};
+  const onErr=()=>{clearTimeout(timer);S.stale=true;S.loaded.idols=true;render()};
+  let rT=0;const soon=()=>{clearTimeout(rT);rT=setTimeout(()=>{if(!isTyping())render()},60)};
+  function isTyping(){const a=document.activeElement;return a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA")&&route().view!=="lineup"}
+  db.collection("idols").onSnapshot(s=>{S.idols=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.idols=true;settle(s);soon()},onErr);
+  db.collection("reviews").onSnapshot(s=>{S.reviews=s.docs.map(d=>({...d.data(),id:d.id})).filter(r=>r.stars>=1&&r.stars<=5);S.loaded.reviews=true;settle(s);soon()},onErr);
+  db.collection("moderation").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.mod=m;soon()},()=>{});
+  if(S.canEdit){
+    db.collection("bills").onSnapshot(s=>{S.bills=s.docs.map(d=>d.data());soon()},()=>{});
+    db.collection("bookings").onSnapshot(s=>{S.bookings=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.bookings=true;soon()},()=>{S.loaded.bookings=true});
+    db.collection("notes").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.notes=m;soon()},()=>{});
+    db.collection("redeemed").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.redeemed=m;soon()},()=>{});
+  }
+  render();
+})();
+})();
+</script>
+</body>
+</html>
