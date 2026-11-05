@@ -57,6 +57,8 @@ nav.tabs a:hover{color:var(--acid)}
 .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--concrete);font-weight:500}
 h1.display{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:clamp(56px,11vw,132px);line-height:.86;letter-spacing:-.005em;margin:0;text-wrap:balance}
 h1.display .y{color:var(--acid)}
+/* tiêu đề trang quản lý: nhỏ hơn 40% so với cỡ cũ clamp(44px,8vw,88px), trắng, line-height đủ chỗ cho dấu Ả Ý không đè lên dòng trên */
+h1.display.admin-title{font-size:clamp(26px,4.8vw,53px);line-height:1.2;color:#fff}
 .lede{max-width:60ch;color:var(--paper);opacity:.85;margin:0}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-block:8px 20px}
 .chip{border:1px solid var(--line);background:transparent;padding:6px 12px;font-size:13px;cursor:pointer;border-radius:999px}
@@ -830,7 +832,7 @@ function renderAdmin(){
   const t=S.adminTab;
   app.innerHTML=`${banner()}
   <section class="admin">
-    <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display" style="font-size:clamp(44px,8vw,88px)">QUẢN <span class="y">LÝ</span></h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
+    <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display admin-title">QUẢN LÝ</h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
     <div class="subtabs" role="tablist">
       ${[["bookings","đặt bàn"],["idols","hồ sơ idol"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
     </div>
