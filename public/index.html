@@ -500,7 +500,7 @@ function renderLineup(){
       <div class="spot" id="spot">${spotHTML(cur,!cur)}</div>
       <div class="roster" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${tiles}</div>
     </div>
-    <p class="note" style="padding-block:6px 40px">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán (${PRIOR_N} lượt ảo), nên 1 lượt 5 sao không vượt được 40 lượt 4,8. S từ 4,8 · A từ 4,5 · B từ 4,0 · C từ 3,5.</p>
+    <p class="note" style="padding-block:6px 40px">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>
   </section>`;
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
