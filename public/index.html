@@ -292,7 +292,8 @@ th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--conc
 td.num{font-variant-numeric:tabular-nums}
 form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);padding:16px}
 .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-label.f,div.f{display:grid;gap:4px;font-size:12px;color:var(--concrete);min-width:0}
+label.f,div.f{display:grid;gap:4px;align-content:start;font-size:12px;color:var(--concrete);min-width:0}
+.dhint{font-size:12px;color:var(--concrete);min-height:1.2em;text-transform:none}
 label.f input,label.f select{background:var(--ink);border:1px solid var(--line);padding:8px;color:var(--paper);width:100%}
 .checks{display:grid;gap:8px;font-size:13px}
 .checks label{display:flex;gap:8px;align-items:flex-start}
@@ -738,7 +739,7 @@ function renderReviews(){
 /* ---------- khách đặt bàn từ lineup ---------- */
 function renderBook(idolId){
   const B=S.book;
-  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",date:todayStr(),time:"",guests:"",note:"",err:"",busy:false,done:false})}
+  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(todayStr()),time:"",guests:"",note:"",err:"",busy:false,done:false})}
   const i=idolById(idolId);
   if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
   if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(B.guestName)} để xác nhận thông tin bàn đặt. hẹn gặp quý khách ở quán sớm nhất.</p><div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
@@ -753,7 +754,7 @@ function renderBook(idolId){
         <div class="f"><span>danh xưng *</span><div class="tags" role="radiogroup" aria-label="danh xưng">${["Mr","Miss"].map(t=>`<button type="button" class="chip bsal" role="radio" data-v="${t}" aria-checked="${B.salutation===t}" aria-pressed="${B.salutation===t}">${t}</button>`).join("")}</div></div>
         <label class="f">tên bạn *<input id="b_name" required maxlength="40" value="${esc(B.guestName)}"></label>
         <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" value="${esc(B.phone)}"></label>
-        <label class="f">ngày *<input id="b_date" type="date" required value="${esc(B.date)}"></label>
+        <label class="f">ngày *<input id="b_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(B.dateText)}"><small class="dhint">${esc(dateHint(B.dateText))}</small></label>
         <label class="f">giờ đến *<input id="b_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time required value="${esc(B.time)}"></label>
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" value="${esc(B.guests)}"></label>
       </div>
@@ -762,16 +763,19 @@ function renderBook(idolId){
       <div><button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"đang gửi…":"gửi yêu cầu đặt bàn"}</button></div>
     </form>
   </section>`;
-  const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.date=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
+  const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.dateText=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
   app.querySelectorAll(".bsal").forEach(x=>x.onclick=()=>{sync();B.salutation=x.dataset.v;B.err="";render()});
   document.getElementById("bookForm").onsubmit=async ev=>{
     ev.preventDefault();sync();
     const phone=B.phone.replace(/\D/g,"");
     if(!B.salutation){B.err="chọn danh xưng Mr hoặc Miss.";return render()}
+    const date=dmToIso(B.dateText);
+    if(!date){B.err="ngày chưa đúng, gõ kiểu 08/11.";return render()}
+    if(date<todayStr()){B.err="ngày này đã qua rồi.";return render()}
     if(!okTime(B.time)){B.err="giờ đến chưa đúng, gõ kiểu 22:30.";return render()}
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
     B.busy=true;B.err="";render();
-    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({salutation:B.salutation,guestName:B.guestName.slice(0,40),phone,date:B.date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
+    try{const id="b"+rid(12);await S.db.doc("bookings/"+id).set({salutation:B.salutation,guestName:B.guestName.slice(0,40),phone,date,time:B.time,guests:B.guests.replace(/\D/g,""),table:"",idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:Date.now()});B.busy=false;B.done=true;render()}
     catch(e){B.busy=false;B.err="chưa gửi được, kiểm tra lại thông tin rồi thử lại.";render()}
   };
 }
@@ -780,6 +784,15 @@ const val=id=>{const el=document.getElementById(id);return el?el.value.trim():""
 const fmtTime=v=>{let d=String(v||"").replace(/\D/g,"");if(d&&+d[0]>2)d="0"+d;d=d.slice(0,4);return d.length>2?d.slice(0,2)+":"+d.slice(2):d};
 const okTime=v=>/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 document.addEventListener("input",e=>{const t=e.target;if(t&&t.matches&&t.matches("input[data-time]")){const f=fmtTime(t.value);if(f!==t.value)t.value=f}});
+/* ô ngày: gõ liền 4 số (0811) là ra 08/11, năm tự lấy năm nay (ngày đã qua thì sang năm sau). muốn ghi năm thì gõ đủ 8 số (08112026). */
+const fmtDateIn=v=>{let d=String(v||"").replace(/\D/g,"");if(d&&+d[0]>3)d="0"+d;if(d.length>2&&+d[2]>1)d=d.slice(0,2)+"0"+d.slice(2);d=d.slice(0,8);return d.length>4?d.slice(0,2)+"/"+d.slice(2,4)+"/"+d.slice(4):d.length>2?d.slice(0,2)+"/"+d.slice(2):d};
+const isoOf=(y,m,d)=>{const t=new Date(y,m-1,d);return t.getFullYear()===y&&t.getMonth()===m-1&&t.getDate()===d?y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0"):""};
+function dmToIso(v){const d=String(v||"").replace(/\D/g,"");if(d.length!==4&&d.length!==8)return "";const dd=+d.slice(0,2),mm=+d.slice(2,4);
+  if(d.length===8)return isoOf(+d.slice(4),mm,dd);const y=new Date().getFullYear();const a=isoOf(y,mm,dd);if(!a)return isoOf(y+1,mm,dd);return a<todayStr()?isoOf(y+1,mm,dd):a}
+function isoToDM(iso){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");if(!m)return "";const s=m[3]+"/"+m[2];return dmToIso(s)===iso?s:s+"/"+m[1]}
+const WDAYS=["chủ nhật","thứ hai","thứ ba","thứ tư","thứ năm","thứ sáu","thứ bảy"];
+function dateHint(v){const iso=dmToIso(v);if(!iso)return "";const [y,m,d]=iso.split("-");const w=WDAYS[new Date(+y,+m-1,+d).getDay()];return (iso===todayStr()?"hôm nay, ":"")+w+" "+d+"/"+m+"/"+y}
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.matches&&t.matches("input[data-date]")){const f=fmtDateIn(t.value);if(f!==t.value)t.value=f;const h=t.parentElement&&t.parentElement.querySelector(".dhint");if(h)h.textContent=dateHint(f)}});
 
 /* ---------- quản lý: đặt bàn ---------- */
 /* sơ đồ bàn: danh sách số bàn hợp lệ (venue/tables). chỉ chọn bàn trong danh sách mới tạo được mã */
@@ -868,7 +881,7 @@ function drawBookForm(){
     <div class="fields">
       <label class="f">tên khách *<input id="k_name" required maxlength="40" value="${esc(e.guestName||"")}"></label>
       <label class="f">số điện thoại<input id="k_phone" inputmode="tel" maxlength="12" value="${esc(e.phone||"")}"></label>
-      <label class="f">ngày *<input id="k_date" type="date" required value="${esc(e.date||todayStr())}"></label>
+      <label class="f">ngày *<input id="k_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(isoToDM(e.date||todayStr()))}"><small class="dhint">${esc(dateHint(isoToDM(e.date||todayStr())))}</small></label>
       <label class="f">giờ đến<input id="k_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time value="${esc(e.time||"")}"></label>
       <label class="f">số người<input id="k_guests" inputmode="numeric" maxlength="3" value="${esc(e.guests||"")}"></label>
       <label class="f">bàn${tableSelect("k_table",e.table,e.id,true)}</label>
@@ -885,11 +898,12 @@ function drawBookForm(){
     ev.preventDefault();const err=document.getElementById("kErr");const btn=document.getElementById("kSave");
     const name=val("k_name");if(!name){err.textContent="cần tên khách.";return}
     if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một promoter cho bàn.";return}
+    const kdate=dmToIso(val("k_date"));if(!kdate){err.textContent="ngày chưa đúng, gõ kiểu 08/11.";return}
     if(val("k_time")&&!okTime(val("k_time"))){err.textContent="giờ đến chưa đúng, gõ kiểu 22:30.";return}
     if(e.status==="seated"&&!(S.tables||[]).includes(val("k_table").toUpperCase())){err.textContent="bàn đang ngồi phải là số bàn trên sơ đồ.";return}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
-    const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:val("k_date"),time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
+    const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:kdate,time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
       status:e.status==="requested"?"confirmed":(e.status||"confirmed"),source:e.source||"admin",code:e.code||"",createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
     if(e.seatedAt)body.seatedAt=e.seatedAt;
     if(e.salutation)body.salutation=e.salutation;
