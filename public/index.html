@@ -290,6 +290,31 @@ table{border-collapse:collapse;width:100%;min-width:620px;font-size:13px}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--concrete);font-weight:500}
 td.num{font-variant-numeric:tabular-nums}
+/* bảng đánh giá & tip: cột cố định, mỗi ô tối đa 3 dòng */
+table.rvtable{table-layout:fixed;min-width:1080px}
+.rvtable col.w-tag{width:26%}.rvtable col.w-txt{width:22%}
+.rvtable td{line-height:1.45}
+.rvtable .nowrap{white-space:nowrap}
+.clamp3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden;overflow-wrap:anywhere}
+.clamp3.taglines{line-height:26px}
+.clamp3.taglines .tag{display:inline-block;margin:0 4px 0 0;line-height:16px;vertical-align:middle}
+.clamp3.more{cursor:pointer;position:relative}
+.clamp3.more:not(.open){-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 1.3em),rgba(0,0,0,.35));mask-image:linear-gradient(180deg,#000 calc(100% - 1.3em),rgba(0,0,0,.35))}
+.clamp3.open{display:block;-webkit-line-clamp:unset;line-clamp:none}
+.rvtable td .rowbtns{flex-direction:column;align-items:stretch;gap:6px}
+.rvtable td .ghostbtn{padding:5px 8px;font-size:12px;white-space:nowrap}
+/* điện thoại: mỗi lượt đánh giá thành 1 thẻ, không phải vuốt ngang */
+@media (max-width:700px){
+  table.rvtable{min-width:0;table-layout:auto;display:block;width:100%}
+  .rvtable thead,.rvtable colgroup{display:none}
+  .rvtable tbody,.rvtable tr{display:block}
+  .rvtable tr{display:grid;grid-template-columns:1fr 1.6fr .6fr;gap:10px 12px;padding:14px 12px;border-bottom:1px solid var(--line)}
+  .rvtable td{display:block;border:0;padding:0;min-width:0}
+  .rvtable td[data-l]::before{content:attr(data-l);display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--concrete);margin-bottom:3px}
+  .rvtable td.wide,.rvtable td:last-child{grid-column:1/-1}
+  .rvtable td.empty-m{display:none}
+  .rvtable td .rowbtns{flex-direction:row;flex-wrap:wrap}
+}
 form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);padding:16px}
 .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 label.f,div.f{display:grid;gap:4px;align-content:start;font-size:12px;color:var(--concrete);min-width:0}
@@ -1123,16 +1148,18 @@ function adminReviews(p){
   const rv=S.reviews.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,300);
   const pend=rv.reduce((a,r)=>{const n=S.notes[r.id];return a+(n&&n.tip&&!n.tipAdded?n.tip:0)},0);
   p.innerHTML=rv.length?`<div class="rowbtns"><span class="pill warn">tip chờ cộng vào bill: ${vnd(pend)}</span><span class="note">sao từ 3 trở xuống, tag góp ý, lời nhắn và tip chỉ hiện ở đây. ẩn một lượt thì nó không còn tính vào điểm.</span></div>
-  <div class="table"><table><thead><tr><th>lúc</th><th>promoter</th><th class="num">sao</th><th>tag</th><th>nhận xét công khai</th><th>lời nhắn cho promoter</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
+  <div class="table"><table class="rvtable"><colgroup><col style="width:78px"><col style="width:124px"><col style="width:48px"><col class="w-tag"><col class="w-txt"><col class="w-txt"><col style="width:98px"><col style="width:104px"><col style="width:132px"></colgroup><thead><tr><th>lúc</th><th>promoter</th><th class="num">sao</th><th>tag</th><th>nhận xét công khai</th><th>lời nhắn cho promoter</th><th class="num">tip</th><th>bàn</th><th></th></tr></thead><tbody>
   ${rv.map(r=>{const m=S.mod[r.id]||{};const n=S.notes[r.id]||{};const tags=[...(r.tags||[]),...(n.negTags||[])];return `<tr style="${m.hidden?"opacity:.45":""}">
-    <td class="muted">${ago(r.createdAt)}</td><td><b>${esc(name[r.idolId]||"(đã xoá)")}</b></td>
-    <td class="num" style="color:${r.stars<=3?"#ff6a6f":"inherit"}">${r.stars}</td>
-    <td><div class="tags">${tags.map(t=>`<span class="tag${NEG_TAGS.includes(t)?" bad":""}">${esc(t)}</span>`).join("")}</div></td>
-    <td>${esc(r.comment||"")}</td>
-    <td>${esc(n.comment||"")}</td>
-    <td class="num">${n.tip?vnd(n.tip):"—"}</td><td class="muted">${esc(n.table||"")}${n.code?` · ${esc(n.code)}`:""}</td>
+    <td class="muted" data-l="lúc">${ago(r.createdAt)}</td><td data-l="promoter"><b>${esc(name[r.idolId]||"(đã xoá)")}</b></td>
+    <td class="num" data-l="sao" style="color:${r.stars<=3?"#ff6a6f":"inherit"}">${r.stars}</td>
+    <td class="wide" data-l="tag">${tags.length?"":"—"}<div class="clamp3 taglines">${tags.map(t=>`<span class="tag${NEG_TAGS.includes(t)?" bad":""}">${esc(t)}</span>`).join("")}</div></td>
+    <td class="wide${r.comment?"":" empty-m"}" data-l="nhận xét công khai"><div class="clamp3">${esc(r.comment||"")}</div></td>
+    <td class="wide${n.comment?"":" empty-m"}" data-l="lời nhắn cho promoter"><div class="clamp3">${esc(n.comment||"")}</div></td>
+    <td class="num" data-l="tip">${n.tip?vnd(n.tip):"—"}</td><td class="muted nowrap" data-l="bàn">${esc(n.table||"")}${n.code?`<br>${esc(n.code)}`:""}</td>
     <td><div class="rowbtns">${n.tip?`<button class="ghostbtn" data-tip="${esc(r.id)}" data-v="${n.tipAdded?1:0}">${n.tipAdded?"✓ đã cộng":"đã cộng vào bill"}</button>`:""}<button class="ghostbtn" data-hide="${esc(r.id)}" data-h="${m.hidden?1:0}">${m.hidden?"hiện lại":"ẩn"}</button></div></td></tr>`}).join("")}
   </tbody></table></div>`:`<div class="empty"><b>chưa có đánh giá nào.</b><span>khi khách đánh giá trên tablet lúc tính tiền, nó hiện ở đây ngay, kèm tip cần cộng vào bill.</span></div>`;
+  /* ô dài quá 3 dòng: cắt bớt, bấm vào để xem hết / thu lại */
+  p.querySelectorAll(".rvtable .clamp3").forEach(c=>{if(c.scrollHeight>c.clientHeight+2){c.classList.add("more");c.title="bấm để xem hết";c.onclick=()=>c.classList.toggle("open")}});
   p.querySelectorAll("[data-hide]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await modSet(b.dataset.hide,{hidden:b.dataset.h!=="1"})}catch(_){b.disabled=false}});
   p.querySelectorAll("[data-tip]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await S.db.doc("notes/"+b.dataset.tip).update({tipAdded:b.dataset.v!=="1"})}catch(_){b.disabled=false}});
 }
