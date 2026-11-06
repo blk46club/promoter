@@ -246,7 +246,7 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 .pick .photo{aspect-ratio:1/1}
 .pick span{padding:6px 8px;font-size:12px;font-weight:700;text-transform:uppercase;overflow-wrap:anywhere}
 .pick[aria-pressed="true"]{border-color:var(--acid);outline:2px solid var(--acid)}
-.starrow{display:flex;gap:6px}
+.starrow{display:flex;gap:6px;touch-action:pan-y;-webkit-user-select:none;user-select:none}
 .starbtn{background:transparent;border:0;font-size:44px;line-height:1;cursor:pointer;color:var(--card-2);padding:0 2px;-webkit-text-stroke:1px var(--concrete)}
 .starbtn.on{color:var(--acid);-webkit-text-stroke:0}
 .starlabel{font-family:var(--display);font-size:22px;text-transform:uppercase;min-height:1.2em}
@@ -386,6 +386,14 @@ window.claude = __claude;
 const POS_TAGS=["nhiệt tình","nói chuyện mượt","giữ vibe cả bàn","thông minh, tinh ý","nói tiếng anh tốt","nhảy cháy"];
 const NEG_TAGS=["chậm","ít để ý bàn","tư vấn sai món","thái độ chưa ổn","ép gọi thêm","hoạt náo kém"];
 const STAR_WORDS=["","tệ","chưa ổn","tạm","ổn","đỉnh"];
+/* tiêu đề bước chấm sao: chưa chọn thì "1 chấm sao", rê chuột / chạm hoặc đã chọn thì hiện "3 sao" */
+const starHead=n=>n?`<span>${n}</span> sao`:`<span>1</span> chấm sao`;
+/* tô sáng sao + đổi tiêu đề, chữ đánh giá theo số sao đang rê tới (chưa chọn) */
+function paintStars(n){
+  document.querySelectorAll(".starbtn").forEach(b=>b.classList.toggle("on",+b.dataset.s<=n));
+  const h=document.querySelector(".starhead");if(h)h.innerHTML=starHead(n);
+  const l=document.querySelector(".starlabel");if(l){l.textContent=STAR_WORDS[n]||"";l.style.color=n&&n<=3?"#ff6a6f":"var(--acid)"}
+}
 const PRIOR_N=5;          // Bayesian prior: số lượt "ảo" kéo điểm về trung bình quán
 const BADGE_AT=5;         // số lượt tag để thành huy hiệu
 const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -696,7 +704,7 @@ function renderTable(bid){
       <div><div class="eyebrow">đánh giá</div><h1 class="display rate-name">${esc(i.stageName)}</h1>
       <div class="muted">${r.n?`${fmt1(r.avg)} sao · ${r.n} lượt`:"chưa có lượt chấm, bạn là người đầu tiên"}</div></div>
     </div>
-    <div class="step"><h3><span>1</span> chấm sao</h3>
+    <div class="step"><h3 class="starhead" aria-live="polite">${starHead(R.stars)}</h3>
       <div class="starrow" role="radiogroup" aria-label="số sao">${[1,2,3,4,5].map(s=>`<button class="starbtn${R.stars>=s?" on":""}" data-s="${s}" role="radio" aria-checked="${R.stars===s}" aria-label="${s} sao">★</button>`).join("")}</div>
       <div class="starlabel" style="color:${R.stars&&R.stars<=3?"#ff6a6f":"var(--acid)"}">${STAR_WORDS[R.stars]||""}</div>
       ${R.stars?`<div class="tags">${tagSet.map(t=>`<button class="chip tagbtn" data-t="${esc(t)}" aria-pressed="${R.tags.includes(t)}">${esc(t)}</button>`).join("")}</div>
@@ -724,6 +732,15 @@ function renderTable(bid){
     document.getElementById("tipline").innerHTML=R.tip?`cộng vào bill: <b>${vnd(R.tip)}</b>`:"không cộng thêm"};
   app.querySelectorAll(".idolsw").forEach(x=>x.onclick=()=>{resetRate(bid,x.dataset.id);render()});
   app.querySelectorAll(".starbtn").forEach(x=>x.onclick=()=>{const s=+x.dataset.s;if(!R.stars||(s<=3)!==(R.stars<=3))R.tags=[];R.stars=s;render()});
+  {const row=app.querySelector(".starrow");if(row){
+    const at=e=>{const el=document.elementFromPoint(e.clientX,e.clientY);const b=el&&el.closest&&el.closest(".starbtn");return b&&row.contains(b)?+b.dataset.s:0};
+    const preview=e=>{const n=at(e);if(n)paintStars(n)};
+    row.addEventListener("pointermove",preview);row.addEventListener("pointerdown",preview);
+    const reset=()=>paintStars(R.stars||0);
+    row.addEventListener("pointerleave",reset);row.addEventListener("pointercancel",reset);
+    row.addEventListener("pointerup",e=>{if(e.pointerType!=="mouse")setTimeout(reset,0)});
+    row.addEventListener("focusin",e=>{const b=e.target.closest(".starbtn");if(b)paintStars(+b.dataset.s)});row.addEventListener("focusout",reset);
+  }}
   app.querySelectorAll(".tagbtn").forEach(x=>x.onclick=()=>{const t=x.dataset.t;R.tags=R.tags.includes(t)?R.tags.filter(y=>y!==t):[...R.tags,t];x.setAttribute("aria-pressed",R.tags.includes(t))});
   const cm=document.getElementById("comment");cm.oninput=()=>{R.comment=cm.value};
   const pc=document.getElementById("pubComment");if(pc)pc.oninput=()=>{R.pub=pc.value};
