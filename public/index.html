@@ -224,6 +224,7 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 .rvcard .stars{color:var(--acid);letter-spacing:.05em}
 .rvcard p{margin:6px 0 0}
 .rvcard .tags{margin-top:8px}
+.rvrow+.rvrow{margin-top:8px}
 .rvsum{display:flex;gap:24px;align-items:baseline;flex-wrap:wrap}
 .rvsum .big{font-family:var(--display);font-size:44px;line-height:1;color:var(--acid)}
 /* điện thoại: thu logo + chữ promoter để menu khách (lineup · đánh giá) vẫn nằm 1 dòng */
@@ -407,7 +408,7 @@ const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
   loaded:{idols:false,reviews:false,bookings:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false},
-  rv:{idol:"",limit:30}};
+  rv:{idol:"",period:"",limit:30}};
 
 const app=document.getElementById("app");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -416,7 +417,13 @@ const mkCode=()=>{let s="";const r=crypto.getRandomValues(new Uint8Array(6));for
 const PUBLIC_MIN_STARS=4; // tab đánh giá chỉ hiện lượt từ 4 sao; 1–3 sao chỉ quản lý xem
 const fmt1=n=>n.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1});
 const starStr=n=>{const f=Math.round(n);return "★".repeat(f)+"☆".repeat(5-f)};
-const ago=t=>{const d=(Date.now()-t)/1000;if(d<3600)return Math.max(1,Math.round(d/60))+" phút trước";if(d<86400)return Math.round(d/3600)+" giờ trước";return Math.round(d/86400)+" ngày trước"};
+/* thời gian đánh giá (anh Minh 06/11): dưới 24 giờ ghi "… trước", từ 24 giờ trở lên ghi rõ ngày/tháng/năm (giờ Hà Nội) */
+const ago=t=>{const d=(Date.now()-t)/1000;if(d<3600)return Math.max(1,Math.floor(d/60))+" phút trước";if(d<86400)return Math.floor(d/3600)+" giờ trước";
+  const v=new Date(t+7*3600e3);return String(v.getUTCDate()).padStart(2,"0")+"/"+String(v.getUTCMonth()+1).padStart(2,"0")+"/"+v.getUTCFullYear()};
+/* mốc đầu tuần (thứ hai 0h) và đầu tháng theo giờ Hà Nội, cho bộ lọc tab đánh giá */
+const periodStart=k=>{const v=new Date(Date.now()+7*3600e3),y=v.getUTCFullYear(),m=v.getUTCMonth();
+  if(k==="month")return Date.UTC(y,m,1)-7*3600e3;
+  if(k==="week")return Date.UTC(y,m,v.getUTCDate()-((v.getUTCDay()+6)%7))-7*3600e3;return 0};
 const ANGLES=[["close","cận"],["full","toàn thân"],["side","nghiêng"]];
 const photosOf=i=>{const p=Object.assign({},i.photos||{});if(!p.close&&i.photoId)p.close=i.photoId;return p};
 const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||""};
@@ -779,7 +786,8 @@ function renderReviews(){
   const pub=S.idols.filter(isPublic),pubIds=new Set(pub.map(i=>i.id));
   const all=visibleReviews(true).filter(r=>pubIds.has(r.idolId)&&r.stars>=PUBLIC_MIN_STARS).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   if(V.idol&&!pubIds.has(V.idol))V.idol="";
-  const list=V.idol?all.filter(r=>r.idolId===V.idol):all;
+  const from=periodStart(V.period);
+  const list=all.filter(r=>(!V.idol||r.idolId===V.idol)&&(!from||(r.createdAt||0)>=from));
   const n=list.length,withText=list.filter(r=>r.comment).length;
   const shown=list.slice(0,V.limit);
   const card=r=>{const i=idolById(r.idolId);const c=coverId(i);
@@ -790,12 +798,14 @@ function renderReviews(){
   app.innerHTML=`${banner()}<section>
     <div class="hero" style="padding-bottom:8px"><div class="eyebrow">khách trước nói gì</div><h1 class="display admin-title">ĐÁNH GIÁ</h1>
       <div class="rvsum"><div><span class="big">${n}</span> <span class="muted">lượt khen từ ${PUBLIC_MIN_STARS} sao</span></div><div class="muted">${withText} nhận xét</div></div></div>
-    ${pub.length>1?`<div class="tags" role="group" aria-label="lọc theo promoter"><button class="chip rvf" data-id="" aria-pressed="${!V.idol}">tất cả</button>${pub.map(i=>`<button class="chip rvf" data-id="${esc(i.id)}" aria-pressed="${V.idol===i.id}">${esc(i.stageName)}</button>`).join("")}</div>`:""}
-    ${shown.length?`<div class="rvfeed">${shown.map(card).join("")}</div>`:`<div class="empty" style="margin-top:16px"><b>${S.loaded.reviews?"chưa có đánh giá nào.":"đang tải…"}</b></div>`}
+    <div class="tags rvrow" role="group" aria-label="lọc theo thời gian">${[["","tất cả"],["month","tháng này"],["week","tuần này"]].map(([k,l])=>`<button class="chip rvp" data-p="${k}" aria-pressed="${V.period===k}">${l}</button>`).join("")}</div>
+    ${pub.length>1?`<div class="tags rvrow" role="group" aria-label="lọc theo promoter (bấm lần nữa để bỏ lọc)">${pub.map(i=>`<button class="chip rvf" data-id="${esc(i.id)}" aria-pressed="${V.idol===i.id}">${esc(i.stageName)}</button>`).join("")}</div>`:""}
+    ${shown.length?`<div class="rvfeed">${shown.map(card).join("")}</div>`:`<div class="empty" style="margin-top:16px"><b>${S.loaded.reviews?(V.period==="week"?"tuần này chưa có đánh giá nào.":V.period==="month"?"tháng này chưa có đánh giá nào.":"chưa có đánh giá nào."):"đang tải…"}</b></div>`}
     ${list.length>shown.length?`<div style="margin-top:16px"><button class="ghostbtn" id="rvMore">xem thêm (${list.length-shown.length})</button></div>`:""}
     <p class="note" style="padding-block:16px 40px">đánh giá từ khách đã ngồi bàn, mỗi bàn chấm mỗi promoter một lần. quán ẩn những lượt vi phạm.</p>
   </section>`;
-  app.querySelectorAll(".rvf").forEach(x=>x.onclick=()=>{V.idol=x.dataset.id;V.limit=30;render()});
+  app.querySelectorAll(".rvf").forEach(x=>x.onclick=()=>{V.idol=V.idol===x.dataset.id?"":x.dataset.id;V.limit=30;render()});
+  app.querySelectorAll(".rvp").forEach(x=>x.onclick=()=>{V.period=x.dataset.p;V.limit=30;render()});
   const more=document.getElementById("rvMore");if(more)more.onclick=()=>{V.limit+=30;render()};
 }
 
