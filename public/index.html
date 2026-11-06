@@ -321,7 +321,7 @@ form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--li
 .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 label.f,div.f{display:grid;gap:4px;align-content:start;font-size:12px;color:var(--concrete);min-width:0}
 .tpick-f{gap:8px}
-.hold-note{color:var(--acid);font-size:14px;line-height:1.45;margin:0;text-transform:none}.hold-note:empty{display:none}
+.hold-note{color:var(--acid);font-size:14px;line-height:1.45;margin:0;text-transform:none}.hold-note:empty{display:none}.hold-note.bad{color:#ff6a6f}
 .done .hold-note{font-size:16px;margin:12px 0 20px;max-width:46ch}
 .tmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line)}
 .tmap{position:relative;min-width:600px;line-height:0}
@@ -843,6 +843,7 @@ function renderBook(idolId){
     if(!date){B.err="ngày chưa đúng, gõ kiểu 08/11.";return render()}
     if(date<todayStr()){B.err="ngày này đã qua rồi.";return render()}
     if(!okTime(B.time)){B.err="giờ đến chưa đúng, gõ kiểu 22:30.";return render()}
+    if(arrivalPast(date,B.time,Date.now())){B.err=ARRIVAL_PAST_MSG;return render()}
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
     const table=B.table&&TABLE_SPOTS.some(x=>x[0]===B.table)?B.table:"";
     if(table&&HOLDS.date===date&&HOLDS.taken.has(table)){B.err="bàn "+table+" ngày này đã có khách đặt, chọn bàn khác nhé.";B.table="";return render()}
@@ -874,12 +875,21 @@ const HOLD_CUTOFF_MIN=22*60+30,HOLD_LATE_MIN=35;
 /* tính theo giờ Hà Nội (UTC+7) dù máy khách đặt múi giờ khác, khớp với luật Firestore (22h30 = 15h30 UTC) */
 const VN_MS=7*3600e3,vnDate=ms=>new Date(ms+VN_MS);
 const isoOfVN=ms=>{const d=vnDate(ms);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")};
+/* giờ đến thật (ms): 0h–6h là rạng sáng hôm sau, trừ khi đang đặt lúc 0h–6h của chính ngày đó */
+function arrivalMs(date,time,placedAt){
+  const t=/^(\d{1,2}):(\d{2})$/.exec(String(time||""));if(!t)return 0;
+  const [y,mo,d]=date.split("-").map(Number);const v=vnDate(placedAt);
+  const small=date===isoOfVN(placedAt)&&v.getUTCHours()<6;
+  return Date.UTC(y,mo-1,d,+t[1]-7,+t[2])+(+t[1]<6&&!small?864e5:0);
+}
+/* đặt cho hôm nay mà giờ đến đã qua (anh Minh 06/11): báo không hợp lệ, không cho gửi */
+const ARRIVAL_PAST_MSG="giờ đến không hợp lệ do giờ đến đang sớm hơn thời gian đặt bàn.";
+const arrivalPast=(date,time,now)=>{const a=arrivalMs(date,time,now);return !!a&&a<=now};
 function holdUntilFor(date,time,placedAt){
   const [y,mo,d]=date.split("-").map(Number);const cutoff=Date.UTC(y,mo-1,d,15,30);
   const v=vnDate(placedAt);const pm=v.getUTCHours()*60+v.getUTCMinutes();const today=date===isoOfVN(placedAt);
   const small=today&&pm<6*60; // 0h–6h: đêm hôm trước vẫn đang chạy, giờ đến 1h là 1h hôm nay
-  const t=/^(\d{1,2}):(\d{2})$/.exec(String(time||""));
-  const arr=t?Date.UTC(y,mo-1,d,+t[1]-7,+t[2])+(+t[1]<6&&!small?864e5:0):0; // giờ đến 0h–6h = rạng sáng hôm sau
+  const arr=arrivalMs(date,time,placedAt);
   if(small||(today&&pm>=HOLD_CUTOFF_MIN))return Math.max(arr,placedAt)+HOLD_LATE_MIN*60e3;
   return arr>cutoff?arr+HOLD_LATE_MIN*60e3:cutoff;
 }
@@ -915,7 +925,7 @@ function paintMap(B){
     :HOLDS.bumped?`bàn bạn chọn vừa có khách khác đặt, chọn bàn khác nhé.`
     :HOLDS.date?`chưa chọn bàn: quán sẽ xếp bàn cho bạn.`:`gõ ngày trước để xem bàn nào còn trống.`;
   HOLDS.bumped=false;
-  const hn=document.getElementById("holdNote");if(hn){const d=dmToIso(B.dateText);hn.textContent=d&&d>=todayStr()?holdNote(holdUntilFor(d,okTime(B.time)?B.time:"",Date.now())):""}
+  const hn=document.getElementById("holdNote");if(hn){const d=dmToIso(B.dateText);const now=Date.now(),tm=okTime(B.time)?B.time:"";const past=!!(d&&tm&&arrivalPast(d,tm,now));hn.classList.toggle("bad",past);hn.textContent=!d||d<todayStr()?"":past?ARRIVAL_PAST_MSG:holdNote(holdUntilFor(d,tm,now))}
   p.querySelectorAll("[data-tclear]").forEach(x=>x.onclick=()=>{B.table="";paintMap(B)});
 }
 /* ô giờ: gõ liền 4 số (2230) là ra 22:30, khỏi bấm sang ô phút. gõ 9 → 09 */
