@@ -91,15 +91,18 @@ function makeDb(staff) {
     }),
     doc: docApi,
     // Bàn đã có người đặt trong một ngày (tableHolds/{ngày}_{bàn}), ai cũng xem được, không kèm tên khách.
+    // Trả về { table, until, seated }: until = giờ hết giữ bàn, seated = khách đã đến (giữ luôn).
     watchHolds: (date, next) => {
-      const fire = () => next(Object.values(col("tableHolds")).filter((h) => h.date === date).map((h) => h.table));
+      const fire = () => next(Object.values(col("tableHolds")).filter((h) => h.date === date).map((h) => ({ table: h.table, until: h.until || null, seated: !!h.seated })));
       (subs.tableHolds = subs.tableHolds || []).push(fire);
       setTimeout(fire, 0);
       return () => { subs.tableHolds = (subs.tableHolds || []).filter((f) => f !== fire); };
     },
     // Khách gửi đặt bàn kèm bàn muốn ngồi: giữ bàn và tạo đặt bàn cùng lúc, bàn đã có người giữ thì báo "taken".
     createBooking: async (bookingId, booking, holdId, hold) => {
-      if (holdId && col("tableHolds")[holdId]) { const e = new Error("taken"); e.code = "taken"; throw e; }
+      // Bàn đã giữ mà quá giờ giữ (quản lý chưa xếp khách vào) thì khách sau được giữ lại.
+      const old = holdId && col("tableHolds")[holdId];
+      if (old && (old.seated || !old.until || old.until > Date.now())) { const e = new Error("taken"); e.code = "taken"; throw e; }
       col("bookings")[bookingId] = JSON.parse(JSON.stringify(booking));
       if (holdId) col("tableHolds")[holdId] = JSON.parse(JSON.stringify(hold));
       save(); notify("bookings"); notify("tableHolds");
