@@ -47,7 +47,7 @@ function seed() {
     const comment = SAMPLE_COMMENTS[(n * 7) % SAMPLE_COMMENTS.length];
     reviews[id] = { idolId: "demo" + (k + 1), stars: s, tags: POS.filter((_, t) => ((t + 1) * (k + 2) + j) % 5 < 1 + ((t + k) % 4)), comment: j % 3 === 0 ? comment : "", createdAt: now - j * 3600e3 };
   }));
-  return { idols, reviews, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {} };
+  return { idols, reviews, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {}, tableHolds: {} };
 }
 if (!data) { data = seed(); try { save(); } catch (_) {} }
 
@@ -90,6 +90,20 @@ function makeDb(staff) {
       },
     }),
     doc: docApi,
+    // Bàn đã có người đặt trong một ngày (tableHolds/{ngày}_{bàn}), ai cũng xem được, không kèm tên khách.
+    watchHolds: (date, next) => {
+      const fire = () => next(Object.values(col("tableHolds")).filter((h) => h.date === date).map((h) => h.table));
+      (subs.tableHolds = subs.tableHolds || []).push(fire);
+      setTimeout(fire, 0);
+      return () => { subs.tableHolds = (subs.tableHolds || []).filter((f) => f !== fire); };
+    },
+    // Khách gửi đặt bàn kèm bàn muốn ngồi: giữ bàn và tạo đặt bàn cùng lúc, bàn đã có người giữ thì báo "taken".
+    createBooking: async (bookingId, booking, holdId, hold) => {
+      if (holdId && col("tableHolds")[holdId]) { const e = new Error("taken"); e.code = "taken"; throw e; }
+      col("bookings")[bookingId] = JSON.parse(JSON.stringify(booking));
+      if (holdId) col("tableHolds")[holdId] = JSON.parse(JSON.stringify(hold));
+      save(); notify("bookings"); notify("tableHolds");
+    },
     submitReview: async (redeemedId, reviewId, note, review) => {
       const r = col("redeemed")[redeemedId];
       if (r && r.reviewId) { const e = new Error("used"); e.code = "used"; throw e; }
@@ -110,7 +124,7 @@ export const backend = {
   login: async (email) => { localStorage.setItem(AUTH, email || "demo@blk46"); },
   logout: async () => { localStorage.removeItem(AUTH); },
   resetDemo: () => { data = seed(); save(); Object.keys(data).forEach(notify); },
-  clearDemo: () => { data = { idols: {}, reviews: {}, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {} }; save(); Object.keys(data).forEach(notify); },
+  clearDemo: () => { data = { idols: {}, reviews: {}, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {}, tableHolds: {} }; save(); Object.keys(data).forEach(notify); },
 };
 
 export const claude = {

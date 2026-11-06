@@ -104,6 +104,23 @@ function makeDb(staff) {
       onSnapshot: (next, err) => onSnapshot(colRef(name), (s) => next(wrapSnap(s)), err),
     }),
     doc: docApi,
+    // Bàn đã có người đặt trong một ngày (tableHolds/{ngày}_{bàn}): công khai, chỉ có ngày + số bàn.
+    watchHolds: (date, next, err) => onSnapshot(
+      query(collection(fs, "tableHolds"), where("date", "==", date)),
+      (s) => next(s.docs.map((d) => d.data().table)), err),
+    // Khách gửi đặt bàn kèm bàn muốn ngồi: ghi đặt bàn + giữ bàn trong một lần.
+    // Luật bảo mật chặn giữ trùng (tạo lại doc đã có = sửa, khách không được sửa).
+    createBooking: async (bookingId, booking, holdId, hold) => {
+      if (!holdId) return setDoc(doc(fs, "bookings/" + bookingId), booking);
+      const hr = doc(fs, "tableHolds/" + holdId);
+      const taken = () => { const e = new Error("taken"); e.code = "taken"; return e; };
+      if ((await getDoc(hr)).exists()) throw taken();
+      const b = writeBatch(fs);
+      b.set(doc(fs, "bookings/" + bookingId), booking);
+      b.set(hr, hold);
+      try { await b.commit(); }
+      catch (e) { if ((await getDoc(hr).catch(() => null))?.exists()) throw taken(); throw e; }
+    },
     // Gửi một lượt đánh giá: khoá mã bàn + idol, ghi lời nhắn và điểm trong cùng một giao dịch.
     submitReview: (redeemedId, reviewId, note, review) => runTransaction(fs, async (tx) => {
       const red = doc(fs, "redeemed/" + redeemedId);
