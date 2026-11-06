@@ -65,6 +65,7 @@ h1.display.admin-title{font-size:clamp(26px,4.8vw,53px);line-height:1.2;color:#f
 .chip[aria-pressed="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 .chip:hover{border-color:var(--paper)}
 .note{font-size:12px;color:var(--concrete);max-width:70ch}
+.note.neg-thanks{font-size:15px;color:var(--acid);line-height:1.45}
 
 /* lineup grid */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding-bottom:48px}
@@ -699,7 +700,7 @@ function renderTable(bid){
       <div class="starrow" role="radiogroup" aria-label="số sao">${[1,2,3,4,5].map(s=>`<button class="starbtn${R.stars>=s?" on":""}" data-s="${s}" role="radio" aria-checked="${R.stars===s}" aria-label="${s} sao">★</button>`).join("")}</div>
       <div class="starlabel" style="color:${R.stars&&R.stars<=3?"#ff6a6f":"var(--acid)"}">${STAR_WORDS[R.stars]||""}</div>
       ${R.stars?`<div class="tags">${tagSet.map(t=>`<button class="chip tagbtn" data-t="${esc(t)}" aria-pressed="${R.tags.includes(t)}">${esc(t)}</button>`).join("")}</div>
-      ${R.stars<=3?`<p class="note" style="margin:0">phần góp ý này chỉ quản lý đọc, không hiện công khai.</p>`:`<p class="note" style="margin:0">tag khen cộng vào chỉ số của ${esc(i.stageName)} trên lineup.</p>`}`:""}
+      ${R.stars<=3?`<p class="note neg-thanks" style="margin:0">Quán trân trọng những góp ý chân tình của khách hàng, quán xin rút kinh nghiệm để trải nghiệm lần tới của quý khách được trọn vẹn nhất.</p>`:`<p class="note" style="margin:0">tag khen cộng vào chỉ số của ${esc(i.stageName)} trên lineup.</p>`}`:""}
     </div>
     ${R.stars>=PUBLIC_MIN_STARS?`<div class="step"><h3><span>2</span> nhận xét công khai</h3>
       <textarea id="pubComment" maxlength="200" placeholder="khách sau sẽ đọc câu này. không bắt buộc.">${esc(R.pub)}</textarea>
