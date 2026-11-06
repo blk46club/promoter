@@ -107,19 +107,20 @@ function makeDb(staff) {
     // Bàn đã có người đặt trong một ngày (tableHolds/{ngày}_{bàn}): công khai, chỉ có ngày + số bàn.
     watchHolds: (date, next, err) => onSnapshot(
       query(collection(fs, "tableHolds"), where("date", "==", date)),
-      (s) => next(s.docs.map((d) => d.data().table)), err),
+      (s) => next(s.docs.map((d) => { const h = d.data(); return { table: h.table, until: h.until || null, seated: !!h.seated }; })), err),
     // Khách gửi đặt bàn kèm bàn muốn ngồi: ghi đặt bàn + giữ bàn trong một lần.
-    // Luật bảo mật chặn giữ trùng (tạo lại doc đã có = sửa, khách không được sửa).
+    // Luật bảo mật chặn giữ trùng: khách chỉ ghi đè được bàn đã quá giờ giữ mà chưa xếp khách vào.
     createBooking: async (bookingId, booking, holdId, hold) => {
       if (!holdId) return setDoc(doc(fs, "bookings/" + bookingId), booking);
       const hr = doc(fs, "tableHolds/" + holdId);
       const taken = () => { const e = new Error("taken"); e.code = "taken"; return e; };
-      if ((await getDoc(hr)).exists()) throw taken();
+      const active = (snap) => { if (!snap || !snap.exists()) return false; const h = snap.data(); return !!(h.seated || !h.until || h.until > Date.now()); };
+      if (active(await getDoc(hr))) throw taken();
       const b = writeBatch(fs);
       b.set(doc(fs, "bookings/" + bookingId), booking);
       b.set(hr, hold);
       try { await b.commit(); }
-      catch (e) { if ((await getDoc(hr).catch(() => null))?.exists()) throw taken(); throw e; }
+      catch (e) { const cur = await getDoc(hr).catch(() => null); if (cur && cur.exists() && cur.data().bookingId !== bookingId) throw taken(); throw e; }
     },
     // Gửi một lượt đánh giá: khoá mã bàn + idol, ghi lời nhắn và điểm trong cùng một giao dịch.
     submitReview: (redeemedId, reviewId, note, review) => runTransaction(fs, async (tx) => {
