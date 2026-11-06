@@ -868,28 +868,27 @@ const TABLE_SPOTS=[["V1",697,107,172,80],["V2",907,105,172,80],["V3",1133,105,17
 const holdKey=(date,table)=>date+"_"+String(table).toUpperCase();
 /* giờ giữ bàn (anh Minh, 06/11/2026):
    - giờ đến từ 22h30 trở về trước: giữ bàn tới 22h30 ngày đặt;
-   - giờ đến sau 22h30 (kể cả sau nửa đêm): giữ tới giờ đến + 35 phút;
+   - giờ đến sau 22h30: giữ tới giờ đến + 35 phút (giờ đọc theo 24 giờ của đúng ngày khách điền);
    - gửi đặt bàn cho tối nay khi đã quá 22h30 (tới 6h sáng): giữ tới (giờ đến hoặc lúc gửi, lấy cái muộn hơn) + 35 phút.
    quá giờ mà quản lý chưa bấm "khách đã đến" thì bàn mở lại trên sơ đồ cho khách khác. */
 const HOLD_CUTOFF_MIN=22*60+30,HOLD_LATE_MIN=35;
 /* tính theo giờ Hà Nội (UTC+7) dù máy khách đặt múi giờ khác, khớp với luật Firestore (22h30 = 15h30 UTC) */
 const VN_MS=7*3600e3,vnDate=ms=>new Date(ms+VN_MS);
 const isoOfVN=ms=>{const d=vnDate(ms);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")};
-/* giờ đến thật (ms): 0h–6h là rạng sáng hôm sau, trừ khi đang đặt lúc 0h–6h của chính ngày đó */
-function arrivalMs(date,time,placedAt){
+/* giờ đến thật (ms), đọc theo 24 giờ đúng ngày khách điền (anh Minh 06/11): 9:30 là 9h30 sáng, 01:30 là 1h30 sáng của chính ngày đó */
+function arrivalMs(date,time){
   const t=/^(\d{1,2}):(\d{2})$/.exec(String(time||""));if(!t)return 0;
-  const [y,mo,d]=date.split("-").map(Number);const v=vnDate(placedAt);
-  const small=date===isoOfVN(placedAt)&&v.getUTCHours()<6;
-  return Date.UTC(y,mo-1,d,+t[1]-7,+t[2])+(+t[1]<6&&!small?864e5:0);
+  const [y,mo,d]=date.split("-").map(Number);
+  return Date.UTC(y,mo-1,d,+t[1]-7,+t[2]);
 }
 /* đặt cho hôm nay mà giờ đến đã qua (anh Minh 06/11): báo không hợp lệ, không cho gửi */
 const ARRIVAL_PAST_MSG="giờ đến không hợp lệ do giờ đến đang sớm hơn thời gian đặt bàn.";
-const arrivalPast=(date,time,now)=>{const a=arrivalMs(date,time,now);return !!a&&a<=now};
+const arrivalPast=(date,time,now)=>{const a=arrivalMs(date,time);return !!a&&a<=now};
 function holdUntilFor(date,time,placedAt){
   const [y,mo,d]=date.split("-").map(Number);const cutoff=Date.UTC(y,mo-1,d,15,30);
   const v=vnDate(placedAt);const pm=v.getUTCHours()*60+v.getUTCMinutes();const today=date===isoOfVN(placedAt);
-  const small=today&&pm<6*60; // 0h–6h: đêm hôm trước vẫn đang chạy, giờ đến 1h là 1h hôm nay
-  const arr=arrivalMs(date,time,placedAt);
+  const small=today&&pm<6*60; // đặt lúc 0h–6h cho hôm nay: đêm vẫn đang chạy, giữ 35 phút
+  const arr=arrivalMs(date,time);
   if(small||(today&&pm>=HOLD_CUTOFF_MIN))return Math.max(arr,placedAt)+HOLD_LATE_MIN*60e3;
   return arr>cutoff?arr+HOLD_LATE_MIN*60e3:cutoff;
 }
