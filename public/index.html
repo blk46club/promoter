@@ -679,7 +679,7 @@ function renderTable(bid){
   const allDone=ids.length&&ids.every(id=>done.has(id));
   if(allDone||R.done&&ids.every(id=>done.has(id))){
     const tip=tableTips(b);
-    app.innerHTML=`<section class="done"><div class="eyebrow">bàn ${esc(b.table||"")} · ${esc(b.guestName||"")}</div><h1 class="display">CẢM ƠN<span class="y">.</span></h1>
+    app.innerHTML=`<section class="done"><div class="eyebrow">bàn ${esc(b.table||"")} · ${esc(guestLabel(b))}</div><h1 class="display">CẢM ƠN<span class="y">.</span></h1>
     <p class="lede">${tip?`tip ${vnd(tip)} sẽ được cộng vào bill khi bạn thanh toán. `:""}keep it loud. see you out there.</p>
     <p class="note" style="margin-top:40px">dành cho nhân viên: <a href="#admin">về quản lý</a></p></section>`;return;
   }
@@ -689,7 +689,7 @@ function renderTable(bid){
   const ready=!R.busy&&R.stars;
   app.innerHTML=`${banner()}
   <section class="rate">
-    <div class="tablebar"><span>bàn <b>${esc(b.table||"—")}</b></span><span>${esc(b.guestName||"")}</span><span class="codelock">mã bàn <b>${esc(b.code)}</b> ✓</span></div>
+    <div class="tablebar"><span>bàn <b>${esc(b.table||"—")}</b></span><span>${esc(guestLabel(b))}</span><span class="codelock">mã bàn <b>${esc(b.code)}</b> ✓</span></div>
     ${ids.length>1?`<div class="tags" role="group" aria-label="chọn promoter để đánh giá">${ids.map(id=>{const x=idolById(id);return `<button class="chip idolsw" data-id="${esc(id)}" aria-pressed="${id===R.idolId}" ${done.has(id)?"disabled":""}>${done.has(id)?"✓ ":""}${esc(x.stageName)}</button>`}).join("")}</div>`:""}
     <div class="rate-head">
       <div class="rate-face">${cid?`<img src="${esc(cid)}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}<b class="g-${g==="?"?"x":g}">${g}</b></div>
@@ -834,6 +834,7 @@ function renderBook(idolId){
 }
 const val=id=>{const el=document.getElementById(id);return el?el.value.trim():""};
 /* tên khách: viết hoa chữ đầu mỗi tiếng (nguyễn nam -> Nguyễn Nam), phần còn lại giữ như khách gõ */
+const guestLabel=b=>((b.salutation?b.salutation+" ":"")+capName(b.guestName||"")).trim();
 const capName=v=>String(v||"").trim().replace(/\s+/g," ").split(" ").map(w=>w?w.charAt(0).toLocaleUpperCase("vi")+w.slice(1):w).join(" ");
 /* sơ đồ chọn bàn cho khách: ảnh brand/so-do-ban.jpg (ảnh anh Minh gửi), vùng bấm theo toạ độ trên ảnh gốc 2000×870.
    [bàn, tâm x, tâm y, rộng, cao, tròn] */
@@ -945,7 +946,7 @@ function bookingCard(b){
   return `<div class="bk">
     <div class="bk-time"><b>${esc(b.time||"--:--")}</b><span>${esc(fmtDate(b.date))}</span></div>
     <div class="bk-main">
-      <div class="rowbtns"><b>${b.salutation?esc(b.salutation)+" ":""}${esc(b.guestName||"(chưa có tên)")}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
+      <div class="rowbtns"><b>${b.guestName?esc(guestLabel(b)):"(chưa có tên)"}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
         <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}</div>
       <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">chưa chọn promoter</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
@@ -981,6 +982,7 @@ function drawBookForm(){
   slot.innerHTML=`<form class="idol" id="bkForm">
     <div class="rowbtns" style="justify-content:space-between"><b>${e.id?"sửa đặt bàn":"đặt bàn mới"}</b><button type="button" class="ghostbtn" id="bkClose">đóng</button></div>
     <div class="fields">
+      <div class="f"><span>danh xưng</span><div class="tags" role="radiogroup" aria-label="danh xưng">${["Mr","Miss"].map(t=>`<button type="button" class="chip ksal" role="radio" data-v="${t}" aria-checked="${e.salutation===t}" aria-pressed="${e.salutation===t}">${t}</button>`).join("")}</div></div>
       <label class="f">tên khách *<input id="k_name" required maxlength="40" value="${esc(e.guestName||"")}"></label>
       <label class="f">số điện thoại<input id="k_phone" inputmode="tel" maxlength="12" value="${esc(e.phone||"")}"></label>
       <label class="f">ngày *<input id="k_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(isoToDM(e.date||todayStr()))}"><small class="dhint">${esc(dateHint(isoToDM(e.date||todayStr())))}</small></label>
@@ -995,6 +997,7 @@ function drawBookForm(){
     <div class="rowbtns"><button class="cta" type="submit" id="kSave">${e.id?"lưu":"tạo đặt bàn"}</button></div>
   </form>`;
   document.getElementById("bkClose").onclick=()=>{S.bookEdit=null;slot.innerHTML=""};
+  slot.querySelectorAll(".ksal").forEach(x=>x.onclick=()=>{e.salutation=e.salutation===x.dataset.v?"":x.dataset.v;slot.querySelectorAll(".ksal").forEach(y=>{const on=y.dataset.v===e.salutation;y.setAttribute("aria-pressed",on);y.setAttribute("aria-checked",on)})});
   slot.querySelectorAll(".kidol").forEach(x=>x.onclick=()=>{const id=x.dataset.id;const a=e.idolIds||(e.idolIds=[]);const k=a.indexOf(id);if(k>=0)a.splice(k,1);else a.push(id);x.setAttribute("aria-pressed",k<0)});
   document.getElementById("bkForm").onsubmit=async ev=>{
     ev.preventDefault();const err=document.getElementById("kErr");const btn=document.getElementById("kSave");
@@ -1006,7 +1009,7 @@ function drawBookForm(){
     {const kt=val("k_table").toUpperCase();if(kt&&bookedOn(kdate,e.id).has(kt)){err.textContent="bàn "+kt+" ngày này đã có khách khác đặt.";return}}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
-    const body={guestName:name.slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:kdate,time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
+    const body={guestName:capName(name).slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:kdate,time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
       status:e.status==="requested"?"confirmed":(e.status||"confirmed"),source:e.source||"admin",code:e.code||"",createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
     if(e.seatedAt)body.seatedAt=e.seatedAt;
     if(e.salutation)body.salutation=e.salutation;
