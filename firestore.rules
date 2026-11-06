@@ -55,11 +55,10 @@ service cloud.firestore {
       return timestamp.date(int(p[0]), int(p[1]), int(p[2])).toMillis();
     }
     function cutoffMs(date) { return dayMs(date) + 930 * 60000; }
-    // giờ đến + 35 phút, giờ đến 0h–6h có thể là rạng sáng hôm sau nên chấp nhận cả hai
+    // giờ đến + 35 phút; giờ đọc theo 24 giờ của đúng ngày đặt
     function arrivalHold(date, time, until) {
       let t = time.split(':');
-      let a = dayMs(date) + (int(t[0]) * 60 + int(t[1]) - 420 + 35) * 60000;
-      return until == a || until == a + 1440 * 60000;
+      return until == dayMs(date) + (int(t[0]) * 60 + int(t[1]) - 420 + 35) * 60000;
     }
     function guestHold(id) {
       let h = request.resource.data;
