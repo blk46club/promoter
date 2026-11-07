@@ -13,7 +13,7 @@ Web công khai cho khách xem lineup idol, đặt bàn kèm idol, và tablet c�
 | | Chạy thử (thêm `?demo=1`) | Firebase (đang dùng) |
 |---|---|---|
 | Chi phí | 0đ, không cần tài khoản | gói Spark miễn phí, không cần thẻ |
-| Ở đâu | https://blk46club.github.io/blk46-idol-web/?demo=1 | https://blk46club.github.io/blk46-idol-web/ (project Firebase `blk46-promoter`, gói Spark) |
+| Ở đâu | https://blk46club.github.io/promoter/?demo=1 | https://blk46club.github.io/promoter/ (project Firebase `blk46-promoter`, gói Spark) |
 | Dữ liệu | lưu trong trình duyệt đang mở, mỗi máy một bản | dùng chung: khách, tablet, quản lý cùng thấy |
 | Đăng nhập quản lý | email, mật khẩu bất kỳ | tài khoản tạo trong Firebase |
 | Ảnh idol | nén và lưu trong trình duyệt | nén và lưu trong Firestore (không cần Storage, không cần Blaze) |
