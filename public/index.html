@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="lineup promoter blk46. pick'em up, đặt bàn, gặp nhau ở 46 mã mây.">
+<meta name="description" content="lineup promoter blk46. heat up ur night, đặt bàn, gặp nhau ở 46 mã mây.">
 <title>BLK46 Promoter Lineup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,9 +100,9 @@ h1.display.admin-title{font-size:clamp(26px,4.8vw,53px);line-height:1.2;color:#f
 /* select screen */
 .select{padding-block:20px 0;display:grid;gap:14px}
 .select-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.sel-title{margin:0;display:flex;align-items:center;gap:.12em;font-family:"Yellowtail",cursive;font-weight:400;font-size:clamp(50px,17vw,116px);line-height:1.05;padding-bottom:.12em;white-space:nowrap;color:var(--acid);text-shadow:0 0 .18em rgba(237,208,41,.5)}
+.sel-title{margin:0;display:flex;align-items:center;gap:.12em;font-family:"Yellowtail",cursive;font-weight:400;font-size:clamp(38px,13vw,116px);line-height:1.05;padding-bottom:.12em;white-space:nowrap;color:var(--acid);text-shadow:0 0 .18em rgba(237,208,41,.5)}
 /* đôi môi chu ra hôn + 2 tim bay, vẽ bằng nét neon cùng màu chữ */
-.sel-title .st-deco{height:.8em;align-self:flex-start;margin-top:.1em;width:auto;flex:none;overflow:visible;filter:drop-shadow(0 0 .06em rgba(237,208,41,.7))}
+.sel-title .st-deco{height:.8em;margin-left:.14em;align-self:flex-start;margin-top:.1em;width:auto;flex:none;overflow:visible;filter:drop-shadow(0 0 .06em rgba(237,208,41,.7))}
 .sel-title .st-deco path{fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round}
 .stage{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:18px;align-items:start}
 @media (max-width:900px){.stage{grid-template-columns:1fr}.roster{order:-1;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));padding-inline:4px}}
@@ -577,7 +577,7 @@ function renderLineup(){
   ${banner()}
   <section class="select">
     <div class="select-head">
-      <h1 class="sel-title" aria-label="pick'em up"><span aria-hidden="true">Pick'em up</span><svg class="st-deco" viewBox="0 0 100 80" aria-hidden="true"><path d="M36 22C33 15 24 14 18 19C11 24 8 32 9 40C11 50 22 60 36 60C50 60 61 50 63 40C64 32 61 24 54 19C48 14 39 15 36 22Z"/><path d="M13 39C20 36 28 37 36 40C44 37 52 36 59 39"/><path d="M25 22l2 7M31 19l1 7M41 19l-1 7M47 22l-2 7M24 55l3-8M31 58l1-8M41 58l-1-8M48 55l-3-8"/><path transform="translate(80 26) rotate(14)" d="M0 -4C-3 -10 -11 -8 -9 -2C-8 3 0 8 0 8C0 8 8 3 9 -2C11 -8 3 -10 0 -4Z"/><path transform="translate(92 8) rotate(20) scale(.6)" d="M0 -4C-3 -10 -11 -8 -9 -2C-8 3 0 8 0 8C0 8 8 3 9 -2C11 -8 3 -10 0 -4Z"/></svg></h1>
+      <h1 class="sel-title" aria-label="heat up ur night"><span aria-hidden="true">Heat up ur night</span><svg class="st-deco" viewBox="0 0 100 80" aria-hidden="true"><path d="M36 22C33 15 24 14 18 19C11 24 8 32 9 40C11 50 22 60 36 60C50 60 61 50 63 40C64 32 61 24 54 19C48 14 39 15 36 22Z"/><path d="M13 39C20 36 28 37 36 40C44 37 52 36 59 39"/><path d="M25 22l2 7M31 19l1 7M41 19l-1 7M47 22l-2 7M24 55l3-8M31 58l1-8M41 58l-1-8M48 55l-3-8"/><path transform="translate(80 26) rotate(14)" d="M0 -4C-3 -10 -11 -8 -9 -2C-8 3 0 8 0 8C0 8 8 3 9 -2C11 -8 3 -10 0 -4Z"/><path transform="translate(92 8) rotate(20) scale(.6)" d="M0 -4C-3 -10 -11 -8 -9 -2C-8 3 0 8 0 8C0 8 8 3 9 -2C11 -8 3 -10 0 -4Z"/></svg></h1>
       <div class="controls" role="group" aria-label="khoảng thời gian" style="padding:0">
         <button class="chip" id="pMonth" aria-pressed="${S.period==="month"}">tháng này</button>
         <button class="chip" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
