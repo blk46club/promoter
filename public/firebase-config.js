@@ -2,10 +2,10 @@
 // Các giá trị này không phải mật khẩu: chúng luôn nằm công khai trong mọi web dùng Firebase.
 // Bảo mật dữ liệu nằm ở firestore.rules và storage.rules.
 export const firebaseConfig = {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME.firebaseapp.com",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME.appspot.com",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME",
+  apiKey: "AIzaSyDWORkNubUiMOkk429kNSVcBBIXENRw_Tc",
+  authDomain: "blk46-promoter.firebaseapp.com",
+  projectId: "blk46-promoter",
+  storageBucket: "blk46-promoter.firebasestorage.app",
+  messagingSenderId: "919107563680",
+  appId: "1:919107563680:web:8792ca6013ec8352c399c5",
 };

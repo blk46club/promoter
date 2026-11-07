@@ -10,10 +10,10 @@ Web công khai cho khách xem lineup idol, đặt bàn kèm idol, và tablet c�
 
 ## Hai chế độ chạy
 
-| | Chạy thử (đang dùng) | Firebase |
+| | Chạy thử (thêm `?demo=1`) | Firebase (đang dùng) |
 |---|---|---|
 | Chi phí | 0đ, không cần tài khoản | gói Spark miễn phí, không cần thẻ |
-| Ở đâu | https://hminhptit-hash.github.io/blk46-idol-web/ | `https://<project-id>.web.app` hoặc link GitHub Pages ở trên |
+| Ở đâu | https://blk46club.github.io/blk46-idol-web/?demo=1 | https://blk46club.github.io/blk46-idol-web/ (project Firebase `blk46-promoter`, gói Spark) |
 | Dữ liệu | lưu trong trình duyệt đang mở, mỗi máy một bản | dùng chung: khách, tablet, quản lý cùng thấy |
 | Đăng nhập quản lý | email, mật khẩu bất kỳ | tài khoản tạo trong Firebase |
 | Ảnh idol | nén và lưu trong trình duyệt | nén và lưu trong Firestore (không cần Storage, không cần Blaze) |
@@ -52,7 +52,7 @@ Chạy thử hợp để chỉnh giao diện, đồ hoạ, tính năng. Không d
 2. Repo GitHub → Settings → Secrets and variables → Actions → New repository secret:
    - `FIREBASE_SERVICE_ACCOUNT`: dán toàn bộ nội dung file JSON.
    - `FIREBASE_PROJECT_ID`: project id.
-3. Actions → "Deploy lên Firebase (bấm tay khi đã có project Firebase)" → Run workflow. Lệnh này đẩy luật bảo mật lên Firebase. Web vẫn chạy ở link GitHub Pages; muốn chạy ở `https://<project-id>.web.app` thì cũng dùng workflow này.
+3. Actions → "Đẩy luật bảo mật Firestore lên Firebase (bấm tay)" → Run workflow. Không có khoá thì dán tay `firestore.rules` vào Firestore → Rules → Publish cũng được (cách đang dùng).
 
 Nếu lần đầu tải ảnh idol báo lỗi quyền: vào Storage → Rules, bấm cấp quyền cho Storage đọc Firestore khi console hỏi (luật ảnh kiểm tra danh sách quản lý trong Firestore).
 
