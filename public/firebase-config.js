@@ -8,4 +8,6 @@ export const firebaseConfig = {
   storageBucket: "blk46-promoter.firebasestorage.app",
   messagingSenderId: "919107563680",
   appId: "1:919107563680:web:8792ca6013ec8352c399c5",
+  // Khoá reCAPTCHA Enterprise cho App Check (công khai, không phải mật khẩu). Để trống = tắt App Check.
+  appCheckKey: "6LcDoRQuAAAAAAWwD2WHZJz9dMGrqc-Zax1-YIQF",
 };
