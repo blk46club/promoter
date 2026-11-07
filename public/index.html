@@ -583,7 +583,7 @@ function renderLineup(){
         <button class="chip" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
       </div>
     </div>
-    ${empty?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện. khung bên dưới là ví dụ bố cục, không phải người thật.</span></div>`:""}
+    ${empty&&S.canEdit?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện. khung bên dưới là ví dụ bố cục, không phải người thật.</span></div>`:""}
     <div class="stage">
       <div class="spot" id="spot">${spotHTML(cur,!cur)}</div>
       <div class="roster" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${tiles}</div>
