@@ -227,6 +227,17 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 .rvrow+.rvrow{margin-top:8px}
 .rvsum{display:flex;gap:24px;align-items:baseline;flex-wrap:wrap}
 .rvsum .big{font-family:var(--display);font-size:44px;line-height:1;color:var(--acid)}
+/* khách đặt trước theo promoter: chữ trên ảnh, đủ 2 khách thì ảnh tối lại */
+.spot-load{position:absolute;left:12px;bottom:12px;z-index:3;background:var(--acid);color:var(--ink);font-weight:700;font-size:13px;letter-spacing:.04em;padding:5px 10px;text-transform:uppercase}
+.spot-portrait.full img,.spot-portrait.full .ph{filter:grayscale(1) brightness(.35)}
+.spot-portrait.full .slash{opacity:.25}
+.spot-portrait.full .spot-load{background:var(--paper);color:var(--ink)}
+.tile .tb{position:absolute;left:0;right:0;bottom:17px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);background:var(--acid);padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:skewX(6deg)}
+.tile.full{cursor:not-allowed;border-color:var(--line)!important;box-shadow:none!important;animation:none!important}
+.tile.full img{filter:grayscale(1) brightness(.3)!important}
+.tile.full .ti{color:rgba(240,236,225,.15)}
+.tile.full .tb{background:var(--paper)}
+.load-note{color:#ff6a6f;font-size:14px;margin:4px 0 0}
 /* chân trang: logo quán, câu chào, nút mạng xã hội */
 footer.foot{border-top:1px solid var(--line);margin-top:24px;padding-block:36px 44px}
 footer.foot .fmark{display:block;height:22px;width:auto}
@@ -420,8 +431,8 @@ const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
 const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
-  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},
-  loaded:{idols:false,reviews:false,bookings:false},stale:false,dbMissing:false,
+  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},
+  loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false},
   rv:{idol:"",period:"",limit:30}};
@@ -563,6 +574,39 @@ function specLine(i){
   return out.join(" · ");
 }
 
+/* ---------- khách đặt trước theo promoter (anh Minh 07/11/2026) ----------
+   - chỉ đặt bàn quản lý đã bấm xác nhận (hoặc khách đã đến) mới được tính; yêu cầu khách vừa gửi chưa tính;
+   - đếm theo ngày khách đặt, mỗi promoter tối đa LOAD_MAX khách một ngày;
+   - đủ rồi: ảnh tối lại, không đặt được ngày đó nữa, vẫn bấm vào xem và đặt ngày khác;
+   - số đếm công khai ở idolLoad/{ngày} { date, counts:{idolId:n} }: chỉ có con số, không tên, không số điện thoại.
+     máy quản lý tự tính lại từ danh sách đặt bàn mỗi khi có thay đổi rồi ghi vào đó. */
+const LOAD_MAX=2;
+const loadLabel=n=>`${n} guest${n>1?"s":""} pre-booked${n>=LOAD_MAX?" · fully booked":""}`;
+const loadTile=n=>n>=LOAD_MAX?"fully booked":`${n} pre-booked`;
+const loadCounted=b=>b.status==="confirmed"||b.status==="seated";
+/* quản lý: đếm thẳng từ danh sách đặt bàn (chính xác nhất); khách: đọc số công khai */
+function loadOf(date,idolId,exceptId){
+  if(S.canEdit&&S.loaded.bookings)return S.bookings.filter(b=>loadCounted(b)&&b.date===date&&b.id!==exceptId&&(b.idolIds||[]).includes(idolId)).length;
+  return ((S.loads[date]||{})[idolId])||0;
+}
+const loadFull=(date,idolId,exceptId)=>loadOf(date,idolId,exceptId)>=LOAD_MAX;
+/* promoter đã đủ khách ngày đó, trừ chính đặt bàn đang sửa: trả về tên để báo cho quản lý */
+const fullIdols=(date,ids,exceptId)=>(ids||[]).filter(id=>loadFull(date,id,exceptId)).map(id=>(idolById(id)||{}).stageName||"promoter");
+const loadFullMsg=(names,date)=>`${names.join(", ")} đã đủ ${LOAD_MAX} khách đặt trước ngày ${fmtDate(date)}.`;
+let loadSyncT=0;
+function syncLoads(){
+  if(!S.canEdit||!S.loaded.bookings||!S.loaded.loads||!S.db)return;
+  clearTimeout(loadSyncT);
+  loadSyncT=setTimeout(async()=>{
+    const td=todayStr();const want={};
+    S.bookings.forEach(b=>{if(!loadCounted(b)||!b.date||b.date<td)return;const c=want[b.date]||(want[b.date]={});(b.idolIds||[]).forEach(id=>{c[id]=(c[id]||0)+1})});
+    const same=(a,b)=>{const ka=Object.keys(a).filter(k=>a[k]),kb=Object.keys(b).filter(k=>b[k]);return ka.length===kb.length&&ka.every(k=>a[k]===b[k])};
+    const dates=new Set([...Object.keys(want),...Object.keys(S.loads).filter(d=>d>=td)]);
+    for(const d of dates){const w=want[d]||{};if(same(w,S.loads[d]||{}))continue;
+      try{await S.db.doc("idolLoad/"+d).set({date:d,counts:w,updatedAt:Date.now()})}catch(e){console.warn("chưa ghi được số khách đặt trước",d,e)}}
+  },400);
+}
+
 /* ---------- lineup ---------- */
 const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH"],["nhảy cháy","NHẢY"]];
 const MIN_FOR_STATS=3;
@@ -583,11 +627,13 @@ function spotHTML(r,ghost){
   const hp=r&&r.n?Math.round(r.avg/5*100):0;
   const stats=r?statVals(r):STATS.map(([,l])=>[l,0]);
   const enough=r&&r.statN>=MIN_FOR_STATS;
-  return `<div class="spot-portrait">
+  const ld=ghost||!r?0:loadOf(todayStr(),i.id);const full=ld>=LOAD_MAX;
+  return `<div class="spot-portrait${full?" full":""}">
       <div class="slash" aria-hidden="true"></div>
       ${pid?`<img src="${esc(pid)}" alt="${esc(i.stageName)}" onerror="this.remove()">`:`<div class="ph" aria-hidden="true">${ghost?"?":esc(initials(i.stageName))}</div>`}
       ${side?`<img class="alt" src="${esc(side)}" alt="" aria-hidden="true" onerror="this.remove()">`:""}
       <div class="grade g-${g==="?"?"x":g}" aria-label="hạng ${g}">${g}</div>
+      ${ld?`<div class="spot-load" role="status">${loadLabel(ld)}</div>`:""}
     </div>
     <div class="spot-info">
       <div class="eyebrow">${ghost?"ví dụ bố cục":r.rank?`#${r.rank} · ${S.period==="month"?"tháng này":"từ đầu"}`:"chưa có hạng"}${i.team?` · team ${esc(i.team)}`:""}</div>
@@ -600,18 +646,21 @@ function spotHTML(r,ghost){
       <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?"chỉ số = tỉ lệ lượt chọn tag của khách":`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
       ${(i.forte||[]).length?`<div class="special"><span class="stat-l">SỞ TRƯỜNG</span><div class="forte">${i.forte.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${(i.talents||[]).length?`<div class="special"><span class="stat-l">KỸ NĂNG ĐẶC BIỆT</span><div class="talents">${i.talents.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
-      ${ghost?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
+      ${ghost||full?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
     </div>`;
 }
 function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
   const empty=!loading&&!rows.length;
-  if(!rows.find(r=>r.idol.id===S.sel))S.sel=rows[0]?rows[0].idol.id:null;
+  /* promoter đủ khách tối nay thì không chọn được (anh Minh 07/11): đang chọn người đã đủ thì chuyển sang người còn trống */
+  const tdy=todayStr();const isFull=id=>loadFull(tdy,id);
+  if(!rows.find(r=>r.idol.id===S.sel&&!isFull(r.idol.id))){const f=rows.find(r=>!isFull(r.idol.id))||rows[0];S.sel=f?f.idol.id:null}
   const cur=rows.find(r=>r.idol.id===S.sel);
-  const tiles=rows.length?rows.map((r,k)=>{const i=r.idol;const cid=coverId(i);return `<button class="tile${r.rank&&r.rank<=3?" top":""}" data-id="${esc(i.id)}" aria-pressed="${i.id===S.sel}" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}">
+  const td=tdy;
+  const tiles=rows.length?rows.map((r,k)=>{const i=r.idol;const cid=coverId(i);const ld=loadOf(td,i.id);const fl=ld>=LOAD_MAX;return `<button class="tile${r.rank&&r.rank<=3?" top":""}${fl?" full":""}" data-id="${esc(i.id)}" ${fl&&i.id!==S.sel?"disabled":""} aria-pressed="${i.id===S.sel}" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
       ${cid?`<img src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:`<span class="ti">${esc(initials(i.stageName))}</span>`}
-      ${r.rank?`<span class="tr">${r.rank}</span>`:""}<span class="tn">${esc(i.stageName)}</span><span class="p1" aria-hidden="true">P1</span></button>`}).join("")
+      ${r.rank?`<span class="tr">${r.rank}</span>`:""}${ld?`<span class="tb" aria-hidden="true">${loadTile(ld)}</span>`:""}<span class="tn">${esc(i.stageName)}</span><span class="p1" aria-hidden="true">P1</span></button>`}).join("")
     :Array.from({length:8},()=>`<div class="tile ghost" aria-hidden="true"><span class="ti">?</span></div>`).join("");
   app.innerHTML=`
   ${banner()}
@@ -643,7 +692,7 @@ function renderLineup(){
   };
   const sr=document.getElementById("spotRate");if(sr&&cur)sr.onclick=()=>{S.rate.idolId=cur.idol.id};
   armFlip();
-  const tilesEl=[...app.querySelectorAll(".tile[data-id]")];
+  const tilesEl=[...app.querySelectorAll(".tile[data-id]:not(.full)")];
   const pick=(b,focus)=>{
     if(S.sel===b.dataset.id)return;
     S.sel=b.dataset.id;tilesEl.forEach(x=>x.setAttribute("aria-pressed",x===b));show(S.sel,true);if(focus)b.focus();
@@ -852,7 +901,7 @@ function renderReviews(){
 /* ---------- khách đặt bàn từ lineup ---------- */
 function renderBook(idolId){
   const B=S.book;
-  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false})}
+  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(loadFull(todayStr(),idolId)?isoOfVN(Date.now()+86400e3):todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false})}
   const i=idolById(idolId);
   if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
   if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. hẹn gặp quý khách ở quán sớm nhất.</p>${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
@@ -867,7 +916,7 @@ function renderBook(idolId){
         <div class="f"><span>danh xưng *</span><div class="tags" role="radiogroup" aria-label="danh xưng">${["Mr","Miss"].map(t=>`<button type="button" class="chip bsal" role="radio" data-v="${t}" aria-checked="${B.salutation===t}" aria-pressed="${B.salutation===t}">${t}</button>`).join("")}</div></div>
         <label class="f">tên bạn *<input id="b_name" required maxlength="40" value="${esc(B.guestName)}"></label>
         <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" value="${esc(B.phone)}"></label>
-        <label class="f">ngày *<input id="b_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(B.dateText)}"><small class="dhint">${esc(dateHint(B.dateText))}</small></label>
+        <label class="f">ngày *<input id="b_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(B.dateText)}"><small class="dhint">${esc(dateHint(B.dateText))}</small><small class="load-note" id="loadNote" role="status"></small></label>
         <label class="f">giờ đến *<input id="b_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time required value="${esc(B.time)}"></label>
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" value="${esc(B.guests)}"></label>
       </div>
@@ -882,7 +931,9 @@ function renderBook(idolId){
   app.querySelectorAll(".bsal").forEach(x=>x.onclick=()=>{sync();B.salutation=x.dataset.v;B.err="";render()});
   app.querySelectorAll(".tspot").forEach(x=>x.onclick=()=>{const t=x.dataset.t;if(HOLDS.taken.has(t))return;B.table=B.table===t?"":t;paintMap(B)});
   app.querySelectorAll("[data-tclear]").forEach(x=>x.onclick=()=>{B.table="";paintMap(B)});
-  const bd=document.getElementById("b_date");bd.addEventListener("input",()=>{B.dateText=bd.value;watchHoldsFor(dmToIso(bd.value),B)});
+  const paintLoad=()=>{const d=dmToIso(B.dateText);const el=document.getElementById("loadNote");if(el)el.textContent=d&&loadFull(d,idolId)?`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`:""};
+  const bd=document.getElementById("b_date");bd.addEventListener("input",()=>setTimeout(()=>{B.dateText=bd.value;watchHoldsFor(dmToIso(bd.value),B);paintLoad()},0));
+  paintLoad();
   const bt=document.getElementById("b_time");bt.addEventListener("input",()=>setTimeout(()=>{B.time=bt.value;paintMap(B)},0)); // chờ ô giờ tự định dạng HH:MM xong
   watchHoldsFor(dmToIso(B.dateText),B);
   document.getElementById("bookForm").onsubmit=async ev=>{
@@ -892,6 +943,7 @@ function renderBook(idolId){
     const date=dmToIso(B.dateText);
     if(!date){B.err="ngày chưa đúng, gõ kiểu 08/11.";return render()}
     if(date<todayStr()){B.err="ngày này đã qua rồi.";return render()}
+    if(loadFull(date,idolId)){B.err=`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`;return render()}
     if(!okTime(B.time)){B.err="giờ đến chưa đúng, gõ kiểu 22:30.";return render()}
     if(arrivalPast(date,B.time,Date.now())){B.err=ARRIVAL_PAST_MSG;return render()}
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
@@ -1043,7 +1095,7 @@ function adminBookings(p){
   p.querySelectorAll("[data-bf]").forEach(x=>x.onclick=()=>{S.bookFilter=x.dataset.bf;render()});
   document.getElementById("newBook").onclick=()=>{S.bookEdit={date:td,idolIds:[]};drawBookForm()};
   p.querySelectorAll("[data-bedit]").forEach(x=>x.onclick=()=>{S.bookEdit=JSON.parse(JSON.stringify(S.bookings.find(b=>b.id===x.dataset.bedit)));drawBookForm();document.getElementById("bookSlot").scrollIntoView({block:"start"})});
-  p.querySelectorAll("[data-bconfirm]").forEach(x=>x.onclick=()=>bookPatch(x,x.dataset.bconfirm,{status:"confirmed"}));
+  p.querySelectorAll("[data-bconfirm]").forEach(x=>x.onclick=()=>{const b=S.bookings.find(y=>y.id===x.dataset.bconfirm);const f=b?fullIdols(b.date,b.idolIds,b.id):[];if(f.length){x.textContent=loadFullMsg(f,b.date);return}bookPatch(x,x.dataset.bconfirm,{status:"confirmed"})});
   p.querySelectorAll("[data-bcancel]").forEach(x=>{let armed=false;x.onclick=()=>{if(!armed){armed=true;x.textContent="bấm lần nữa để huỷ";return}bookPatch(x,x.dataset.bcancel,{status:"cancelled"})}});
   p.querySelectorAll("[data-bseat]").forEach(x=>x.onclick=()=>seatBooking(x,x.dataset.bseat));
   const ts=document.getElementById("tblSave");if(ts)ts.onclick=async()=>{const list=parseTables(document.getElementById("tblList").value);const m=document.getElementById("tblMsg");ts.disabled=true;
@@ -1064,7 +1116,7 @@ function bookingCard(b){
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
       <div class="rowbtns">
-        ${b.status==="requested"?`<button class="ghostbtn" data-bconfirm="${esc(b.id)}">xác nhận</button>`:""}
+        ${b.status==="requested"?(fullIdols(b.date,b.idolIds,b.id).length?`<span class="pill bad">${esc(loadFullMsg(fullIdols(b.date,b.idolIds,b.id),b.date))} đổi promoter hoặc huỷ</span>`:`<button class="ghostbtn" data-bconfirm="${esc(b.id)}">xác nhận</button>`):""}
         ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn${tableSelect("seat_"+b.id,b.table,b.id,false,b.date)}</label><button class="cta" data-bseat="${esc(b.id)}" ${(S.tables||[]).length?"":"disabled"}>khách đã đến · tạo mã bàn</button>`:""}
         ${b.status==="seated"&&!allRated?`<a class="cta" href="#table-${esc(b.id)}">mở màn đánh giá</a>`:""}
         ${b.status!=="cancelled"&&b.status!=="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">sửa</button><button class="ghostbtn danger" data-bcancel="${esc(b.id)}">huỷ</button>`:""}
@@ -1080,6 +1132,7 @@ async function seatBooking(btn,id){
   if(busyTables(id).has(table)){btn.textContent="bàn "+table+" đang có khách";return}
   if(bookedOn(b.date,id).has(table)){btn.textContent="bàn "+table+" đã có khách khác đặt ngày này";return}
   if(!(b.idolIds||[]).length){btn.textContent="chọn promoter cho bàn trước";return}
+  if(!loadCounted(b)){const f=fullIdols(b.date,b.idolIds,b.id);if(f.length){btn.textContent=loadFullMsg(f,b.date)+" đổi promoter trước";return}}
   btn.disabled=true;btn.textContent="đang tạo mã…";
   try{
     const have=new Set(S.bills.map(x=>x.code));let c;do{c=mkCode()}while(have.has(c));
@@ -1119,6 +1172,7 @@ function drawBookForm(){
     if(val("k_time")&&!okTime(val("k_time"))){err.textContent="giờ đến chưa đúng, gõ kiểu 22:30.";return}
     if(e.status==="seated"&&!(S.tables||[]).includes(val("k_table").toUpperCase())){err.textContent="bàn đang ngồi phải là số bàn trên sơ đồ.";return}
     {const kt=val("k_table").toUpperCase();if(kt&&bookedOn(kdate,e.id).has(kt)){err.textContent="bàn "+kt+" ngày này đã có khách khác đặt.";return}}
+    {const st=e.status==="requested"?"confirmed":(e.status||"confirmed");if(loadCounted({status:st})){const f=fullIdols(kdate,e.idolIds,e.id);if(f.length){err.textContent=loadFullMsg(f,kdate)+" chọn promoter khác.";return}}}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
     const body={guestName:capName(name).slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:kdate,time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
@@ -1298,9 +1352,10 @@ render();
   db.collection("idols").onSnapshot(s=>{S.idols=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.idols=true;settle(s);soon()},onErr);
   db.collection("reviews").onSnapshot(s=>{S.reviews=s.docs.map(d=>({...d.data(),id:d.id})).filter(r=>r.stars>=1&&r.stars<=5);S.loaded.reviews=true;settle(s);soon()},onErr);
   db.collection("moderation").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.mod=m;soon()},()=>{});
+  if(db.watchLoads)db.watchLoads(todayStr(),list=>{const m={};list.forEach(x=>{m[x.date]=x.counts||{}});S.loads=m;S.loaded.loads=true;syncLoads();soon()},()=>{S.loaded.loads=false});
   if(S.canEdit){
     db.collection("bills").onSnapshot(s=>{S.bills=s.docs.map(d=>d.data());soon()},()=>{});
-    db.collection("bookings").onSnapshot(s=>{S.bookings=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.bookings=true;soon()},()=>{S.loaded.bookings=true});
+    db.collection("bookings").onSnapshot(s=>{S.bookings=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.bookings=true;syncLoads();soon()},()=>{S.loaded.bookings=true});
     db.collection("notes").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.notes=m;soon()},()=>{});
     db.collection("venue").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="tables");S.tables=d?(d.data().list||[]):DEFAULT_TABLES.slice();S.loaded.tables=true;soon()},()=>{S.tables=DEFAULT_TABLES.slice();S.loaded.tables=true});
     db.collection("redeemed").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.redeemed=m;soon()},()=>{});
