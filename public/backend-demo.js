@@ -98,6 +98,14 @@ function makeDb(staff) {
       setTimeout(fire, 0);
       return () => { subs.tableHolds = (subs.tableHolds || []).filter((f) => f !== fire); };
     },
+    // Lượt mở trang theo ngày (visits/{ngày} { date, n }).
+    countVisit: async (date) => { const v = col("visits"); v[date] = { date, n: ((v[date] || {}).n || 0) + 1 }; save(); notify("visits"); },
+    watchVisits: (fromDate, next) => {
+      const fire = () => next(Object.values(col("visits")).filter((x) => x.date >= fromDate).map((x) => ({ date: x.date, n: x.n || 0 })));
+      (subs.visits = subs.visits || []).push(fire);
+      setTimeout(fire, 0);
+      return () => { subs.visits = (subs.visits || []).filter((f) => f !== fire); };
+    },
     // Số khách đặt trước đã xác nhận theo ngày (idolLoad/{ngày}), ai cũng xem được, chỉ có con số.
     watchLoads: (fromDate, next) => {
       const fire = () => next(Object.values(col("idolLoad")).filter((x) => x.date >= fromDate).map((x) => ({ date: x.date, counts: x.counts || {} })));

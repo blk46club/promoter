@@ -306,6 +306,14 @@ h1.display.rate-name{font-size:clamp(44px,8vw,80px);line-height:1.25;margin:0 0 
 /* admin */
 .admin{padding-block:24px 64px;display:grid;gap:18px}
 .subtabs{display:flex;gap:6px;flex-wrap:wrap}
+/* ô lượt truy cập + dung lượng tải ra (chỉ quản lý) */
+.usage{border:1px solid var(--line);padding:12px 14px;margin:14px 0 4px;display:grid;gap:8px}
+.usage .u-row{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.usage .u-row b{font-family:var(--display);font-size:24px;color:var(--paper);font-weight:400;margin-right:4px}
+.usage .u-bar{height:8px;background:rgba(240,236,225,.1);position:relative;overflow:hidden}
+.usage .u-bar i{position:absolute;inset:0 auto 0 0;background:var(--acid)}
+.usage .u-bar.warn i{background:#ff6a6f}
+.usage .note{margin:0}
 .panel{display:grid;gap:14px}
 .table{overflow-x:auto;border:1px solid var(--line)}
 table{border-collapse:collapse;width:100%;min-width:620px;font-size:13px}
@@ -431,7 +439,7 @@ const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
 const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
-  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},
+  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false},
@@ -605,6 +613,38 @@ function syncLoads(){
     for(const d of dates){const w=want[d]||{};if(same(w,S.loads[d]||{}))continue;
       try{await S.db.doc("idolLoad/"+d).set({date:d,counts:w,updatedAt:Date.now()})}catch(e){console.warn("chưa ghi được số khách đặt trước",d,e)}}
   },400);
+}
+
+/* ---------- lượt mở trang + ước tính dung lượng tải ra (anh Minh 07/11/2026) ----------
+   gói miễn phí Firebase không có đồng hồ cho dữ liệu tải ra (10 GB/tháng), nên quán tự đếm:
+   - mỗi máy khách cộng 1 lượt khi mở web, tối đa 1 lần / 30 phút; máy quản lý và màn tablet chấm điểm không đếm;
+   - dung lượng mỗi lượt = ước tính từ dữ liệu khách tải về lúc mở lineup (hồ sơ promoter kèm ảnh + đánh giá);
+   - tháng này ≈ số lượt × dung lượng mỗi lượt hiện tại (ước tính, không phải số Firebase đo). */
+const VISIT_GAP_MS=30*60e3,FREE_EGRESS_GB=10;
+function countVisitOnce(){
+  if(S.canEdit||!S.db||!S.db.countVisit||route().view==="table")return;
+  try{const k="blk46:lastVisit";const last=+localStorage.getItem(k)||0;if(Date.now()-last<VISIT_GAP_MS)return;localStorage.setItem(k,String(Date.now()))}catch(_){}
+  S.db.countVisit(isoOfVN(Date.now())).catch(()=>{});
+}
+function bytesPerVisit(){
+  const pub=S.idols.filter(isPublic);
+  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,photos:i.photos,talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight,bust:i.bust,waist:i.waist,hip:i.hip}).length+120,0);
+  const revB=S.reviews.reduce((t,r)=>t+JSON.stringify(r).length+120,0);
+  const modB=Object.keys(S.mod||{}).length*150;
+  return Math.round((idolB+revB+modB+600)*1.1); // +10% phần đầu gói tin của Firestore (ước tính)
+}
+const fmtBytes=b=>b>=1e9?(b/1e9).toFixed(2).replace(".",",")+" GB":b>=1e6?(b/1e6).toFixed(1).replace(".",",")+" MB":Math.max(1,Math.round(b/1e3))+" KB";
+function usageBox(){
+  const td=isoOfVN(Date.now());const m0=td.slice(0,8)+"01";
+  const today=(S.visits.find(v=>v.date===td)||{}).n||0;
+  const month=S.visits.filter(v=>v.date>=m0).reduce((t,v)=>t+v.n,0);
+  const per=bytesPerVisit();const used=month*per;const pct=Math.min(100,used/(FREE_EGRESS_GB*1e9)*100);
+  const left=per?Math.max(0,Math.floor((FREE_EGRESS_GB*1e9-used)/per)):0;
+  return `<div class="usage" aria-label="lượt truy cập và dung lượng tải ra">
+    <div class="u-row"><span><b>${today}</b>lượt hôm nay</span><span><b>${month}</b>lượt tháng này</span><span><b>${fmtBytes(per)}</b>mỗi lượt</span><span><b>${fmtBytes(used)}</b>/ ${FREE_EGRESS_GB} GB tải ra tháng này</span></div>
+    <div class="u-bar${pct>=80?" warn":""}"><i style="width:${pct.toFixed(1)}%"></i></div>
+    <p class="note">ước tính, không phải số Firebase đo. với dung lượng hiện tại, tháng này còn khoảng ${left.toLocaleString("vi-VN")} lượt mở trang trước khi chạm ${FREE_EGRESS_GB} GB miễn phí. mỗi máy chỉ đếm 1 lần / 30 phút, máy quản lý không đếm.</p>
+  </div>`;
 }
 
 /* ---------- lineup ---------- */
@@ -1206,6 +1246,7 @@ function renderAdmin(){
   app.innerHTML=`${banner()}
   <section class="admin">
     <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display admin-title">QUẢN LÝ</h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
+    ${usageBox()}
     <div class="subtabs" role="tablist">
       ${[["bookings","đặt bàn"],["idols","hồ sơ promoter"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
     </div>
@@ -1352,6 +1393,8 @@ render();
   db.collection("idols").onSnapshot(s=>{S.idols=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.idols=true;settle(s);soon()},onErr);
   db.collection("reviews").onSnapshot(s=>{S.reviews=s.docs.map(d=>({...d.data(),id:d.id})).filter(r=>r.stars>=1&&r.stars<=5);S.loaded.reviews=true;settle(s);soon()},onErr);
   db.collection("moderation").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.mod=m;soon()},()=>{});
+  countVisitOnce();
+  if(S.canEdit&&db.watchVisits)db.watchVisits(isoOfVN(Date.now()).slice(0,8)+"01",list=>{S.visits=list;soon()},()=>{});
   if(db.watchLoads)db.watchLoads(todayStr(),list=>{const m={};list.forEach(x=>{m[x.date]=x.counts||{}});S.loads=m;S.loaded.loads=true;syncLoads();soon()},()=>{S.loaded.loads=false});
   if(S.canEdit){
     db.collection("bills").onSnapshot(s=>{S.bills=s.docs.map(d=>d.data());soon()},()=>{});

@@ -4,7 +4,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, doc, query, where, onSnapshot, getDoc, setDoc, updateDoc,
-  deleteDoc, runTransaction, writeBatch, connectFirestoreEmulator,
+  deleteDoc, runTransaction, writeBatch, connectFirestoreEmulator, increment,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, connectAuthEmulator,
@@ -121,6 +121,11 @@ function makeDb(staff) {
     watchHolds: (date, next, err) => onSnapshot(
       query(collection(fs, "tableHolds"), where("date", "==", date)),
       (s) => next(s.docs.map((d) => { const h = d.data(); return { table: h.table, until: h.until || null, seated: !!h.seated }; })), err),
+    // Lượt mở trang theo ngày (visits/{ngày} { date, n }): khách chỉ được cộng 1, chỉ quản lý đọc.
+    countVisit: (date) => setDoc(doc(fs, "visits/" + date), { date, n: increment(1) }, { merge: true }),
+    watchVisits: (fromDate, next, err) => onSnapshot(
+      query(collection(fs, "visits"), where("date", ">=", fromDate)),
+      (s) => next(s.docs.map((d) => { const x = d.data(); return { date: x.date, n: x.n || 0 }; })), err),
     // Số khách đặt trước đã xác nhận theo ngày (idolLoad/{ngày}): công khai, chỉ có con số theo promoter.
     watchLoads: (fromDate, next, err) => onSnapshot(
       query(collection(fs, "idolLoad"), where("date", ">=", fromDate)),
