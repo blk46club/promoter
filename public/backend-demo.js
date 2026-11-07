@@ -47,7 +47,7 @@ function seed() {
     const comment = SAMPLE_COMMENTS[(n * 7) % SAMPLE_COMMENTS.length];
     reviews[id] = { idolId: "demo" + (k + 1), stars: s, tags: POS.filter((_, t) => ((t + 1) * (k + 2) + j) % 5 < 1 + ((t + k) % 4)), comment: j % 3 === 0 ? comment : "", createdAt: now - j * 3600e3 };
   }));
-  return { idols, reviews, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {}, tableHolds: {} };
+  return { idols, reviews, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {}, tableHolds: {}, idolLoad: {} };
 }
 if (!data) { data = seed(); try { save(); } catch (_) {} }
 
@@ -98,6 +98,13 @@ function makeDb(staff) {
       setTimeout(fire, 0);
       return () => { subs.tableHolds = (subs.tableHolds || []).filter((f) => f !== fire); };
     },
+    // Số khách đặt trước đã xác nhận theo ngày (idolLoad/{ngày}), ai cũng xem được, chỉ có con số.
+    watchLoads: (fromDate, next) => {
+      const fire = () => next(Object.values(col("idolLoad")).filter((x) => x.date >= fromDate).map((x) => ({ date: x.date, counts: x.counts || {} })));
+      (subs.idolLoad = subs.idolLoad || []).push(fire);
+      setTimeout(fire, 0);
+      return () => { subs.idolLoad = (subs.idolLoad || []).filter((f) => f !== fire); };
+    },
     // Khách gửi đặt bàn kèm bàn muốn ngồi: giữ bàn và tạo đặt bàn cùng lúc, bàn đã có người giữ thì báo "taken".
     createBooking: async (bookingId, booking, holdId, hold) => {
       // Bàn đã giữ mà quá giờ giữ (quản lý chưa xếp khách vào) thì khách sau được giữ lại.
@@ -127,7 +134,7 @@ export const backend = {
   login: async (email) => { localStorage.setItem(AUTH, email || "demo@blk46"); },
   logout: async () => { localStorage.removeItem(AUTH); },
   resetDemo: () => { data = seed(); save(); Object.keys(data).forEach(notify); },
-  clearDemo: () => { data = { idols: {}, reviews: {}, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {}, tableHolds: {} }; save(); Object.keys(data).forEach(notify); },
+  clearDemo: () => { data = { idols: {}, reviews: {}, moderation: {}, notes: {}, bills: {}, redeemed: {}, bookings: {}, tableHolds: {}, idolLoad: {} }; save(); Object.keys(data).forEach(notify); },
 };
 
 export const claude = {

@@ -87,6 +87,17 @@ service cloud.firestore {
       );
     }
 
+    // Số khách đặt trước đã xác nhận theo ngày: idolLoad/{ngày} { date, counts: { idolId: số }, updatedAt }.
+    // Chỉ có con số theo promoter, không tên hay số điện thoại khách, nên ai cũng đọc được. Chỉ quản lý ghi.
+    match /idolLoad/{d} {
+      allow read: if true;
+      allow delete: if isStaff();
+      allow create, update: if isStaff() &&
+        request.resource.data.keys().hasOnly(['date', 'counts', 'updatedAt']) &&
+        request.resource.data.date == d &&
+        request.resource.data.counts is map;
+    }
+
     // Đặt bàn: khách gửi yêu cầu (chỉ tạo mới, đúng khuôn), quản lý đọc và xử lý.
     match /bookings/{id} {
       allow read, update, delete: if isStaff();

@@ -121,6 +121,10 @@ function makeDb(staff) {
     watchHolds: (date, next, err) => onSnapshot(
       query(collection(fs, "tableHolds"), where("date", "==", date)),
       (s) => next(s.docs.map((d) => { const h = d.data(); return { table: h.table, until: h.until || null, seated: !!h.seated }; })), err),
+    // Số khách đặt trước đã xác nhận theo ngày (idolLoad/{ngày}): công khai, chỉ có con số theo promoter.
+    watchLoads: (fromDate, next, err) => onSnapshot(
+      query(collection(fs, "idolLoad"), where("date", ">=", fromDate)),
+      (s) => next(s.docs.map((d) => { const x = d.data(); return { date: x.date, counts: x.counts || {} }; })), err),
     // Khách gửi đặt bàn kèm bàn muốn ngồi: ghi đặt bàn + giữ bàn trong một lần.
     // Luật bảo mật chặn giữ trùng: khách chỉ ghi đè được bàn đã quá giờ giữ mà chưa xếp khách vào.
     createBooking: async (bookingId, booking, holdId, hold) => {
