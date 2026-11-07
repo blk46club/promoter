@@ -16,6 +16,19 @@ import { firebaseConfig } from "./firebase-config.js";
 import { compressImage } from "./image.js";
 
 const app = initializeApp(firebaseConfig);
+// App Check (chống bot gửi đặt bàn hàng loạt): chỉ bật khi firebase-config.js có appCheckKey (khoá reCAPTCHA Enterprise).
+// Nạp lỗi (trình chặn quảng cáo, mạng chập) thì web vẫn chạy bình thường. Chỉ khi bấm "Enforce" trong Firebase
+// thì request không có token mới bị chặn, nên xem số liệu App Check vài ngày rồi hãy Enforce.
+if (firebaseConfig.appCheckKey && location.hostname !== "localhost") {
+  try {
+    const { initializeAppCheck, ReCaptchaEnterpriseProvider } =
+      await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js");
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(firebaseConfig.appCheckKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (e) { console.warn("App Check chưa bật được", e); }
+}
 const fs = getFirestore(app);
 const auth = getAuth(app);
 const storage = firebaseConfig.useStorage ? getStorage(app) : null;
