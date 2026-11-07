@@ -25,6 +25,8 @@ const CFG = {
 const STATUS_VI = { requested: "chờ xác nhận", confirmed: "đã xác nhận", seated: "đã đến", cancelled: "đã huỷ" };
 const HEADER = ["giờ đến", "danh xưng", "tên khách", "số điện thoại", "số người", "bàn", "promoter",
   "trạng thái", "mã bàn", "tip (đ)", "tip từng promoter", "tip đã cộng bill", "giữ bàn đến", "nguồn", "ghi chú", "gửi đặt lúc"];
+// độ rộng tối thiểu từng cột (px), cùng thứ tự HEADER; cột ghi chú cố định và xuống dòng
+const COL_W = [80, 95, 170, 130, 85, 70, 150, 115, 90, 100, 210, 135, 110, 160, 280, 150];
 
 /** Chạy mỗi sáng: lưu đêm hôm qua. */
 function luuDemHomQua() {
@@ -69,12 +71,16 @@ function luuNgay(iso) {
   sh.getRange(1, 1, 1, HEADER.length).setValues([HEADER]).setFontWeight("bold");
   if (rows.length) sh.getRange(2, 1, rows.length, HEADER.length).setValues(rows);
   else sh.getRange(2, 1).setValue("không có đặt bàn nào đêm này");
+  if (rows.length) sh.autoResizeColumns(1, HEADER.length);
+  COL_W.forEach((w, i) => sh.setColumnWidth(i + 1, i === 14 || !rows.length ? w : Math.max(w, sh.getColumnWidth(i + 1) + 20)));
+  sh.getRange(1, 1, Math.max(rows.length, 1) + 1, HEADER.length).setVerticalAlignment("middle");
+  sh.getRange(1, 15, Math.max(rows.length, 1) + 1, 1).setWrap(true);
+  sh.setRowHeight(1, 30);
   const tong = rows.length, den = rows.filter((r) => r[7] === "đã đến").length, huy = rows.filter((r) => r[7] === "đã huỷ").length;
   const tipSum = rows.reduce((s, r) => s + (Number(r[9]) || 0), 0);
   sh.getRange(rows.length + 3, 1, 1, 2).setValues([["tổng", tong + " đơn · " + den + " đã đến · " + huy + " huỷ · tip " + tipSum.toLocaleString("vi-VN") + "đ"]]).setFontWeight("bold");
   if (rows.length) sh.getRange(2, 10, rows.length, 1).setNumberFormat("#,##0");
   sh.setFrozenRows(1);
-  sh.autoResizeColumns(1, HEADER.length);
   console.log("đã lưu " + tong + " đơn vào " + ss.getUrl());
 }
 
