@@ -87,6 +87,17 @@ service cloud.firestore {
       );
     }
 
+    // Lượt mở trang theo ngày: visits/{ngày} { date, n }. Khách chỉ được tạo với n = 1 hoặc cộng thêm đúng 1.
+    // Không có thông tin khách. Chỉ quản lý đọc (để ước tính dung lượng tải ra so với 10 GB/tháng miễn phí).
+    match /visits/{d} {
+      allow read, delete: if isStaff();
+      allow create: if d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        request.resource.data.keys().hasOnly(['date', 'n']) &&
+        request.resource.data.date == d && request.resource.data.n == 1;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['n']) &&
+        request.resource.data.n == resource.data.n + 1;
+    }
+
     // Số khách đặt trước đã xác nhận theo ngày: idolLoad/{ngày} { date, counts: { idolId: số }, updatedAt }.
     // Chỉ có con số theo promoter, không tên hay số điện thoại khách, nên ai cũng đọc được. Chỉ quản lý ghi.
     match /idolLoad/{d} {
