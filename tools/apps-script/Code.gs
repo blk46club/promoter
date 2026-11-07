@@ -24,7 +24,7 @@ const CFG = {
 
 const STATUS_VI = { requested: "chờ xác nhận", confirmed: "đã xác nhận", seated: "đã đến", cancelled: "đã huỷ" };
 const HEADER = ["giờ đến", "danh xưng", "tên khách", "số điện thoại", "số người", "bàn", "promoter",
-  "trạng thái", "mã bàn", "giữ bàn đến", "nguồn", "ghi chú", "gửi đặt lúc"];
+  "trạng thái", "mã bàn", "tip (đ)", "tip từng promoter", "tip đã cộng bill", "giữ bàn đến", "nguồn", "ghi chú", "gửi đặt lúc"];
 
 /** Chạy mỗi sáng: lưu đêm hôm qua. */
 function luuDemHomQua() {
@@ -38,7 +38,9 @@ function luuNgayTay() { luuNgay("2026-11-07"); }
 function luuNgay(iso) {
   const token = dangNhap_();
   const idolNames = tenPromoter_(token);
-  const rows = layDatBan_(token, iso).map((b) => [
+  const list = layDatBan_(token, iso);
+  const tips = layTip_(token, list.map((b) => b.id));
+  const rows = list.map((b) => { const t = tips[b.id] || { sum: 0, by: {}, n: 0, added: 0 }; return [
     b.time || "",
     b.salutation || "",
     b.guestName || "",
@@ -48,11 +50,14 @@ function luuNgay(iso) {
     (b.idolIds || []).map((id) => idolNames[id] || id).join(", "),
     STATUS_VI[b.status] || b.status || "",
     b.code || "",
+    t.sum || "",
+    Object.entries(t.by).map(([id, v]) => (idolNames[id] || id) + ": " + v.toLocaleString("vi-VN")).join(", "),
+    t.n ? (t.added === t.n ? "đã cộng" : t.added ? "cộng " + t.added + "/" + t.n : "chưa cộng") : "",
     b.holdUntil ? Utilities.formatDate(new Date(Number(b.holdUntil)), CFG.tz, "HH:mm") : "",
     b.source === "web" ? "khách đặt trên web" : "quản lý tạo",
     b.note || "",
     b.createdAt ? Utilities.formatDate(new Date(Number(b.createdAt)), CFG.tz, "dd/MM/yyyy HH:mm") : "",
-  ]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  ]; }).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
 
   const [y, m, dd] = iso.split("-");
   const label = dd + "-" + m + "-" + y;
@@ -65,7 +70,9 @@ function luuNgay(iso) {
   if (rows.length) sh.getRange(2, 1, rows.length, HEADER.length).setValues(rows);
   else sh.getRange(2, 1).setValue("không có đặt bàn nào đêm này");
   const tong = rows.length, den = rows.filter((r) => r[7] === "đã đến").length, huy = rows.filter((r) => r[7] === "đã huỷ").length;
-  sh.getRange(rows.length + 3, 1, 1, 2).setValues([["tổng", tong + " đơn · " + den + " đã đến · " + huy + " huỷ"]]).setFontWeight("bold");
+  const tipSum = rows.reduce((s, r) => s + (Number(r[9]) || 0), 0);
+  sh.getRange(rows.length + 3, 1, 1, 2).setValues([["tổng", tong + " đơn · " + den + " đã đến · " + huy + " huỷ · tip " + tipSum.toLocaleString("vi-VN") + "đ"]]).setFontWeight("bold");
+  if (rows.length) sh.getRange(2, 10, rows.length, 1).setNumberFormat("#,##0");
   sh.setFrozenRows(1);
   sh.autoResizeColumns(1, HEADER.length);
   console.log("đã lưu " + tong + " đơn vào " + ss.getUrl());
@@ -123,6 +130,25 @@ function layDatBan_(token, iso) {
     where: { fieldFilter: { field: { fieldPath: "date" }, op: "EQUAL", value: { stringValue: iso } } },
   } });
   return res.filter((x) => x.document).map((x) => doc_(x.document));
+}
+
+/* Tip khách để lại khi chấm điểm (notes/*: bookingId, idolId, tip, tipAdded). Chỉ quản lý đọc được. */
+function layTip_(token, ids) {
+  const out = {};
+  for (let i = 0; i < ids.length; i += 30) {
+    const chunk = ids.slice(i, i + 30);
+    const res = fs_(token, ":runQuery", { structuredQuery: {
+      from: [{ collectionId: "notes" }],
+      where: { fieldFilter: { field: { fieldPath: "bookingId" }, op: "IN",
+        value: { arrayValue: { values: chunk.map((x) => ({ stringValue: x })) } } } },
+    } });
+    res.filter((x) => x.document).map((x) => doc_(x.document)).forEach((n) => {
+      const tip = Number(n.tip) || 0; if (!tip) return;
+      const o = out[n.bookingId] || (out[n.bookingId] = { sum: 0, by: {}, n: 0, added: 0 });
+      o.sum += tip; o.by[n.idolId] = (o.by[n.idolId] || 0) + tip; o.n++; if (n.tipAdded) o.added++;
+    });
+  }
+  return out;
 }
 
 function tenPromoter_(token) {
