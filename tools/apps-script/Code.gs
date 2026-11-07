@@ -96,11 +96,10 @@ function dangNhap_() {
 
 function fs_(token, path, body) {
   const base = "https://firestore.googleapis.com/v1/projects/" + CFG.projectId + "/databases/(default)/documents";
-  const r = UrlFetchApp.fetch(base + path, {
-    method: body ? "post" : "get", contentType: "application/json", muteHttpExceptions: true,
-    headers: { Authorization: "Bearer " + token, Referer: CFG.referer },
-    payload: body ? JSON.stringify(body) : undefined,
-  });
+  const opt = { method: body ? "post" : "get", muteHttpExceptions: true,
+    headers: { Authorization: "Bearer " + token, Referer: CFG.referer } };
+  if (body) { opt.contentType = "application/json"; opt.payload = JSON.stringify(body); }
+  const r = UrlFetchApp.fetch(base + path, opt);
   if (r.getResponseCode() !== 200) throw new Error("Firestore " + r.getResponseCode() + ": " + r.getContentText().slice(0, 300));
   return JSON.parse(r.getContentText());
 }
