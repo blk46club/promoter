@@ -227,6 +227,10 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 .prv-item p{margin:8px 0 0}
 .prv-item .tags{margin-top:8px}
 @media (max-width:520px){.prv-list{grid-template-columns:1fr}}
+.book-wrap{display:grid;grid-template-columns:1fr;gap:0}
+.book-rv{margin-top:0;padding-bottom:48px}
+.book-rv .prv-list{grid-template-columns:1fr}
+@media (min-width:1000px){.book-wrap{grid-template-columns:minmax(0,640px) minmax(0,1fr);gap:48px;align-items:start}.book-rv{border-top:0;padding-top:28px}}
 /* khách đặt trước theo promoter: chữ trên ảnh, đủ 2 khách thì ảnh tối lại */
 .spot-load{position:absolute;left:12px;bottom:12px;z-index:3;background:var(--acid);color:var(--ink);font-weight:700;font-size:13px;letter-spacing:.04em;padding:5px 10px;text-transform:uppercase}
 .spot-portrait.full img,.spot-portrait.full .ph{filter:grayscale(1) brightness(.35)}
@@ -685,14 +689,14 @@ function spotHTML(r,ghost){
       ${ghost||full?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
     </div>`;
 }
-/* đánh giá hiện ngay dưới promoter đang chọn (anh Minh 08/11, thay tab đánh giá riêng) */
+/* đánh giá riêng từng promoter, hiện ở cột phải trang đặt bàn (anh Minh 08/11, thay tab đánh giá chung) */
 const PRV_STEP=6;
 function promoReviews(id){
   return visibleReviews(true).filter(r=>r.idolId===id&&r.stars>=PUBLIC_MIN_STARS).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 }
-function promoReviewsHTML(r){
-  if(!r)return "";
-  const i=r.idol,list=promoReviews(i.id);
+function promoReviewsHTML(i){
+  if(!i)return "";
+  const list=promoReviews(i.id);
   const lim=S.prv&&S.prv.id===i.id?S.prv.limit:PRV_STEP;
   const tc={};list.forEach(x=>(x.tags||[]).forEach(t=>{if(POS_TAGS.includes(t))tc[t]=(tc[t]||0)+1}));
   const tops=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
@@ -733,7 +737,6 @@ function renderLineup(){
       <div class="spot" id="spot">${spotHTML(cur,!cur)}</div>
       <div class="roster" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${tiles}</div>
     </div>
-    ${cur?`<section class="prv" id="promoRv" aria-live="polite">${promoReviewsHTML(cur)}</section>`:""}
     <p class="note" style="padding-block:6px 40px">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>
   </section>`;
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
@@ -741,12 +744,9 @@ function renderLineup(){
   const spot=document.getElementById("spot");
   const FLIP_MS=1500;
   const armFlip=()=>{clearTimeout(S.flipT);const sp=spot.querySelector(".spot-portrait");if(sp&&sp.querySelector("img.alt"))S.flipT=setTimeout(()=>sp.classList.add("flip"),FLIP_MS)};
-  const wireRv=(r)=>{const box=document.getElementById("promoRv");if(!box||!r)return;box.innerHTML=promoReviewsHTML(r);
-    const m=document.getElementById("prvMore");if(m)m.onclick=()=>{const cur=S.prv&&S.prv.id===r.idol.id?S.prv.limit:PRV_STEP;S.prv={id:r.idol.id,limit:cur+PRV_STEP*2};wireRv(r)}};
-  wireRv(cur);
   const show=(id,anim)=>{
     const r=rows.find(x=>x.idol.id===id);if(!r)return;
-    spot.innerHTML=spotHTML(r,false);armFlip();wireRv(r);
+    spot.innerHTML=spotHTML(r,false);armFlip();
     if(anim){spot.classList.remove("anim");void spot.offsetWidth;spot.classList.add("anim")}
     const sr=document.getElementById("spotRate");if(sr)sr.onclick=()=>{S.rate.idolId=id};
   };
@@ -938,7 +938,7 @@ function renderBook(idolId){
   if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. hẹn gặp quý khách ở quán sớm nhất.</p>${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
   app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi promoter</a>
-  <section class="rate">
+  <div class="book-wrap"><section class="rate">
     <div class="rate-head"><div class="rate-face">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:`<span>${esc(initials(i.stageName))}</span>`}</div>
       <div><div class="eyebrow">đặt bàn cùng</div><h1 class="display rate-name">${esc(i.stageName)}</h1></div></div>
     
@@ -957,7 +957,9 @@ function renderBook(idolId){
       <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
       <div><button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"đang gửi…":"gửi yêu cầu đặt bàn"}</button></div>
     </form>
-  </section>`;
+  </section>
+  <aside class="prv book-rv" id="promoRv" aria-label="đánh giá của khách cho ${esc(i.stageName)}">${promoReviewsHTML(i)}</aside></div>`;
+  {const m=document.getElementById("prvMore");if(m)m.onclick=()=>{const cur=S.prv&&S.prv.id===i.id?S.prv.limit:PRV_STEP;S.prv={id:i.id,limit:cur+PRV_STEP*2};const y=scrollY;sync();render();scrollTo(0,y)}}
   const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.dateText=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
   app.querySelectorAll(".bsal").forEach(x=>x.onclick=()=>{sync();B.salutation=x.dataset.v;B.err="";render()});
   app.querySelectorAll(".tspot").forEach(x=>x.onclick=()=>{const t=x.dataset.t;if(HOLDS.taken.has(t))return;B.table=B.table===t?"":t;paintMap(B)});
