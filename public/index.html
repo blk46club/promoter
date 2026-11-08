@@ -136,7 +136,7 @@ h1.display.admin-title{font-size:clamp(26px,4.8vw,53px);line-height:1.2;color:#f
 @media (max-width:380px){.statgrid{grid-template-columns:1fr}}
 .forte{display:flex;gap:6px;flex-wrap:wrap}
 .forte span{border:1px solid var(--acid);color:var(--acid);padding:3px 10px;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
-.stat{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center}
+.stat{display:grid;grid-template-columns:136px minmax(0,1fr);gap:8px;align-items:center}
 .segs{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
 .segs i{height:9px;background:var(--card-2);transform:skewX(-14deg)}
 .segs i.on{background:var(--acid)}
@@ -648,7 +648,7 @@ function usageBox(){
 }
 
 /* ---------- lineup ---------- */
-const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH"],["nhảy cháy","NHẢY"]];
+const STATS=[["nhiệt tình","NHIỆT"],["nói chuyện mượt","SMOOTHNESS"],["giữ vibe cả bàn","VIBE"],["thông minh, tinh ý","THÔNG MINH"],["nói tiếng anh tốt","ENGLISH SPEAKING"],["nhảy cháy","DANCE SKILLS"]];
 const MIN_FOR_STATS=3;
 function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.5?"A":s>=4.0?"B":s>=3.5?"C":"D"}
 function statVals(r){const t=r.statRate||{},top=r.statTop||{};return STATS.map(([k,l])=>[l,top[k]?Math.min(10,Math.round(10*(t[k]||0)/top[k])):0])}
