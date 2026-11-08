@@ -214,19 +214,19 @@ h2.sec{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--
 .tblcfg textarea{width:100%}
 select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line);padding:6px 8px;font:inherit;min-width:110px}
 /* tab đánh giá: khách mới xem đánh giá cũ. không có tip (tip chỉ nằm trong notes, khách không đọc được) */
-.rvfeed{display:grid;gap:12px;margin-top:16px}
-.rvcard{display:grid;grid-template-columns:52px 1fr;gap:12px;background:var(--card);border:1px solid var(--line);padding:12px}
-.rvcard .face{width:52px;aspect-ratio:3/4;background:var(--card-2);overflow:hidden;display:grid;place-items:center;font-family:var(--display);color:var(--concrete)}
-.rvcard .face img{width:100%;height:100%;object-fit:cover;display:block}
-.rvcard .top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
-.rvcard .who{font-family:var(--display);text-transform:uppercase;font-size:18px;text-decoration:none}
-.rvcard .who:hover{color:var(--acid)}
-.rvcard .stars{color:var(--acid);letter-spacing:.05em}
-.rvcard p{margin:6px 0 0}
-.rvcard .tags{margin-top:8px}
-.rvrow+.rvrow{margin-top:8px}
-.rvsum{display:flex;gap:24px;align-items:baseline;flex-wrap:wrap}
-.rvsum .big{font-family:var(--display);font-size:44px;line-height:1;color:var(--acid)}
+.prv{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+.prv-head .eyebrow{margin-bottom:6px}
+.prv-head h2{margin:0;font-family:var(--display);font-size:clamp(22px,3vw,30px);text-transform:uppercase;line-height:1.1}
+.prv-head h2 small{color:var(--concrete);font-size:.7em}
+.prv-tags{margin-top:12px}
+.prv-tags .tag b{color:var(--acid);margin-left:4px}
+.prv-list{display:grid;gap:10px;margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.prv-item{background:var(--card);border:1px solid var(--line);padding:12px 14px}
+.prv-item .top{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.prv-item .stars{color:var(--acid);letter-spacing:.05em}
+.prv-item p{margin:8px 0 0}
+.prv-item .tags{margin-top:8px}
+@media (max-width:520px){.prv-list{grid-template-columns:1fr}}
 /* khách đặt trước theo promoter: chữ trên ảnh, đủ 2 khách thì ảnh tối lại */
 .spot-load{position:absolute;left:12px;bottom:12px;z-index:3;background:var(--acid);color:var(--ink);font-weight:700;font-size:13px;letter-spacing:.04em;padding:5px 10px;text-transform:uppercase}
 .spot-portrait.full img,.spot-portrait.full .ph{filter:grayscale(1) brightness(.35)}
@@ -393,7 +393,6 @@ img{max-width:100%}
     <a class="mark" href="#lineup" aria-label="BLK46 promoter, về lineup"><img src="brand/blk46.svg" alt="BLK46®" width="128" height="18"><span>promoter</span></a>
     <nav class="tabs" aria-label="chuyển trang">
       <a href="#lineup" data-tab="lineup">lineup</a>
-      <a href="#reviews" data-tab="reviews">đánh giá</a>
       <a href="#admin" data-tab="admin" id="adminTab" hidden>quản lý</a>
     </nav>
   </div>
@@ -442,8 +441,7 @@ const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
   idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
-  rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false},
-  rv:{idol:"",period:"",limit:30}};
+  rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false}};
 
 const app=document.getElementById("app");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -518,7 +516,6 @@ function route(){
   if(h.startsWith("idol-")||h.startsWith("book-"))return {view:"book",id:h.slice(5)};
   if(h.startsWith("table-"))return {view:"table",id:h.slice(6)};
   if(h==="admin")return {view:"admin"};
-  if(h==="reviews")return {view:"reviews"};
   return {view:"lineup"};
 }
 /* ---------- chân trang ---------- */
@@ -558,7 +555,6 @@ function render(){
   if(r.view==="book")return renderBook(r.id);
   if(r.view==="table")return renderTable(r.id);
   if(r.view==="admin")return renderAdmin();
-  if(r.view==="reviews")return renderReviews();
   return renderLineup();
 }
 window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
@@ -689,6 +685,26 @@ function spotHTML(r,ghost){
       ${ghost||full?"":`<div class="rowbtns"><a class="cta" href="#book-${esc(i.id)}">đặt ${esc(i.stageName)}</a></div>`}
     </div>`;
 }
+/* đánh giá hiện ngay dưới promoter đang chọn (anh Minh 08/11, thay tab đánh giá riêng) */
+const PRV_STEP=6;
+function promoReviews(id){
+  return visibleReviews(true).filter(r=>r.idolId===id&&r.stars>=PUBLIC_MIN_STARS).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+}
+function promoReviewsHTML(r){
+  if(!r)return "";
+  const i=r.idol,list=promoReviews(i.id);
+  const lim=S.prv&&S.prv.id===i.id?S.prv.limit:PRV_STEP;
+  const tc={};list.forEach(x=>(x.tags||[]).forEach(t=>{if(POS_TAGS.includes(t))tc[t]=(tc[t]||0)+1}));
+  const tops=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
+  const item=x=>`<article class="prv-item"><div class="top"><span class="stars" aria-label="${x.stars} sao">${starStr(x.stars)}</span><span class="muted">${ago(x.createdAt||Date.now())}</span></div>
+    ${x.comment?`<p>${esc(x.comment)}</p>`:""}
+    ${(x.tags||[]).length?`<div class="tags">${x.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</article>`;
+  return `<div class="prv-head"><div class="eyebrow">khách trước nói gì</div><h2>đánh giá · ${esc(i.stageName)} <small>(${list.length})</small></h2></div>
+    ${tops.length?`<div class="tags prv-tags" aria-label="tag khách chọn nhiều nhất">${tops.map(([t,n])=>`<span class="tag">${esc(t)}<b>${n}</b></span>`).join("")}</div>`:""}
+    ${list.length?`<div class="prv-list">${list.slice(0,lim).map(item).join("")}</div>`:`<div class="empty" style="margin-top:14px"><b>${S.loaded.reviews?`${esc(i.stageName)} chưa có đánh giá nào.`:"đang tải…"}</b></div>`}
+    ${list.length>lim?`<div style="margin-top:14px"><button class="ghostbtn" id="prvMore">xem thêm (${list.length-lim})</button></div>`:""}
+    <p class="note" style="padding-top:10px">đánh giá từ khách đã ngồi bàn, mỗi bàn chấm mỗi promoter một lần. quán ẩn những lượt vi phạm.</p>`;
+}
 function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
@@ -717,6 +733,7 @@ function renderLineup(){
       <div class="spot" id="spot">${spotHTML(cur,!cur)}</div>
       <div class="roster" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${tiles}</div>
     </div>
+    ${cur?`<section class="prv" id="promoRv" aria-live="polite">${promoReviewsHTML(cur)}</section>`:""}
     <p class="note" style="padding-block:6px 40px">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>
   </section>`;
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
@@ -724,9 +741,12 @@ function renderLineup(){
   const spot=document.getElementById("spot");
   const FLIP_MS=1500;
   const armFlip=()=>{clearTimeout(S.flipT);const sp=spot.querySelector(".spot-portrait");if(sp&&sp.querySelector("img.alt"))S.flipT=setTimeout(()=>sp.classList.add("flip"),FLIP_MS)};
+  const wireRv=(r)=>{const box=document.getElementById("promoRv");if(!box||!r)return;box.innerHTML=promoReviewsHTML(r);
+    const m=document.getElementById("prvMore");if(m)m.onclick=()=>{const cur=S.prv&&S.prv.id===r.idol.id?S.prv.limit:PRV_STEP;S.prv={id:r.idol.id,limit:cur+PRV_STEP*2};wireRv(r)}};
+  wireRv(cur);
   const show=(id,anim)=>{
     const r=rows.find(x=>x.idol.id===id);if(!r)return;
-    spot.innerHTML=spotHTML(r,false);armFlip();
+    spot.innerHTML=spotHTML(r,false);armFlip();wireRv(r);
     if(anim){spot.classList.remove("anim");void spot.offsetWidth;spot.classList.add("anim")}
     const sr=document.getElementById("spotRate");if(sr)sr.onclick=()=>{S.rate.idolId=id};
   };
@@ -907,35 +927,6 @@ async function submitRating(b){
     if(e&&e.code==="quota_exceeded")return fail("kho dữ liệu đã đầy. báo quản lý dọn bớt dữ liệu cũ.");
     fail("chưa gửi được, mạng đang chập chờn. bấm gửi lại.");
   }
-}
-
-/* ---------- tab đánh giá ---------- */
-function renderReviews(){
-  const V=S.rv;
-  const pub=S.idols.filter(isPublic),pubIds=new Set(pub.map(i=>i.id));
-  const all=visibleReviews(true).filter(r=>pubIds.has(r.idolId)&&r.stars>=PUBLIC_MIN_STARS).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  if(V.idol&&!pubIds.has(V.idol))V.idol="";
-  const from=periodStart(V.period);
-  const list=all.filter(r=>(!V.idol||r.idolId===V.idol)&&(!from||(r.createdAt||0)>=from));
-  const n=list.length,withText=list.filter(r=>r.comment).length;
-  const shown=list.slice(0,V.limit);
-  const card=r=>{const i=idolById(r.idolId);const c=coverId(i);
-    return `<article class="rvcard"><div class="face">${c?`<img src="${esc(c)}" alt="" loading="lazy" onerror="this.remove()">`:esc(initials(i.stageName))}</div>
-      <div><div class="top"><a class="who" href="#book-${esc(i.id)}">${esc(i.stageName)}</a><span class="stars" aria-label="${r.stars} sao">${starStr(r.stars)}</span><span class="muted">${ago(r.createdAt||Date.now())}</span></div>
-      ${r.comment?`<p>${esc(r.comment)}</p>`:""}
-      ${(r.tags||[]).length?`<div class="tags">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</div></article>`};
-  app.innerHTML=`${banner()}<section>
-    <div class="hero" style="padding-bottom:8px"><div class="eyebrow">khách trước nói gì</div><h1 class="display admin-title">ĐÁNH GIÁ</h1>
-      <div class="rvsum"><div><span class="big">${n}</span> <span class="muted">lượt khen từ ${PUBLIC_MIN_STARS} sao</span></div><div class="muted">${withText} nhận xét</div></div></div>
-    <div class="tags rvrow" role="group" aria-label="lọc theo thời gian">${[["","tất cả"],["month","tháng này"],["week","tuần này"]].map(([k,l])=>`<button class="chip rvp" data-p="${k}" aria-pressed="${V.period===k}">${l}</button>`).join("")}</div>
-    ${pub.length>1?`<div class="tags rvrow" role="group" aria-label="lọc theo promoter (bấm lần nữa để bỏ lọc)">${pub.map(i=>`<button class="chip rvf" data-id="${esc(i.id)}" aria-pressed="${V.idol===i.id}">${esc(i.stageName)}</button>`).join("")}</div>`:""}
-    ${shown.length?`<div class="rvfeed">${shown.map(card).join("")}</div>`:`<div class="empty" style="margin-top:16px"><b>${S.loaded.reviews?(V.period==="week"?"tuần này chưa có đánh giá nào.":V.period==="month"?"tháng này chưa có đánh giá nào.":"chưa có đánh giá nào."):"đang tải…"}</b></div>`}
-    ${list.length>shown.length?`<div style="margin-top:16px"><button class="ghostbtn" id="rvMore">xem thêm (${list.length-shown.length})</button></div>`:""}
-    <p class="note" style="padding-block:16px 40px">đánh giá từ khách đã ngồi bàn, mỗi bàn chấm mỗi promoter một lần. quán ẩn những lượt vi phạm.</p>
-  </section>`;
-  app.querySelectorAll(".rvf").forEach(x=>x.onclick=()=>{V.idol=V.idol===x.dataset.id?"":x.dataset.id;V.limit=30;render()});
-  app.querySelectorAll(".rvp").forEach(x=>x.onclick=()=>{V.period=x.dataset.p;V.limit=30;render()});
-  const more=document.getElementById("rvMore");if(more)more.onclick=()=>{V.limit+=30;render()};
 }
 
 /* ---------- khách đặt bàn từ lineup ---------- */
