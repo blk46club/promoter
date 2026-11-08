@@ -690,7 +690,7 @@ function spotHTML(r,ghost){
     </div>`;
 }
 /* đánh giá riêng từng promoter, hiện ở cột phải trang đặt bàn (anh Minh 08/11, thay tab đánh giá chung) */
-const PRV_STEP=6;
+const PRV_STEP=5,PRV_MAX=15; // 5 đánh giá, bấm xem thêm thì tối đa 15 (anh Minh 08/11)
 function promoReviews(id){
   return visibleReviews(true).filter(r=>r.idolId===id&&r.stars>=PUBLIC_MIN_STARS).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 }
@@ -706,7 +706,7 @@ function promoReviewsHTML(i){
   return `<div class="prv-head"><div class="eyebrow">khách trước nói gì</div><h2>đánh giá · ${esc(i.stageName)} <small>(${list.length})</small></h2></div>
     ${tops.length?`<div class="tags prv-tags" aria-label="tag khách chọn nhiều nhất">${tops.map(([t,n])=>`<span class="tag">${esc(t)}<b>${n}</b></span>`).join("")}</div>`:""}
     ${list.length?`<div class="prv-list">${list.slice(0,lim).map(item).join("")}</div>`:`<div class="empty" style="margin-top:14px"><b>${S.loaded.reviews?`${esc(i.stageName)} chưa có đánh giá nào.`:"đang tải…"}</b></div>`}
-    ${list.length>lim?`<div style="margin-top:14px"><button class="ghostbtn" id="prvMore">xem thêm (${list.length-lim})</button></div>`:""}
+    ${lim<PRV_MAX&&list.length>lim?`<div style="margin-top:14px"><button class="ghostbtn" id="prvMore">xem thêm (${Math.min(list.length,PRV_MAX)-lim})</button></div>`:""}
     <p class="note" style="padding-top:10px">đánh giá từ khách đã ngồi bàn, mỗi bàn chấm mỗi promoter một lần. quán ẩn những lượt vi phạm.</p>`;
 }
 function renderLineup(){
@@ -959,7 +959,7 @@ function renderBook(idolId){
     </form>
   </section>
   <aside class="prv book-rv" id="promoRv" aria-label="đánh giá của khách cho ${esc(i.stageName)}">${promoReviewsHTML(i)}</aside></div>`;
-  {const m=document.getElementById("prvMore");if(m)m.onclick=()=>{const cur=S.prv&&S.prv.id===i.id?S.prv.limit:PRV_STEP;S.prv={id:i.id,limit:cur+PRV_STEP*2};const y=scrollY;sync();render();scrollTo(0,y)}}
+  {const m=document.getElementById("prvMore");if(m)m.onclick=()=>{S.prv={id:i.id,limit:PRV_MAX};const y=scrollY;sync();render();scrollTo(0,y)}}
   const sync=()=>{B.guestName=val("b_name");B.phone=val("b_phone");B.dateText=val("b_date");B.time=val("b_time");B.guests=val("b_guests");B.note=val("b_note")};
   app.querySelectorAll(".bsal").forEach(x=>x.onclick=()=>{sync();B.salutation=x.dataset.v;B.err="";render()});
   app.querySelectorAll(".tspot").forEach(x=>x.onclick=()=>{const t=x.dataset.t;if(HOLDS.taken.has(t))return;B.table=B.table===t?"":t;paintMap(B)});
