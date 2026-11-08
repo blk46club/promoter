@@ -20,7 +20,7 @@
 <meta name="theme-color" content="#000000">
 <link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png">
 <link rel="apple-touch-icon" href="brand/apple-touch-icon.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"NightClub","name":"BLK46","url":"https://blk46club.github.io/promoter/","image":"https://blk46club.github.io/promoter/brand/share.jpg","telephone":"+84852839239","address":{"@type":"PostalAddress","streetAddress":"46 Mã Mây","addressLocality":"Hà Nội","addressCountry":"VN"},"hasMap":"https://share.google/SntJEvVotOjQeHLYL","hasMenu":"https://blkmenu.vercel.app","sameAs":["https://www.instagram.com/blk.hanoi/","https://www.threads.com/@blk.hanoi","https://www.tiktok.com/@blk.hanoi","https://www.facebook.com/share/1FHCWCqqY9/"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"NightClub","name":"BLK46","url":"https://blk46club.github.io/promoter/","image":"https://blk46club.github.io/promoter/brand/share.jpg","telephone":"+84852839239","address":{"@type":"PostalAddress","streetAddress":"46 Mã Mây","addressLocality":"Hà Nội","addressCountry":"VN"},"hasMap":"https://share.google/SntJEvVotOjQeHLYL","hasMenu":"https://blkmenu.vercel.app","openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Thursday","Sunday"],"opens":"21:00","closes":"03:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":["Friday","Saturday"],"opens":"21:00","closes":"04:00"}],"sameAs":["https://www.instagram.com/blk.hanoi/","https://www.threads.com/@blk.hanoi","https://www.tiktok.com/@blk.hanoi","https://www.facebook.com/share/1FHCWCqqY9/"]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;700&family=Yellowtail&display=swap">
@@ -272,7 +272,7 @@ footer.foot .finfo a:hover{color:var(--acid)}
 /* giờ mở cửa hôm nay + hotline (anh Minh 08/11) */
 .tonight{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:6px 12px;margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);background:var(--card);font-size:14px;line-height:1.45}
 .tonight .dot{width:8px;height:8px;border-radius:50%;background:var(--acid);box-shadow:0 0 8px var(--acid)}
-.tonight .nw{white-space:nowrap}
+.nw{white-space:nowrap}
 @media (max-width:640px){.tonight{grid-template-columns:8px minmax(0,1fr)}.tonight .dot{align-self:start;margin-top:6px}.tonight .tn-links{grid-column:2;justify-self:start;margin-left:0!important}}
 .tonight.off .dot{background:var(--concrete);box-shadow:none}
 .tonight b{font-weight:700}
@@ -446,7 +446,7 @@ img{max-width:100%}
   <div class="wrap">
     <img class="fmark" src="brand/blk46.svg" alt="BLK46®" width="156" height="22">
     <p class="fline">mỗi tối một bữa tiệc. mang năng lượng tới, phần còn lại để blk.</p>
-    <p class="finfo">46 mã mây, hà nội · <a href="https://share.google/SntJEvVotOjQeHLYL" target="_blank" rel="noopener">xem bản đồ</a><br>thứ 5 – chủ nhật, từ 21h · nghỉ thứ 2, 3, 4<br>hotline <a href="tel:0852839239">0852 839 239</a> · <a href="https://blkmenu.vercel.app" target="_blank" rel="noopener">menu</a></p>
+    <p class="finfo">46 mã mây, hà nội · <a href="https://share.google/SntJEvVotOjQeHLYL" target="_blank" rel="noopener">xem bản đồ</a><br>thứ 5, chủ nhật: <span class="nw">21h – 3h sáng</span><br>thứ 6, thứ 7: <span class="nw">21h – 4h sáng</span> · nghỉ thứ 2, 3, 4<br>hotline <a href="tel:0852839239">0852 839 239</a> · <a href="https://blkmenu.vercel.app" target="_blank" rel="noopener">menu</a></p>
     <nav class="soc" id="socLinks" aria-label="mạng xã hội của quán"></nav>
   </div>
 </footer>
@@ -563,15 +563,15 @@ const SOCIAL={
   threads:"https://www.threads.com/@blk.hanoi",
   tiktok:"https://www.tiktok.com/@blk.hanoi",
 };
-// hotline + giờ mở cửa (anh Minh 08/11): thứ 5 – chủ nhật từ 21h, nghỉ thứ 2, 3, 4
+// hotline + giờ mở cửa (anh Minh 08/11): mở 21h; t5 + cn đóng 3h sáng, t6 + t7 đóng 4h sáng; nghỉ t2, t3, t4
 const HOTLINE="0852839239",HOTLINE_SHOW="0852 839 239";
 const MAP_URL="https://share.google/SntJEvVotOjQeHLYL",MENU_URL="https://blkmenu.vercel.app";
-const OPEN_DAYS=[4,5,6,0],OPEN_FROM=21; // 0 = chủ nhật
+const OPEN_FROM=21,CLOSE_AT={4:3,5:4,6:4,0:3}; // theo đêm bắt đầu: 0 = chủ nhật
 function tonightInfo(now=Date.now()){
-  // giờ Hà Nội; trước 6h sáng vẫn tính là đêm hôm trước
-  const v=new Date(now+7*3600e3-6*3600e3),dow=v.getUTCDay();
-  if(OPEN_DAYS.includes(dow))return {open:true,text:`tối nay quán mở từ ${OPEN_FROM}h`};
-  return {open:false,text:`hôm nay quán nghỉ. mở lại thứ 5, từ ${OPEN_FROM}h`};
+  const v=new Date(now+7*3600e3),h=v.getUTCHours(),d=v.getUTCDay(),pd=(d+6)%7;
+  if(h<6&&CLOSE_AT[pd]!=null&&h<CLOSE_AT[pd])return {open:true,text:`quán đang mở đến ${CLOSE_AT[pd]}h sáng`};
+  if(CLOSE_AT[d]!=null)return {open:true,text:`tối nay quán mở ${OPEN_FROM}h – ${CLOSE_AT[d]}h sáng`};
+  return {open:false,text:`hôm nay quán nghỉ. mở lại thứ 5, ${OPEN_FROM}h`};
 }
 function tonightHTML(){const t=tonightInfo();
   return `<div class="tonight${t.open?"":" off"}" role="status"><span class="dot" aria-hidden="true"></span><span><b>${t.text}</b> <span class="nw">· 46 mã mây</span></span><span class="tn-links"><a href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></span></div>`}
