@@ -116,6 +116,19 @@ service cloud.firestore {
         request.resource.data.counts is map;
     }
 
+    // Tên DJ từng đêm cho tờ rơi đầu trang: tonight/{ngày} { date, dj, updatedAt }.
+    // Ai cũng đọc được (chỉ là tên DJ). Chỉ quản lý ghi, đúng khuôn, tên tối đa 60 ký tự.
+    match /tonight/{d} {
+      allow read: if true;
+      allow delete: if isStaff();
+      allow create, update: if isStaff() &&
+        d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        request.resource.data.keys().hasOnly(['date', 'dj', 'updatedAt']) &&
+        request.resource.data.date == d &&
+        request.resource.data.dj is string && request.resource.data.dj.size() > 0 && request.resource.data.dj.size() <= 60 &&
+        request.resource.data.updatedAt is number;
+    }
+
     // Đặt bàn: khách gửi yêu cầu (chỉ tạo mới, đúng khuôn), quản lý đọc và xử lý.
     match /bookings/{id} {
       allow read, update, delete: if isStaff();
