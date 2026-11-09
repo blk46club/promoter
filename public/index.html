@@ -410,6 +410,18 @@ body.v-lineup .hbook{display:inline-flex}
 .fly-art.poster .pic img{width:78%;height:auto;filter:invert(1)}
 .fly-art.poster .pic p{margin:0;font-family:var(--display);font-size:clamp(28px,2.6vw,36px);line-height:1.12;text-align:center;letter-spacing:.02em}
 @media (max-width:899px){.fly-art.poster{display:none}}
+/* poster event dán lên tờ rơi: giữ đúng tỉ lệ poster, bấm vào xem to */
+.fly-art.pst .pic{display:block;width:100%;padding:0;border:0;aspect-ratio:auto;background:#000;cursor:zoom-in;color:inherit}
+.fly-art.pst .pic>img{height:auto}
+.fly-cap{margin:16px 0 0;text-align:center;font-family:var(--display);font-size:20px;letter-spacing:.06em;color:var(--paper)}
+.fly-cap b{color:var(--acid);font-weight:400}
+/* xem poster to */
+.pdlg{border:0;padding:0;background:#000;color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
+.pdlg::backdrop{background:rgba(0,0,0,.86)}
+.pdlg img{display:block;width:auto;max-width:100%;height:auto;max-height:calc(94vh - 84px);margin:0 auto}
+.pdlg-x{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;background:#000;color:var(--paper);font-size:28px;line-height:1;cursor:pointer;z-index:1}
+.pdlg-bar{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:14px 16px}
+.pdlg-bar p{margin:0;font-family:var(--display);font-size:20px;letter-spacing:.04em}
 .sticker{position:absolute;left:-6px;bottom:0;width:140px;height:140px;border-radius:50%;background:var(--acid);color:#000;display:grid;place-content:center;justify-items:center;text-align:center;transform:rotate(-10deg);padding:12px;z-index:1}
 .sticker b{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.1}
 .sticker span{font-size:13px;font-weight:700;line-height:1.25}
@@ -528,8 +540,8 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
   .ev-list{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 .ev{border:3px solid #000;background:#F7F4EC;display:flex;flex-direction:column;min-width:0}
-.ev-pic{aspect-ratio:4/5;background:#000;border-bottom:3px solid #000;overflow:hidden}
-.ev-pic img{display:block;width:100%;height:100%;object-fit:cover}
+.ev-pst{font:inherit;font-size:14px;font-weight:700;background:none;border:0;padding:4px 0;color:#000;cursor:pointer;text-decoration:underline;text-underline-offset:4px;align-self:flex-start}
+.ev-mp{font:inherit;font-weight:700;background:none;border:0;padding:0;color:#000;cursor:pointer;text-decoration:underline;text-underline-offset:4px;white-space:nowrap}
 .ev-top{display:flex;align-items:stretch;border-bottom:3px solid #000}
 .ev-d{flex:none;width:96px;background:#000;color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;gap:2px}
 .ev-d b{font-family:var(--display);font-weight:400;font-size:36px;line-height:1}
@@ -948,29 +960,33 @@ function promoReviewsHTML(i){
 }
 /* ---------- hướng 2: tờ rơi đầu trang (anh Minh 09/11) ---------- */
 // Ảnh dọc trong quán cho khung bên phải tờ rơi: chép ảnh vào public/brand/ rồi ghi đường dẫn ở đây, vd "brand/trong-quan.jpg".
-// Để trống thì máy tính hiện tấm poster thể loại nhạc, điện thoại không hiện gì.
+// Thứ tự khung bên phải: poster đêm gần nhất có poster > poster lịch tháng > ảnh quán > tấm thể loại nhạc (chỉ máy tính).
 const VENUE_PHOTO="";
 // Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn tròn.
 const GOOGLE_RATING=null;
-/* lịch event (anh Minh 09/11, từ trang lịch tháng 11 trong file Canva "EVENT- BLK46 - Q4").
+/* lịch event (anh Minh 09/11): tên đêm theo poster lịch tháng 11 (events/lich-thang-11.jpg),
+   phần còn lại theo file Canva "EVENT- BLK46 - Q4". poster không ghi các tối ladies night thường và phố hàng nhạc.
    chỉ ghi phần khách cần biết. KHÔNG ghi kịch bản: moment, giờ diễn, trò chơi, quà bất ngờ, decor (quán khác có vào xem).
    KHÔNG ghi khuyến mại rượu: luật 44/2019/QH14 điều 5 cấm quảng cáo và khuyến mại rượu từ 15 độ.
-   poster: chép ảnh vào public/events/ rồi ghi đường dẫn, vd "events/walk-of-fame.jpg". để trống thì là thẻ chữ.
+   poster: chép ảnh dọc (khoảng 800px ngang, jpg) vào public/events/ rồi ghi đường dẫn, vd "events/walk-of-fame-13-11.jpg".
+   đầu trang hiện poster của đêm gần nhất có poster. thẻ đêm có poster thì có nút "xem poster".
    dj: guest dj của đêm đó (hiện thành dòng "guest dj" trên tờ rơi và thẻ). dress: dress code. */
 const EVENTS=[
   {date:"2026-11-12",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng."},
-  {date:"2026-11-13",name:"WALK OF FAME",line:"thứ 6 ngày 13. hôm nay xui cỡ nào thì bước vào blk cũng bỏ lại ngoài cửa."},
-  {date:"2026-11-14",name:"FREEBIES NIGHT",line:"tối nay có quà. quà gì thì tới mới biết."},
+  {date:"2026-11-13",name:"WALK OF FAME",line:"thứ 6 ngày 13. hôm nay xui cỡ nào thì bước vào blk cũng bỏ lại ngoài cửa.",poster:"events/walk-of-fame-13-11.jpg"},
+  {date:"2026-11-14",name:"SPECIAL PERFORMANCE",line:"saxophone chơi cùng dj trên nền nhạc của blk."},
   {date:"2026-11-15",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
-  {date:"2026-11-19",name:"COOC-XÊ",line:"đêm thời trang của các chị em. diện cho chính mình là một phần cuộc chơi.",dj:"BONG"},
+  {date:"2026-11-19",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng.",dj:"BÔNG"},
   {date:"2026-11-20",name:"BỎNG OUT #2: THE SLEEPOVER",line:"tell ur fam, u got a sleepover.",dress:"đồ ngủ, slip dress, đồ thể thao, bịt mắt, lô cuốn tóc"},
-  {date:"2026-11-21",name:"IT'S FINGER BLKING GOOD",line:"đồ ăn cầm tay mang tới tận bàn."},
+  {date:"2026-11-21",name:"CAVIAR PEOPLE",line:"thứ 7 có caviar. phần còn lại tới mới biết."},
   {date:"2026-11-22",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
   {date:"2026-11-26",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng."},
-  {date:"2026-11-27",name:"BLKFRIDAY",line:"thứ 6 đen của blk. dark side cả đêm."},
-  {date:"2026-11-28",name:"SAX & DJ",line:"saxophone chơi cùng dj trên nền nhạc của blk."},
+  {date:"2026-11-27",name:"BLOCK FRIDAY",line:"thứ 6 đen của blk. dark side cả đêm."},
+  {date:"2026-11-28",name:"SPECIAL PERFORMANCE",line:"saxophone chơi cùng dj trên nền nhạc của blk."},
   {date:"2026-11-29",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
 ];
+// poster lịch cả tháng: "năm-tháng":đường dẫn. hiện ở mục lịch (nút xem poster) và ở đầu trang khi không còn poster đêm nào.
+const MONTH_POSTERS={"2026-11":"events/lich-thang-11.jpg"};
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const eventOn=iso=>EVENTS.find(e=>e.date===iso);
 /* event từ đêm đang nói tới trên tờ rơi trở đi (đêm đã qua thì ẩn) */
@@ -1010,7 +1026,12 @@ function flyHTML(){
   const n=nightInfo(),t=tonightInfo(),h=flyHead(n),dj=h.head,ev=h.ev,up=upcomingEvents();
   const evLine=ev||up.length?`<p class="fly-ev">${ev?esc(ev.line):""}${ev&&ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev&&ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${up.length?` <button type="button" class="fly-more" data-go="events">lịch tháng ${+up[0].date.slice(5,7)}&nbsp;↓</button>`:""}</p>`:"";
   const rating=GOOGLE_RATING&&GOOGLE_RATING.stars?`<div class="sticker"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?`<br>${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></div>`:"";
-  const art=VENUE_PHOTO
+  const pe=up.find(e=>e.poster),mp=!pe&&up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];
+  const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
+  const art=pe
+    ?`<div class="fly-art pst"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${rating}${pe.date!==n.iso?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
+    :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button><span class="tape l" aria-hidden="true"></span>${rating}</div>`
+    :VENUE_PHOTO
     ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div><span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>${rating}</div>`
     :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div><span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>${rating}</div>`;
   return `<div class="fly-main">
@@ -1099,15 +1120,30 @@ function eventGroups(){
   const up=upcomingEvents();
   return DAY_ORDER.map(d=>({d,list:up.filter(e=>dowOfIso(e.date)===d)})).filter(g=>g.list.length);
 }
+const evDayText=e=>`${WD_FLY[dowOfIso(e.date)]} ${e.date.slice(8)}.${e.date.slice(5,7)}`;
+/* xem poster to: data-pst = ngày của đêm, hoặc "month" cho poster lịch tháng */
+function openPoster(key){
+  const up=upcomingEvents(),e=key==="month"?null:EVENTS.find(x=>x.date===key&&x.poster);
+  const src=e?e.poster:up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];if(!src)return;
+  let d=document.getElementById("pdlg");
+  if(!d){d=document.createElement("dialog");d.id="pdlg";d.className="pdlg";document.body.append(d);
+    d.addEventListener("click",x=>{if(x.target===d)d.close()})}
+  const alt=e?`poster ${e.name}, ${evDayText(e)}`:`poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46`;
+  d.setAttribute("aria-label",alt);
+  d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(src)}" alt="${esc(alt)}">
+    ${e?`<div class="pdlg-bar"><p>${esc(evDayText(e))} · ${esc(e.name)}</p><button type="button" class="btn-acid" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div>`
+      :`<div class="pdlg-bar"><p>LỊCH THÁNG ${+up[0].date.slice(5,7)}</p><button type="button" class="btn-acid" data-go="events">CHỌN ĐÊM</button></div>`}`;
+  d.showModal();
+}
 function evCard(e,n,live){
   const now=live&&e.date===n.iso;
   return `<li class="ev${now?" now":""}">
-        ${e.poster?`<div class="ev-pic"><img src="${esc(e.poster)}" alt="poster ${esc(e.name)}" loading="lazy" onerror="this.parentNode.remove()"></div>`:""}
         <div class="ev-top"><div class="ev-d"><b>${e.date.slice(8)}.${e.date.slice(5,7)}</b></div>
           <div class="ev-h">${now?`<p class="ev-tag">TỐI NAY</p>`:""}<h3>${esc(e.name)}</h3></div></div>
         <div class="ev-b"><p>${esc(e.line)}</p>
           ${e.dj?`<p class="x"><b>guest dj:</b> ${esc(e.dj.toLowerCase())}</p>`:""}
           ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
+          ${e.poster?`<button type="button" class="ev-pst" data-pst="${e.date}">xem poster ↗</button>`:""}
           <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
 }
 const evMoreText=(g,open)=>open?"thu gọn ↑":`xem thêm ${g.list.length-1} đêm ${DAY_FULL[g.d].toLowerCase()} ↓`;
@@ -1120,7 +1156,7 @@ function eventsHTML(){
   /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
   let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
   return `<section class="evs" id="events" aria-label="lịch event">
-    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p></div>
+    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.${MONTH_POSTERS[up[0].date.slice(0,7)]?` <button type="button" class="ev-mp" data-pst="month">xem poster lịch tháng ${+up[0].date.slice(5,7)} ↗</button>`:""}</p></div>
       ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
     ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
       <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
@@ -1197,7 +1233,9 @@ function renderLineup(){
 }
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
 /* nút "giữ bàn đêm này" ở lịch event: nhớ ngày đó, form đặt bàn điền sẵn ngày */
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-go]");if(!b)return;const g=b.dataset.go;if(g!=="roster"&&g!=="events")return;e.preventDefault();if(b.dataset.ev)S.wantDate=b.dataset.ev;goTo(g)});
+document.addEventListener("click",e=>{const p=e.target.closest&&e.target.closest("[data-pst]");if(p){e.preventDefault();openPoster(p.dataset.pst);return}
+  const b=e.target.closest&&e.target.closest("[data-go]");if(!b)return;const g=b.dataset.go;if(g!=="roster"&&g!=="events")return;e.preventDefault();
+  const dl=b.closest("dialog");if(dl)dl.close();if(b.dataset.ev)S.wantDate=b.dataset.ev;goTo(g)});
 /* ---------- idol profile ---------- */
 function renderIdol(id){
   const rows=computeBoard();const r=rows.find(x=>x.idol.id===id);
