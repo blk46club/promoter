@@ -186,7 +186,7 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 .book-wrap{display:grid;grid-template-columns:1fr;gap:0}
 .book-rv{margin-top:0;padding-bottom:48px}
 .book-rv .prv-list{grid-template-columns:1fr}
-@media (min-width:1000px){.book-wrap{grid-template-columns:minmax(0,640px) minmax(0,1fr);gap:48px;align-items:start}.book-rv{border-top:0;padding-top:28px}}
+@media (min-width:1000px){.book-wrap{grid-template-columns:minmax(0,640px) minmax(0,1fr);gap:48px;align-items:start}.book-rv{border-top:0;padding-top:28px}.book-wrap.solo{grid-template-columns:minmax(0,640px);justify-content:center}}
 .load-note{color:#ff6a6f;font-size:14px;margin:4px 0 0}
 /* chân trang: logo quán, câu chào, nút mạng xã hội */
 footer.foot{border-top:1px solid var(--line);margin-top:24px;padding-block:36px 44px}
@@ -398,9 +398,10 @@ body.v-lineup .hbook{display:inline-flex}
 .btn-acid:hover{background:var(--paper)}
 .btn-line{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--paper);color:var(--paper);text-decoration:none;font-weight:500;padding:0 18px;min-height:50px}
 .btn-line:hover{background:var(--paper);color:#000}
+button.btn-line{background:none;font-family:var(--display);font-size:18px;font-weight:400;letter-spacing:.06em;cursor:pointer}
 .fly-call{color:var(--paper);font-weight:500;text-underline-offset:4px;padding-block:12px}
 .fly-call:hover{color:var(--acid)}
-@media (max-width:699px){.fly-btns .btn-acid{flex:1 1 auto}}
+@media (max-width:699px){.fly-btns .btn-acid,.fly-btns button.btn-line{flex:1 1 auto}}
 .fly-art{position:relative;padding:18px 18px 40px;width:100%;max-width:440px;justify-self:center}
 .fly-art .pic{aspect-ratio:4/5;background:#1c1c19;transform:rotate(1.5deg);overflow:hidden;position:relative}
 .fly-art .pic>img{width:100%;height:100%;object-fit:cover;display:block}
@@ -683,7 +684,7 @@ img{max-width:100%}
       <a class="hx" href="https://blkmenu.vercel.app" target="_blank" rel="noopener">menu</a>
       <a class="hx" href="tel:0852839239">0852 839 239</a>
       <a href="#admin" data-tab="admin" id="adminTab" hidden>quản lý</a>
-      <button type="button" class="hbook" data-go="roster">ĐẶT BÀN</button>
+      <button type="button" class="hbook" data-go="book">ĐẶT BÀN</button>
     </nav>
   </div>
 </header>
@@ -812,6 +813,7 @@ function computeBoard(){
 /* ---------- routing ---------- */
 function route(){
   const h=(location.hash||"#lineup").slice(1);
+  if(h==="book")return {view:"book",id:""}; // đặt bàn không chọn promoter: quán xếp người (anh Minh 09/11)
   if(h.startsWith("idol-")||h.startsWith("book-"))return {view:"book",id:h.slice(5)};
   if(h.startsWith("table-"))return {view:"table",id:h.slice(6)};
   if(h==="admin")return {view:"admin"};
@@ -1077,7 +1079,7 @@ function flyHTML(){
       ${n.state==="tonight"?"":`<p class="fly-state${t.open?"":" off"}" role="status">${esc(t.text)}</p>`}
       ${evLine}
       ${promoHTML(n.dow,"on-dark")}
-      <div class="fly-btns"><button type="button" class="btn-acid" data-go="roster">CHỌN PROMOTER</button><a class="btn-line" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call" href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></div>
+      <div class="fly-btns"><button type="button" class="btn-acid" data-go="book">ĐẶT BÀN</button><button type="button" class="btn-line" data-go="roster">CHỌN PROMOTER</button><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call" href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></div>
     </div>${art}`;
 }
 /* thẻ promoter: ảnh nhỏ, số hạng, tên, sao. đủ khách tối nay thì đóng dấu, không chọn được */
@@ -1168,7 +1170,7 @@ function openPoster(key){
   const alt=e?`poster ${e.name}, ${evDayText(e)}`:`poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46`;
   d.setAttribute("aria-label",alt);
   d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(src)}" alt="${esc(alt)}">
-    ${e?`<div class="pdlg-bar"><p>${esc(evDayText(e))} · ${esc(e.name)}</p><button type="button" class="btn-acid" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div>`
+    ${e?`<div class="pdlg-bar"><p>${esc(evDayText(e))} · ${esc(e.name)}</p><button type="button" class="btn-acid" data-go="book" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div>`
       :`<div class="pdlg-bar"><p>LỊCH THÁNG ${+up[0].date.slice(5,7)}</p><button type="button" class="btn-acid" data-go="events">CHỌN ĐÊM</button></div>`}`;
   d.showModal();
 }
@@ -1195,7 +1197,7 @@ function evCard(e,n,live){
           ${e.dj?`<p class="x"><b>guest dj:</b> ${esc(e.dj.toLowerCase())}</p>`:""}
           ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
           ${e.poster?`<button type="button" class="ev-pst" data-pst="${e.date}">xem poster</button>`:""}
-          <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
+          <button type="button" class="ev-go" data-go="book" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
 }
 const evMoreText=(g,open)=>open?"thu gọn ↑":`xem thêm ${g.list.length-1} đêm ${DAY_FULL[g.d].toLowerCase()} ↓`;
 function eventsHTML(){
@@ -1286,8 +1288,10 @@ function renderLineup(){
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
 /* nút "giữ bàn đêm này" ở lịch event: nhớ ngày đó, form đặt bàn điền sẵn ngày */
 document.addEventListener("click",e=>{const p=e.target.closest&&e.target.closest("[data-pst]");if(p){e.preventDefault();openPoster(p.dataset.pst);return}
-  const b=e.target.closest&&e.target.closest("[data-go]");if(!b)return;const g=b.dataset.go;if(g!=="roster"&&g!=="events")return;e.preventDefault();
-  const dl=b.closest("dialog");if(dl)dl.close();if(b.dataset.ev)S.wantDate=b.dataset.ev;goTo(g)});
+  const b=e.target.closest&&e.target.closest("[data-go]");if(!b)return;const g=b.dataset.go;if(g!=="roster"&&g!=="events"&&g!=="book")return;e.preventDefault();
+  const dl=b.closest("dialog");if(dl)dl.close();if(b.dataset.ev)S.wantDate=b.dataset.ev;
+  if(g==="book"){if(location.hash==="#book"){scrollTo(0,0);render()}else location.hash="book";return} // nút đặt bàn: mở thẳng form, không qua lineup
+  goTo(g)});
 /* ---------- idol profile ---------- */
 function renderIdol(id){
   const rows=computeBoard();const r=rows.find(x=>x.idol.id===id);
@@ -1451,19 +1455,20 @@ async function submitRating(b){
 
 /* ---------- khách đặt bàn từ lineup ---------- */
 function renderBook(idolId){
-  const B=S.book;
-  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(loadFull(todayStr(),idolId)?isoOfVN(Date.now()+86400e3):todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false})}
+  const B=S.book;idolId=idolId||"";const anyone=!idolId; // anyone = khách không chọn promoter, quán xếp người
+  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:anyone?[]:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(!anyone&&loadFull(todayStr(),idolId)?isoOfVN(Date.now()+86400e3):todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false})}
   if(S.wantDate&&B.wantFor!==S.wantDate){B.wantFor=S.wantDate;if(S.wantDate>=todayStr())B.dateText=isoToDM(S.wantDate)}
-  const i=idolById(idolId);
-  if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
-  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. hẹn gặp quý khách ở quán sớm nhất.</p>${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
+  const i=anyone?{id:"",stageName:"BLK46"}:idolById(idolId);
+  if(!anyone&&(!i||!isPublic(i))){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
+  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. quản lý xem yêu cầu từ 17h mỗi ngày. hẹn gặp quý khách ở quán sớm nhất.</p>${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
-  const br=computeBoard().find(x=>x.idol.id===idolId);
+  const br=anyone?null:computeBoard().find(x=>x.idol.id===idolId);
   const tkMeta=br&&br.n?`★ ${fmt1(br.avg)} · ${br.n} lượt · hạng ${grade(br)}`:"chưa có lượt chấm";
-  app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">← đổi promoter</a>
-  <div class="book-wrap"><section class="tk" aria-label="đặt bàn cùng ${esc(i.stageName)}">
-    <div class="tk-head"><div class="tk-face">${SIL}${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}</div>
-      <div class="tk-who"><p class="tk-pre">ĐẶT BÀN CÙNG</p><h1 class="tk-name">${esc(i.stageName)}</h1><p class="tk-meta">${tkMeta}</p></div></div>
+  app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">${anyone?"← về trang chính":"← đổi promoter"}</a>
+  <div class="book-wrap${anyone?" solo":""}"><section class="tk" aria-label="${anyone?"đặt bàn ở blk46":`đặt bàn cùng ${esc(i.stageName)}`}">
+    ${anyone?`<div class="tk-head"><div class="tk-who"><p class="tk-pre">ĐẶT BÀN Ở</p><h1 class="tk-name">BLK46</h1><p class="tk-meta">quán xếp promoter takecare bàn của bạn.</p></div></div>`
+    :`<div class="tk-head"><div class="tk-face">${SIL}${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}</div>
+      <div class="tk-who"><p class="tk-pre">ĐẶT BÀN CÙNG</p><h1 class="tk-name">${esc(i.stageName)}</h1><p class="tk-meta">${tkMeta}</p></div></div>`}
     <div class="tk-row"><p id="tkDay"></p><p id="tkTime"></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
     <p class="tk-ev" id="tkEv" hidden></p>
     <form class="idol" id="bookForm">
@@ -1480,11 +1485,11 @@ function renderBook(idolId){
       <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
       <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
       <button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"ĐANG GỬI…":"GỬI YÊU CẦU ĐẶT BÀN"}</button>
-      <p class="tk-after">gửi xong, quán gọi lại để xác nhận bàn. không có mức chi tối thiểu.</p>
-      <div class="book-help"><span>ngại điền? <a href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></span><a href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><button type="button" id="shareIdol">gửi link ${esc(i.stageName)} cho bạn</button><span id="shareMsg" role="status"></span></div>
+      <p class="tk-after">gửi xong, quản lý xem yêu cầu từ 17h và gọi lại để xác nhận bàn. không có mức chi tối thiểu.</p>
+      <div class="book-help"><span>ngại điền? <a href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></span><a href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a>${anyone?"":`<button type="button" id="shareIdol">gửi link ${esc(i.stageName)} cho bạn</button><span id="shareMsg" role="status"></span>`}</div>
     </form>
   </section>
-  <aside class="prv book-rv" id="promoRv" aria-label="đánh giá của khách cho ${esc(i.stageName)}">${promoReviewsHTML(i)}</aside></div>`;
+  ${anyone?"":`<aside class="prv book-rv" id="promoRv" aria-label="đánh giá của khách cho ${esc(i.stageName)}">${promoReviewsHTML(i)}</aside>`}</div>`;
   {const m=document.getElementById("prvMore");if(m)m.onclick=()=>{const cur=S.prv&&S.prv.id===i.id?S.prv.limit:PRV_STEP;S.prv={id:i.id,limit:Math.min(PRV_MAX,cur+PRV_STEP)};const y=scrollY;sync();render();scrollTo(0,y)}}
   {const sb=document.getElementById("shareIdol");if(sb)sb.onclick=async()=>{
     const url=location.origin+location.pathname+"#book-"+i.id,msg=document.getElementById("shareMsg");
@@ -1496,7 +1501,7 @@ function renderBook(idolId){
   app.querySelectorAll(".bsal").forEach(x=>x.onclick=()=>{sync();B.salutation=x.dataset.v;B.err="";render()});
   app.querySelectorAll(".tspot").forEach(x=>x.onclick=()=>{const t=x.dataset.t;if(HOLDS.taken.has(t))return;B.table=B.table===t?"":t;paintMap(B)});
   app.querySelectorAll("[data-tclear]").forEach(x=>x.onclick=()=>{B.table="";paintMap(B)});
-  const paintLoad=()=>{const d=dmToIso(B.dateText);const el=document.getElementById("loadNote");if(el)el.textContent=d&&loadFull(d,idolId)?`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`:""};
+  const paintLoad=()=>{const d=dmToIso(B.dateText);const el=document.getElementById("loadNote");if(el)el.textContent=d&&!anyone&&loadFull(d,idolId)?`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`:""};
   /* dòng ngày · giờ mở cửa trên vé, theo ngày khách gõ */
   const tkPaint=()=>{const iso=dmToIso(B.dateText),a=document.getElementById("tkDay"),z=document.getElementById("tkTime");if(!a||!z)return;
     const ve=document.getElementById("tkEv"),ev=iso&&eventOn(iso);if(ve){ve.hidden=!ev;ve.textContent=ev?"ĐÊM NÀY: "+ev.name:""}
@@ -1513,7 +1518,7 @@ function renderBook(idolId){
     const date=dmToIso(B.dateText);
     if(!date){B.err="ngày chưa đúng, gõ kiểu 08/11.";return render()}
     if(date<todayStr()){B.err="ngày này đã qua rồi.";return render()}
-    if(loadFull(date,idolId)){B.err=`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`;return render()}
+    if(!anyone&&loadFull(date,idolId)){B.err=`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`;return render()}
     if(!okTime(B.time)){B.err="giờ đến chưa đúng, gõ kiểu 22:30.";return render()}
     if(arrivalPast(date,B.time,Date.now())){B.err=ARRIVAL_PAST_MSG;return render()}
     if(phone.length<9||phone.length>11){B.err="số điện thoại chưa đúng.";return render()}
@@ -1521,7 +1526,7 @@ function renderBook(idolId){
     if(table&&HOLDS.date===date&&HOLDS.taken.has(table)){B.err="bàn "+table+" ngày này đã có khách đặt, chọn bàn khác nhé.";B.table="";return render()}
     B.busy=true;B.err="";render();
     try{const id="b"+rid(12);const now=Date.now();const holdUntil=holdUntilFor(date,B.time,now);
-      const booking={holdUntil,salutation:B.salutation,guestName:capName(B.guestName).slice(0,40),phone,date,time:B.time,guests:B.guests.replace(/\D/g,""),table,idolIds:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:now};
+      const booking={holdUntil,salutation:B.salutation,guestName:capName(B.guestName).slice(0,40),phone,date,time:B.time,guests:B.guests.replace(/\D/g,""),table,idolIds:anyone?[]:[idolId],note:B.note.slice(0,160),status:"requested",source:"web",code:"",createdAt:now};
       await S.db.createBooking(id,booking,table?holdKey(date,table):"",table?{date,table,bookingId:id,createdAt:now,until:holdUntil}:null);
       if(HOLDS.off){HOLDS.off();HOLDS.off=null;HOLDS.date=""}B.doneTable=table;B.doneUntil=holdUntil;B.busy=false;B.done=true;render()}
     catch(e){B.busy=false;if(e&&e.code==="taken"){B.err="bàn "+table+" vừa có khách khác đặt ngày này, chọn bàn khác nhé.";B.table=""}else B.err="chưa gửi được, kiểm tra lại thông tin rồi thử lại.";render()}
@@ -1716,7 +1721,7 @@ function bookingCard(b){
     <div class="bk-main">
       <div class="rowbtns"><b>${b.guestName?esc(guestLabel(b)):"(chưa có tên)"}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
         <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}${b.status!=="seated"&&b.status!=="cancelled"&&b.holdUntil?(holdExpired(b)?`<span class="pill bad">quá giờ giữ bàn${b.table?" · bàn đã mở lại":""}</span>`:`<span class="pill warn">giữ đến ${fmtHM(b.holdUntil)}</span>`):""}</div>
-      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">chưa chọn promoter</span>`}</div>
+      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">khách để quán xếp promoter</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
       <div class="rowbtns">
