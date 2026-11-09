@@ -541,6 +541,25 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
   .ev-dh h3{display:none}
   .ev-list{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+/* ưu đãi hằng tuần (thứ 5, chủ nhật): ô vàng, ở đầu khung thứ đó và trên tờ rơi đêm đó */
+.promo{background:var(--acid);color:#000;border:3px solid #000;box-shadow:5px 5px 0 #000;padding:14px 16px 16px;margin:0 0 18px}
+.promo.on-dark{box-shadow:5px 5px 0 var(--paper);margin:4px 0 0;max-width:560px}
+.promo p{margin:0}
+.promo-t{font-family:var(--display);font-size:22px;line-height:1.3;letter-spacing:.04em}
+.promo-l{margin-top:4px!important;font-size:15px;font-weight:500;max-width:52ch}
+.promo-r{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:12px}
+.promo-r span{font-size:13px}
+.promo-go{display:inline-flex;align-items:center;min-height:46px;padding:0 18px;background:#000;color:var(--acid);font-family:var(--display);font-size:18px;letter-spacing:.05em;text-decoration:none}
+/* trong khung thứ trên nền giấy: ô đen, để không lẫn với thẻ "tối nay" màu vàng */
+.promo:not(.on-dark){background:#000;color:var(--paper);box-shadow:5px 5px 0 var(--acid)}
+.promo:not(.on-dark) .promo-t{color:var(--acid)}
+.promo:not(.on-dark) .promo-go{background:var(--acid);color:#000}
+.promo:not(.on-dark) .promo-go:hover{background:var(--paper);outline:0}
+.promo:not(.on-dark) .promo-pst{color:var(--paper)}
+.promo:not(.on-dark) .promo-r span{color:#d8d4c9}
+.promo-pst{font:inherit;font-size:14px;font-weight:700;background:none;border:0;padding:4px 0;color:#000;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+.promo-go:hover{background:#fff;color:#000;outline:3px solid #000;outline-offset:-3px}
+@media (min-width:900px){.promo{display:flex;align-items:center;gap:24px}.promo-m{flex:1}.promo-r{margin-top:0;flex:none;flex-direction:column;align-items:flex-start}.promo.on-dark{display:block}.promo.on-dark .promo-r{margin-top:12px;flex-direction:row}}
 .ev{border:3px solid #000;background:#F7F4EC;display:flex;flex-direction:column;min-width:0}
 .ev-pst{font:inherit;font-size:14px;font-weight:700;background:none;border:0;padding:4px 0;color:#000;cursor:pointer;text-decoration:underline;text-underline-offset:4px;align-self:flex-start}
 /* nút poster lịch tháng: ô vàng nổi như tem dán, để khách thấy mà bấm */
@@ -991,6 +1010,20 @@ const EVENTS=[
 ];
 // poster lịch cả tháng: "năm-tháng":đường dẫn. hiện ở mục lịch (nút xem poster) và ở đầu trang khi không còn poster đêm nào.
 const MONTH_POSTERS={"2026-11":"events/lich-thang-11.jpg"};
+/* ưu đãi lặp lại hằng tuần, theo thứ (4 = thứ 5, 0 = chủ nhật). chủ đề từng đêm vẫn ghi ở EVENTS.
+   anh Minh 09/11: đăng đủ nội dung + poster ưu đãi (đã biết rủi ro luật 44/2019 điều 5, 12).
+   poster: ảnh trong public/events/. PROMO_FORM_URL: link form khách điền. để trống thì nút dẫn tới instagram của quán. */
+const PROMO_FORM_URL="";
+const WEEKLY_PROMOS={
+  4:{tag:"LADIES SPECIAL",line:"voucher có hạn cho chị em tới trước 22h45: mỗi chị em 2 ly miễn phí, nhóm 4 chị em được tặng 1 chai.",go:"NHẬN VOUCHER",poster:"events/promo-thu-5.jpg"},
+  0:{tag:"FREE BEER",line:"phố hàng nhạc: điền form trước khi tới để nhận 1 bia miễn phí.",go:"NHẬN BIA",poster:"events/promo-chu-nhat.jpg"},
+};
+function promoHTML(dow,cls=""){
+  const p=WEEKLY_PROMOS[dow];if(!p)return "";
+  const url=PROMO_FORM_URL||SOCIAL.instagram;if(!url)return "";
+  return `<div class="promo${cls?" "+cls:""}"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
+    <div class="promo-r"><a class="promo-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}<span>${PROMO_FORM_URL?"":"điền form ở bio instagram @blk.hanoi. "}dành cho khách từ 18 tuổi.</span></div></div>`;
+}
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const eventOn=iso=>EVENTS.find(e=>e.date===iso);
 /* event từ đêm đang nói tới trên tờ rơi trở đi (đêm đã qua thì ẩn) */
@@ -1044,6 +1077,7 @@ function flyHTML(){
       <div class="fly-row"><p>${esc(n.time)}</p><p>${esc(n.day)}</p><p>TẦNG 1, 46 MÃ MÂY</p></div>
       ${n.state==="tonight"?"":`<p class="fly-state${t.open?"":" off"}" role="status">${esc(t.text)}</p>`}
       ${evLine}
+      ${promoHTML(n.dow,"on-dark")}
       <div class="fly-btns"><button type="button" class="btn-acid" data-go="roster">CHỌN PROMOTER</button><a class="btn-line" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call" href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></div>
     </div>${art}`;
 }
@@ -1126,6 +1160,7 @@ function eventGroups(){
 const evDayText=e=>`${WD_FLY[dowOfIso(e.date)]} ${e.date.slice(8)}.${e.date.slice(5,7)}`;
 /* xem poster to: data-pst = ngày của đêm, hoặc "month" cho poster lịch tháng */
 function openPoster(key){
+  if(/^promo-\d$/.test(key))return openPromoPoster(+key.slice(6));
   const up=upcomingEvents(),e=key==="month"?null:EVENTS.find(x=>x.date===key&&x.poster);
   const src=e?e.poster:up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];if(!src)return;
   let d=document.getElementById("pdlg");
@@ -1136,6 +1171,20 @@ function openPoster(key){
   d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(src)}" alt="${esc(alt)}">
     ${e?`<div class="pdlg-bar"><p>${esc(evDayText(e))} · ${esc(e.name)}</p><button type="button" class="btn-acid" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div>`
       :`<div class="pdlg-bar"><p>LỊCH THÁNG ${+up[0].date.slice(5,7)}</p><button type="button" class="btn-acid" data-go="events">CHỌN ĐÊM</button></div>`}`;
+  d.showModal();
+}
+function posterDialog(){
+  let d=document.getElementById("pdlg");
+  if(!d){d=document.createElement("dialog");d.id="pdlg";d.className="pdlg";document.body.append(d);
+    d.addEventListener("click",x=>{if(x.target===d)d.close()})}
+  return d;
+}
+function openPromoPoster(dow){
+  const p=WEEKLY_PROMOS[dow];if(!p||!p.poster)return;
+  const d=posterDialog(),alt=`poster ưu đãi ${p.tag.toLowerCase()} mỗi ${DAY_FULL[dow].toLowerCase()} ở blk46`;
+  d.setAttribute("aria-label",alt);
+  d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(p.poster)}" alt="${esc(alt)}">
+    <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="${esc(PROMO_FORM_URL||SOCIAL.instagram)}" target="_blank" rel="noopener">${esc(p.go)}</a></div>`;
   d.showModal();
 }
 function evCard(e,n,live){
@@ -1163,6 +1212,7 @@ function eventsHTML(){
       ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
     ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
       <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
+      ${promoHTML(g.d)}
       <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol>
       ${g.list.length>1?`<button type="button" class="sq ev-more" aria-expanded="${S.evOpen.has(g.d)}">${evMoreText(g,S.evOpen.has(g.d))}</button>`:""}</div>`).join("")}
   </section>`;
