@@ -960,8 +960,7 @@ function promoReviewsHTML(i){
   return `<div class="prv-head"><h2>Khách trước<br>nói gì <small>${list.length} đánh giá</small></h2></div>
     ${tops.length?`<div class="tags prv-tags" aria-label="tag khách chọn nhiều nhất">${tops.map(([t,n])=>`<span class="tag">${esc(t)}<b>${n}</b></span>`).join("")}</div>`:""}
     ${list.length?`<div class="prv-list">${list.slice(0,lim).map(item).join("")}</div>`:`<div class="empty" style="margin-top:14px"><b>${S.loaded.reviews?`${esc(i.stageName)} chưa có đánh giá nào.`:"đang tải…"}</b></div>`}
-    ${lim<PRV_MAX&&list.length>lim?`<div style="margin-top:14px"><button class="ghostbtn" id="prvMore">xem thêm (${Math.min(PRV_STEP,list.length-lim,PRV_MAX-lim)})</button></div>`:""}
-    <p class="note" style="padding-top:10px">đánh giá từ khách đã ngồi bàn, mỗi bàn chấm mỗi promoter một lần. chỉ hiện đánh giá từ 4★ trở lên, quán ẩn những lượt vi phạm.</p>`;
+    ${lim<PRV_MAX&&list.length>lim?`<div style="margin-top:14px"><button class="ghostbtn" id="prvMore">xem thêm (${Math.min(PRV_STEP,list.length-lim,PRV_MAX-lim)})</button></div>`:""}`;
 }
 /* ---------- hướng 2: tờ rơi đầu trang (anh Minh 09/11) ---------- */
 // Ảnh dọc trong quán cho khung bên phải tờ rơi: chép ảnh vào public/brand/ rồi ghi đường dẫn ở đây, vd "brand/trong-quan.jpg".
