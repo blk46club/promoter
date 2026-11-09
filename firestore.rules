@@ -22,6 +22,11 @@ service cloud.firestore {
       allow read: if resource.data.public == true || isStaff();
       allow write: if isStaff();
     }
+    // Ảnh to cho khung lớn trên lineup: khách chỉ tải khi chọn promoter, chỉ đọc được người đang hiển thị.
+    match /idolPhotos/{id} {
+      allow read: if resource.data.public == true || isStaff();
+      allow write: if isStaff();
+    }
     // Hồ sơ đầy đủ (số đo bị ẩn, giấy đồng ý): chỉ quản lý.
     match /idolsPrivate/{id} {
       allow read, write: if isStaff();

@@ -132,6 +132,8 @@ h1.display.admin-title{font-size:clamp(26px,4.8vw,53px);line-height:1.2;color:#f
 /* ảnh góc nghiêng hiện đè lên ảnh toàn thân sau 1,5 giây */
 .spot-portrait img.alt{opacity:0;transition:opacity .4s ease}
 .spot-portrait.flip img.alt{opacity:1}
+/* ảnh nhỏ tạm thời trong lúc tải ảnh to (anh Minh 09/11) */
+.spot-portrait img.lq{filter:blur(12px);transform:scale(1.08)}
 .spot-portrait .ph{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:120px;color:rgba(0,0,0,.35)}
 .grade{position:absolute;right:10px;bottom:6px;font-family:var(--display);font-size:96px;line-height:1;color:var(--paper);-webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink)}
 .grade.g-S{color:var(--acid)}
@@ -477,7 +479,7 @@ const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
 const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
-  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],
+  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false}};
@@ -498,7 +500,14 @@ const periodStart=k=>{const v=new Date(Date.now()+7*3600e3),y=v.getUTCFullYear()
   if(k==="week")return Date.UTC(y,m,v.getUTCDate()-((v.getUTCDay()+6)%7))-7*3600e3;return 0};
 const ANGLES=[["close","cận"],["full","toàn thân"],["side","nghiêng"]];
 const photosOf=i=>{const p=Object.assign({},i.photos||{});if(!p.close&&i.photoId)p.close=i.photoId;return p};
-const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||""};
+// khách chỉ có i.thumb (ảnh nhỏ); quản lý và bản chạy thử có đủ i.photos
+const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||i.thumb||""};
+/* ảnh to cho khung lớn trên lineup: chỉ tải khi khách chọn promoter (anh Minh 09/11) */
+function loadSpot(id){
+  if(S.big[id]||S.bigReq[id]||!S.db||!S.db.getSpot)return;
+  S.bigReq[id]=S.db.getSpot(id).then(d=>{S.big[id]={main:(d&&d.main)||"",alt:(d&&d.alt)||""};if(S.reshowSpot)S.reshowSpot(id)})
+    .catch(()=>{S.big[id]={main:"",alt:""};if(S.reshowSpot)S.reshowSpot(id)});
+}
 const photoSrc=i=>coverId(i)?(""+coverId(i)):"";
 const initials=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
 const isPublic=i=>i.public===true||!!(i.active!==false&&i.consent&&i.consent.signed&&i.consent.adult);
@@ -675,10 +684,13 @@ function countVisitOnce(){
 }
 function bytesPerVisit(){
   const pub=S.idols.filter(isPublic);
-  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,photos:i.photos,talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight,bust:i.bust,waist:i.waist,hip:i.hip}).length+120,0);
+  // mỗi lượt: hồ sơ công khai (kèm 1 ảnh nhỏ) của mọi promoter + ảnh to của 1 người hiện ở khung lớn.
+  // khách rê/chọn thêm người nào thì tải thêm ảnh to người đó, nên con số thật có thể cao hơn.
+  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,thumb:i.thumb||"",talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight,bust:i.bust,waist:i.waist,hip:i.hip}).length+120,0);
+  const spotB=pub.length?Math.round(pub.reduce((t,i)=>{const p=photosOf(i);const m=p.full||p.close||p.side||"";return t+m.length+(p.side&&p.side!==m?p.side.length:0)},0)/pub.length)+200:0;
   const revB=S.reviews.reduce((t,r)=>t+JSON.stringify(r).length+120,0);
   const modB=Object.keys(S.mod||{}).length*150;
-  return Math.round((idolB+revB+modB+600)*1.1); // +10% phần đầu gói tin của Firestore (ước tính)
+  return Math.round((idolB+spotB+revB+modB+600)*1.1); // +10% phần đầu gói tin của Firestore (ước tính)
 }
 const fmtBytes=b=>b>=1e9?(b/1e9).toFixed(2).replace(".",",")+" GB":b>=1e6?(b/1e6).toFixed(1).replace(".",",")+" MB":Math.max(1,Math.round(b/1e3))+" KB";
 function usageBox(){
@@ -701,7 +713,11 @@ function grade(r){if(!r||!r.n)return "?";const s=r.score;return s>=4.8?"S":s>=4.
 function statVals(r){const t=r.statRate||{},top=r.statTop||{};return STATS.map(([k,l])=>[l,top[k]?Math.min(10,Math.round(10*(t[k]||0)/top[k])):0])}
 function spotHTML(r,ghost){
   const i=r?r.idol:{stageName:"[TÊN PROMOTER]"};
-  const p=r?photosOf(i):{};const pid=p.full||p.close||p.side||"";const side=p.side&&p.side!==pid?p.side:"";
+  const p=r?photosOf(i):{};let pid=p.full||p.close||p.side||"",side=p.side&&p.side!==pid?p.side:"",lq="";
+  if(!pid&&r&&i.thumb){const bg=S.big[i.id];
+    if(bg&&bg.main){pid=bg.main;side=bg.alt}
+    else if(i.hasSpot&&!bg){lq=i.thumb;loadSpot(i.id)}
+    else pid=i.thumb}
   const sh=i.show||{};
   const bio=[];
   if(ghost){bio.push(["cao","—"],["nặng","—"],["số đo","—"])}
@@ -717,7 +733,7 @@ function spotHTML(r,ghost){
   const ld=ghost||!r?0:loadOf(todayStr(),i.id);const full=ld>=LOAD_MAX;
   return `<div class="spot-portrait${full?" full":""}">
       <div class="slash" aria-hidden="true"></div>
-      ${pid?`<img src="${esc(pid)}" alt="${esc(i.stageName)}" onerror="this.remove()">`:`<div class="ph" aria-hidden="true">${ghost?"?":esc(initials(i.stageName))}</div>`}
+      ${pid?`<img src="${esc(pid)}" alt="${esc(i.stageName)}" onerror="this.remove()">`:lq?`<img class="lq" src="${esc(lq)}" alt="${esc(i.stageName)}" onerror="this.remove()">`:`<div class="ph" aria-hidden="true">${ghost?"?":esc(initials(i.stageName))}</div>`}
       ${side?`<img class="alt" src="${esc(side)}" alt="" aria-hidden="true" onerror="this.remove()">`:""}
       <div class="grade g-${g==="?"?"x":g}" aria-label="hạng ${g}">${g}</div>
       ${ld?`<div class="spot-load" role="status">${loadLabel(ld)}</div>`:""}
@@ -800,6 +816,7 @@ function renderLineup(){
   };
   const sr=document.getElementById("spotRate");if(sr&&cur)sr.onclick=()=>{S.rate.idolId=cur.idol.id};
   armFlip();
+  S.reshowSpot=id=>{if(S.sel===id&&spot.isConnected)show(id,false)};
   const tilesEl=[...app.querySelectorAll(".tile[data-id]:not(.full)")];
   const pick=(b,focus)=>{
     if(S.sel===b.dataset.id)return;
@@ -1402,6 +1419,14 @@ async function saveIdol(ev){
     err.textContent=x&&x.code==="type_not_allowed"?"định dạng ảnh không hỗ trợ, dùng jpg hoặc png.":(x&&x.code==="too_large"?"ảnh quá nặng, tối đa 20 MB.":"chưa lưu được, thử lại.");
   }
 }
+/* hồ sơ lưu trước 09/11 còn để ảnh to trong hồ sơ công khai: máy quản lý tự lưu lại một lần theo cách mới */
+const MIGRATING={};
+function migrateThumbs(){
+  if(!S.canEdit||!S.db||!S.db.thumbV)return;
+  S.idols.filter(i=>Object.keys(i.photos||{}).length&&i.thumbV!==S.db.thumbV&&!MIGRATING[i.id]).forEach(i=>{
+    MIGRATING[i.id]=1;S.db.doc("idols/"+i.id).set({...i}).catch(()=>{delete MIGRATING[i.id]});
+  });
+}
 function modSet(id,patch){const cur=S.mod[id]||{};return S.db.doc("moderation/"+id).set({hidden:!!cur.hidden,...patch,at:Date.now()})}
 function adminReviews(p){
   const name={};S.idols.forEach(i=>name[i.id]=i.stageName);
@@ -1438,7 +1463,7 @@ render();
   const onErr=()=>{clearTimeout(timer);S.stale=true;S.loaded.idols=true;render()};
   let rT=0;const soon=()=>{clearTimeout(rT);rT=setTimeout(()=>{if(!isTyping())render()},60)};
   function isTyping(){const a=document.activeElement;return a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA")&&route().view!=="lineup"}
-  db.collection("idols").onSnapshot(s=>{S.idols=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.idols=true;settle(s);soon()},onErr);
+  db.collection("idols").onSnapshot(s=>{S.idols=s.docs.map(d=>({...d.data(),id:d.id}));S.loaded.idols=true;settle(s);migrateThumbs();soon()},onErr);
   db.collection("reviews").onSnapshot(s=>{S.reviews=s.docs.map(d=>({...d.data(),id:d.id})).filter(r=>r.stars>=1&&r.stars<=5);S.loaded.reviews=true;settle(s);soon()},onErr);
   db.collection("moderation").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.mod=m;soon()},()=>{});
   countVisitOnce();
