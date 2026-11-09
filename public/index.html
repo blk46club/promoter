@@ -1145,7 +1145,7 @@ function evCard(e,n,live){
         <div class="ev-b"><p>${esc(e.line)}</p>
           ${e.dj?`<p class="x"><b>guest dj:</b> ${esc(e.dj.toLowerCase())}</p>`:""}
           ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
-          ${e.poster?`<button type="button" class="ev-pst" data-pst="${e.date}">xem poster ↗</button>`:""}
+          ${e.poster?`<button type="button" class="ev-pst" data-pst="${e.date}">xem poster</button>`:""}
           <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
 }
 const evMoreText=(g,open)=>open?"thu gọn ↑":`xem thêm ${g.list.length-1} đêm ${DAY_FULL[g.d].toLowerCase()} ↓`;
@@ -1158,7 +1158,7 @@ function eventsHTML(){
   /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
   let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
   return `<section class="evs" id="events" aria-label="lịch event">
-    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p>${MONTH_POSTERS[up[0].date.slice(0,7)]?`<button type="button" class="ev-mp" data-pst="month">XEM POSTER LỊCH THÁNG ${+up[0].date.slice(5,7)} <span aria-hidden="true">↗</span></button>`:""}</div>
+    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p>${MONTH_POSTERS[up[0].date.slice(0,7)]?`<button type="button" class="ev-mp" data-pst="month">XEM POSTER LỊCH THÁNG ${+up[0].date.slice(5,7)}</button>`:""}</div>
       ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
     ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
       <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
