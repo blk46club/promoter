@@ -1,0 +1,12 @@
+name: Kiểm bộ thiết kế (màu, cỡ chữ)
+on:
+  pull_request:
+    paths: ["public/index.html", "tools/kiem-token.cjs"]
+permissions:
+  contents: read
+jobs:
+  kiem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tools/kiem-token.cjs
