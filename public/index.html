@@ -1571,7 +1571,7 @@ function renderBook(idolId){
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" placeholder="4" value="${esc(B.guests)}"></label>
       </div>
       <p class="hold-note" id="holdNote" role="status"></p>
-      <div class="f tpick-f"><span>chọn bàn muốn ngồi (không bắt buộc)</span>${tableMap(B.table)}</div>
+      <div class="f tpick-f"><span>chọn bàn muốn ngồi - bấm vào bàn trong hình (không bắt buộc)</span>${tableMap(B.table)}</div>
       <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
       <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
       <button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"ĐANG GỬI…":"GỬI YÊU CẦU ĐẶT BÀN"}</button>
