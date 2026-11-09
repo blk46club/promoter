@@ -7,6 +7,7 @@ Web công khai cho khách xem lineup idol, đặt bàn kèm idol, và tablet c�
 - `public/firebase-config.js`: thông tin project Firebase (không phải mật khẩu).
 - `firestore.rules`, `storage.rules`: luật bảo mật. Đây là thứ thật sự giữ số điện thoại khách, lời nhắn và tip khỏi người ngoài.
 - `.github/workflows/deploy.yml`: merge vào `main` là web tự cập nhật.
+- `docs/bo-thiet-ke.md`: bộ thiết kế dùng chung (màu, chữ, nút). Sửa giao diện thì lấy token trong `:root`, chạy `node tools/kiem-token.cjs` trước khi gửi PR. Trang mẫu: `tools/bo-thiet-ke.html`.
 
 ## Hai chế độ chạy
 
