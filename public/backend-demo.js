@@ -113,6 +113,8 @@ function makeDb(staff) {
       setTimeout(fire, 0);
       return () => { subs.idolLoad = (subs.idolLoad || []).filter((f) => f !== fire); };
     },
+    // Khách đăng ký voucher ưu đãi hằng tuần (vouchers/{id}).
+    createVoucher: async (id, v) => { col("vouchers")[id] = JSON.parse(JSON.stringify(v)); save(); notify("vouchers"); },
     // Khách gửi đặt bàn kèm bàn muốn ngồi: giữ bàn và tạo đặt bàn cùng lúc, bàn đã có người giữ thì báo "taken".
     createBooking: async (bookingId, booking, holdId, hold) => {
       // Bàn đã giữ mà quá giờ giữ (quản lý chưa xếp khách vào) thì khách sau được giữ lại.
