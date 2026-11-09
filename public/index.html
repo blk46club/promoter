@@ -493,6 +493,63 @@ body.paper .sheet .note{margin:0;color:var(--concrete)}
 @keyframes fadein{from{opacity:0}}
 body.paper .grade-note{padding-block:14px 0;margin:0}
 
+/* lịch event (anh Minh 09/11): thẻ chữ, có chỗ cho poster */
+.fly-ev{margin:0;font-size:18px;font-weight:500;max-width:46ch}
+.fly-ev .x{display:block;margin-top:4px;font-size:15px;font-weight:400;color:#d8d4c9}
+.fly-more{font:inherit;font-size:15px;font-weight:500;background:none;border:0;color:var(--acid);padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:4px;white-space:nowrap}
+.fly-more:hover{color:var(--paper)}
+.evs{padding-block:40px 56px;scroll-margin-top:64px;border-top:3px solid #000}
+@media (min-width:900px){.evs{padding-block:56px 72px}}
+.evs-head{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
+.evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,6vw,76px);line-height:1.14;text-transform:uppercase}
+.evs-head p{margin:8px 0 0;color:var(--muted-p);max-width:56ch;font-size:15px}
+@media (min-width:900px){.evs-head{margin-bottom:28px}.evs-head p{font-size:16px}}
+/* mỗi thứ một khung. điện thoại: các khung xếp dọc. máy tính (từ 900px): mỗi lần một khung, bấm mũi tên để đổi */
+.ev-nav{display:none;align-items:center;gap:12px}
+.ev-nav .sq{font-family:var(--display);font-size:24px;padding:0;width:52px;min-height:52px;display:inline-flex;align-items:center;justify-content:center}
+.ev-nav .sq:hover{background:#000;color:var(--paper)}
+.evs-head .ev-now{margin:0;min-width:250px;text-align:center;font-family:var(--display);font-size:44px;line-height:1.05;color:#000;max-width:none}
+.evs-head .ev-now small{display:block;margin-top:2px;font-family:var(--body);font-size:13px;line-height:1.3;letter-spacing:.08em;color:var(--muted-p)}
+.ev-day+.ev-day{margin-top:36px}
+.ev-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-top:3px solid #000;padding-top:10px;margin-bottom:14px}
+.ev-dh h3{margin:0;font-family:var(--display);font-weight:400;font-size:40px;line-height:1.1}
+.ev-dh p{margin:0;font-family:var(--display);font-size:18px;letter-spacing:.03em}
+.ev-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:700px){.ev-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}}
+/* điện thoại: mỗi thứ chỉ hiện đêm gần nhất, bấm "xem thêm" mới mở (anh Minh 09/11) */
+.ev-more{display:block;width:100%;margin-top:12px}
+@media (max-width:899px){.ev-day:not(.all) .ev:nth-child(n+2){display:none}}
+@media (min-width:900px){
+  .ev-more{display:none}
+  .ev-nav{display:flex}
+  .ev-day{display:none}.ev-day.on{display:block}
+  .ev-day+.ev-day{margin-top:0}
+  .ev-dh h3{display:none}
+  .ev-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.ev{border:3px solid #000;background:#F7F4EC;display:flex;flex-direction:column;min-width:0}
+.ev-pic{aspect-ratio:4/5;background:#000;border-bottom:3px solid #000;overflow:hidden}
+.ev-pic img{display:block;width:100%;height:100%;object-fit:cover}
+.ev-top{display:flex;align-items:stretch;border-bottom:3px solid #000}
+.ev-d{flex:none;width:96px;background:#000;color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;gap:2px}
+.ev-d b{font-family:var(--display);font-weight:400;font-size:36px;line-height:1}
+.ev-d span{font-family:var(--display);font-size:14px;letter-spacing:.06em}
+.ev-h{padding:10px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.ev-tag{margin:0;font-size:12px;font-weight:700;letter-spacing:.14em}
+.ev-h h3{margin:0;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.18;text-transform:uppercase;overflow-wrap:anywhere}
+.ev-b{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.ev-b p{margin:0;font-size:15px}
+.ev-b .x{color:var(--muted-p);font-size:14px}
+.ev-b .x b{color:#000;font-weight:700}
+.ev-go{margin-top:auto;align-self:flex-start;font-family:var(--display);font-size:15px;letter-spacing:.06em;background:transparent;border:2px solid #000;color:#000;padding:0 14px;min-height:44px;cursor:pointer}
+.ev-go:hover{background:#000;color:var(--paper)}
+.ev.now{background:var(--acid)}
+.ev.now .ev-go{background:#000;color:var(--paper)}
+.ev.now .ev-go:hover{background:var(--paper);color:#000}
+.tk-ev{margin:0;padding:10px 14px;border-bottom:3px solid #000;background:var(--acid);font-family:var(--display);font-size:18px;letter-spacing:.03em}
+.tk-ev[hidden]{display:none}
+@media (min-width:700px){.tk-ev{padding:12px 20px;font-size:20px}}
+
 /* đặt bàn thế nào: 3 bước */
 .how{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding-block:8px 48px}
 .how>div{border-top:3px solid #000;padding-top:12px;display:flex;gap:16px}
@@ -635,7 +692,7 @@ const BADGE_AT=5;         // số lượt tag để thành huy hiệu
 const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
-const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
+const S={evOpen:new Set(),db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
   idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
@@ -895,7 +952,29 @@ function promoReviewsHTML(i){
 const VENUE_PHOTO="";
 // Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn tròn.
 const GOOGLE_RATING=null;
+/* lịch event (anh Minh 09/11, từ trang lịch tháng 11 trong file Canva "EVENT- BLK46 - Q4").
+   chỉ ghi phần khách cần biết. KHÔNG ghi kịch bản: moment, giờ diễn, trò chơi, quà bất ngờ, decor (quán khác có vào xem).
+   KHÔNG ghi khuyến mại rượu: luật 44/2019/QH14 điều 5 cấm quảng cáo và khuyến mại rượu từ 15 độ.
+   poster: chép ảnh vào public/events/ rồi ghi đường dẫn, vd "events/walk-of-fame.jpg". để trống thì là thẻ chữ.
+   dj: guest dj của đêm đó (hiện thành dòng "guest dj" trên tờ rơi và thẻ). dress: dress code. */
+const EVENTS=[
+  {date:"2026-11-12",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng."},
+  {date:"2026-11-13",name:"WALK OF FAME",line:"thứ 6 ngày 13. hôm nay xui cỡ nào thì bước vào blk cũng bỏ lại ngoài cửa."},
+  {date:"2026-11-14",name:"FREEBIES NIGHT",line:"tối nay có quà. quà gì thì tới mới biết."},
+  {date:"2026-11-15",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
+  {date:"2026-11-19",name:"COOC-XÊ",line:"đêm thời trang của các chị em. diện cho chính mình là một phần cuộc chơi.",dj:"BONG"},
+  {date:"2026-11-20",name:"BỎNG OUT #2: THE SLEEPOVER",line:"tell ur fam, u got a sleepover.",dress:"đồ ngủ, slip dress, đồ thể thao, bịt mắt, lô cuốn tóc"},
+  {date:"2026-11-21",name:"IT'S FINGER BLKING GOOD",line:"đồ ăn cầm tay mang tới tận bàn."},
+  {date:"2026-11-22",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
+  {date:"2026-11-26",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng."},
+  {date:"2026-11-27",name:"BLKFRIDAY",line:"thứ 6 đen của blk. dark side cả đêm."},
+  {date:"2026-11-28",name:"SAX & DJ",line:"saxophone chơi cùng dj trên nền nhạc của blk."},
+  {date:"2026-11-29",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
+];
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
+const eventOn=iso=>EVENTS.find(e=>e.date===iso);
+/* event từ đêm đang nói tới trên tờ rơi trở đi (đêm đã qua thì ẩn) */
+const upcomingEvents=()=>{const from=nightInfo().iso;return EVENTS.filter(e=>e.date>=from).sort((a,b)=>a.date<b.date?-1:1)};
 const pad2=n=>String(n).padStart(2,"0");
 const dowOfIso=iso=>{const [y,m,d]=iso.split("-").map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay()};
 const hoursOf=dow=>CLOSE_AT[dow]!=null?`${OPEN_FROM}.00 – ${CLOSE_AT[dow]}.00`:"QUÁN NGHỈ";
@@ -920,20 +999,26 @@ function fetchTonight(){
     paintDj();
   }).catch(()=>{});
 }
-function paintDj(){const el=document.getElementById("flyDj");if(!el)return;const t=S.tonight.dj||DJ_FALLBACK;el.textContent=t;el.classList.toggle("long",t.length>14)}
+/* chữ to nhất trên tờ rơi: tên DJ quản lý nhập > tên event > HOUSE PARTY */
+function flyHead(n){
+  const ev=eventOn(n.iso),dj=(S.tonight.iso===n.iso&&S.tonight.dj)||"";
+  return {ev,head:dj||(ev&&ev.name)||DJ_FALLBACK,pre:"BLK46 PRESENTS"+(dj&&ev?" · "+ev.name:"")};
+}
+function paintDj(){const el=document.getElementById("flyDj");if(!el)return;const h=flyHead(nightInfo());el.textContent=h.head;el.classList.toggle("long",h.head.length>14);const p=document.getElementById("flyPre");if(p)p.textContent=h.pre}
 const SIL=`<svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="38" r="20" fill="currentColor"/><path d="M10 120c2-32 19-48 40-48s38 16 40 48z" fill="currentColor"/></svg>`;
 function flyHTML(){
-  const n=nightInfo(),t=tonightInfo();
-  const dj=(S.tonight.iso===n.iso&&S.tonight.dj)||DJ_FALLBACK;
+  const n=nightInfo(),t=tonightInfo(),h=flyHead(n),dj=h.head,ev=h.ev,up=upcomingEvents();
+  const evLine=ev||up.length?`<p class="fly-ev">${ev?esc(ev.line):""}${ev&&ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev&&ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${up.length?` <button type="button" class="fly-more" data-go="events">lịch tháng ${+up[0].date.slice(5,7)}&nbsp;↓</button>`:""}</p>`:"";
   const rating=GOOGLE_RATING&&GOOGLE_RATING.stars?`<div class="sticker"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?`<br>${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></div>`:"";
   const art=VENUE_PHOTO
     ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div><span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>${rating}</div>`
     :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div><span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>${rating}</div>`;
   return `<div class="fly-main">
-      <p class="fly-pre">BLK46 PRESENTS</p>
+      <p class="fly-pre" id="flyPre">${esc(h.pre)}</p>
       <h1 class="fly-dj${dj.length>14?" long":""}" id="flyDj">${esc(dj)}</h1>
       <div class="fly-row"><p>${esc(n.time)}</p><p>${esc(n.day)}</p><p>TẦNG 1, 46 MÃ MÂY</p></div>
       ${n.state==="tonight"?"":`<p class="fly-state${t.open?"":" off"}" role="status">${esc(t.text)}</p>`}
+      ${evLine}
       <p class="fly-lede">hip-hop newschool, upper house, afro house. không có mức chi tối thiểu. chọn promoter bên dưới, giữ bàn trước khi tới.</p>
       <div class="fly-btns"><button type="button" class="btn-acid" data-go="roster">CHỌN PROMOTER</button><a class="btn-line" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call" href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></div>
     </div>${art}`;
@@ -1007,7 +1092,44 @@ function howHTML(){
     ["TỚI QUÁN",`quán giữ bàn đến ${hm(HOLD_CUTOFF_MIN)}. hẹn muộn hơn thì giữ thêm ${HOLD_LATE_MIN} phút sau giờ hẹn.`]]
     .map(([h,p],k)=>`<div><p class="n">${k+1}</p><div><h3>${h}</h3><p>${p}</p></div></div>`).join("");
 }
-const goRoster=()=>{const el=document.getElementById("roster");if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
+/* lịch event gom theo thứ trong tuần (anh Minh 09/11): mỗi thứ một khung */
+const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
+const DAY_ORDER=[1,2,3,4,5,6,0]; // thứ 2 → chủ nhật
+function eventGroups(){
+  const up=upcomingEvents();
+  return DAY_ORDER.map(d=>({d,list:up.filter(e=>dowOfIso(e.date)===d)})).filter(g=>g.list.length);
+}
+function evCard(e,n,live){
+  const now=live&&e.date===n.iso;
+  return `<li class="ev${now?" now":""}">
+        ${e.poster?`<div class="ev-pic"><img src="${esc(e.poster)}" alt="poster ${esc(e.name)}" loading="lazy" onerror="this.parentNode.remove()"></div>`:""}
+        <div class="ev-top"><div class="ev-d"><b>${e.date.slice(8)}.${e.date.slice(5,7)}</b></div>
+          <div class="ev-h">${now?`<p class="ev-tag">TỐI NAY</p>`:""}<h3>${esc(e.name)}</h3></div></div>
+        <div class="ev-b"><p>${esc(e.line)}</p>
+          ${e.dj?`<p class="x"><b>guest dj:</b> ${esc(e.dj.toLowerCase())}</p>`:""}
+          ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
+          <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
+}
+const evMoreText=(g,open)=>open?"thu gọn ↑":`xem thêm ${g.list.length-1} đêm ${DAY_FULL[g.d].toLowerCase()} ↓`;
+function eventsHTML(){
+  const groups=eventGroups();if(!groups.length)return "";
+  const n=nightInfo(),live=n.state!=="closed";
+  const up=groups.flatMap(g=>g.list);
+  const months=[...new Set(up.map(e=>+e.date.slice(5,7)))];
+  const head=months.length===1?`Tháng ${months[0]}<br>ở blk46`:`Sắp tới<br>ở blk46`;
+  /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
+  let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
+  return `<section class="evs" id="events" aria-label="lịch event">
+    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p></div>
+      ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
+    ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
+      <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
+      <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol>
+      ${g.list.length>1?`<button type="button" class="sq ev-more" aria-expanded="${S.evOpen.has(g.d)}">${evMoreText(g,S.evOpen.has(g.d))}</button>`:""}</div>`).join("")}
+  </section>`;
+}
+const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
+const goRoster=()=>goTo("roster");
 function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
@@ -1035,7 +1157,18 @@ function renderLineup(){
     ${rows.length||(empty&&S.canEdit)?`<article class="bleed sheet" id="spot" aria-live="polite" aria-label="hồ sơ promoter đang chọn">${sheetHTML(cur,!cur)}</article>`:""}
     ${rows.length?`<p class="note grade-note">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>`:""}
   </section>
-  <section class="how" aria-label="đặt bàn thế nào">${howHTML()}</section>`;
+  <section class="how" aria-label="đặt bàn thế nào">${howHTML()}</section>
+  ${eventsHTML()}`;
+  /* mũi tên đổi thứ (chỉ hiện trên máy tính), vòng tròn: chủ nhật → thứ 5 */
+  const evDays=[...app.querySelectorAll(".ev-day")],evNow=document.getElementById("evNow");
+  const evShow=step=>{let k=evDays.findIndex(x=>x.classList.contains("on"));k=(k+step+evDays.length)%evDays.length;
+    evDays.forEach((x,j)=>x.classList.toggle("on",j===k));S.evDay=+evDays[k].dataset.d;
+    if(evNow)evNow.innerHTML=`${DAY_FULL[S.evDay]}<small>${k+1} / ${evDays.length}</small>`};
+  const evP=document.getElementById("evPrev"),evN=document.getElementById("evNext");
+  if(evP)evP.onclick=()=>evShow(-1);if(evN)evN.onclick=()=>evShow(1);
+  app.querySelectorAll(".ev-more").forEach(b=>b.onclick=()=>{const d=b.closest(".ev-day"),dw=+d.dataset.d,on=d.classList.toggle("all");
+    on?S.evOpen.add(dw):S.evOpen.delete(dw);b.setAttribute("aria-expanded",on);b.textContent=evMoreText(eventGroups().find(g=>g.d===dw),on);
+    if(!on){const t=d.getBoundingClientRect().top;if(t<70)scrollBy(0,t-70)}});
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
   const sheet=document.getElementById("spot");
@@ -1063,7 +1196,8 @@ function renderLineup(){
   });
 }
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-go='roster']");if(b){e.preventDefault();goRoster()}});
+/* nút "giữ bàn đêm này" ở lịch event: nhớ ngày đó, form đặt bàn điền sẵn ngày */
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-go]");if(!b)return;const g=b.dataset.go;if(g!=="roster"&&g!=="events")return;e.preventDefault();if(b.dataset.ev)S.wantDate=b.dataset.ev;goTo(g)});
 /* ---------- idol profile ---------- */
 function renderIdol(id){
   const rows=computeBoard();const r=rows.find(x=>x.idol.id===id);
@@ -1229,6 +1363,7 @@ async function submitRating(b){
 function renderBook(idolId){
   const B=S.book;
   if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(loadFull(todayStr(),idolId)?isoOfVN(Date.now()+86400e3):todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false})}
+  if(S.wantDate&&B.wantFor!==S.wantDate){B.wantFor=S.wantDate;if(S.wantDate>=todayStr())B.dateText=isoToDM(S.wantDate)}
   const i=idolById(idolId);
   if(!i||!isPublic(i)){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
   if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. hẹn gặp quý khách ở quán sớm nhất.</p>${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
@@ -1240,6 +1375,7 @@ function renderBook(idolId){
     <div class="tk-head"><div class="tk-face">${SIL}${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}</div>
       <div class="tk-who"><p class="tk-pre">ĐẶT BÀN CÙNG</p><h1 class="tk-name">${esc(i.stageName)}</h1><p class="tk-meta">${tkMeta}</p></div></div>
     <div class="tk-row"><p id="tkDay"></p><p id="tkTime"></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
+    <p class="tk-ev" id="tkEv" hidden></p>
     <form class="idol" id="bookForm">
       <div class="fields">
         <div class="f"><span>danh xưng *</span><div class="tags" role="radiogroup" aria-label="danh xưng">${["Mr","Miss"].map(t=>`<button type="button" class="chip bsal" role="radio" data-v="${t}" aria-checked="${B.salutation===t}" aria-pressed="${B.salutation===t}">${t}</button>`).join("")}</div></div>
@@ -1273,6 +1409,7 @@ function renderBook(idolId){
   const paintLoad=()=>{const d=dmToIso(B.dateText);const el=document.getElementById("loadNote");if(el)el.textContent=d&&loadFull(d,idolId)?`${i.stageName} đã đủ ${LOAD_MAX} khách đặt trước ngày này, chọn ngày khác nhé.`:""};
   /* dòng ngày · giờ mở cửa trên vé, theo ngày khách gõ */
   const tkPaint=()=>{const iso=dmToIso(B.dateText),a=document.getElementById("tkDay"),z=document.getElementById("tkTime");if(!a||!z)return;
+    const ve=document.getElementById("tkEv"),ev=iso&&eventOn(iso);if(ve){ve.hidden=!ev;ve.textContent=ev?"ĐÊM NÀY: "+ev.name:""}
     if(!iso){a.textContent="NGÀY ?";z.textContent=`${OPEN_FROM}.00`;return}
     const dw=dowOfIso(iso);a.textContent=`${WD_FLY[dw]} · ${iso.slice(8)}.${iso.slice(5,7)}`;z.textContent=hoursOf(dw)};
   const bd=document.getElementById("b_date");bd.addEventListener("input",()=>setTimeout(()=>{B.dateText=bd.value;watchHoldsFor(dmToIso(bd.value),B);paintLoad();tkPaint()},0));
@@ -1451,7 +1588,7 @@ function adminBookings(p){
 function djCfgHTML(){
   const D=S.dj;if(!D.text)D.text=isoToDM(nightInfo().iso);
   return `<details class="tblcfg" id="djCfg"><summary>tên DJ trên đầu trang${S.tonight.dj?` · tối nay: ${esc(S.tonight.dj)}`:""}</summary>
-    <p class="note" style="margin:6px 0">tên này hiện to nhất ở đầu trang lineup, thay chữ ${DJ_FALLBACK}. mỗi đêm một tên. để trống rồi lưu thì quay về ${DJ_FALLBACK}.</p>
+    <p class="note" style="margin:6px 0">tên này hiện to nhất ở đầu trang lineup. mỗi đêm một tên. để trống rồi lưu thì hiện tên event của đêm đó (sửa trong EVENTS ở index.html), không có event thì hiện ${DJ_FALLBACK}.</p>
     <div class="fields">
       <label class="f">đêm<input id="djDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 13/11" data-date value="${esc(D.text)}"><small class="dhint">${esc(dateHint(D.text))}</small></label>
       <label class="f">tên DJ (tối đa 60 ký tự)<input id="djName" maxlength="60" autocomplete="off" value="${esc(D.name)}"></label>
