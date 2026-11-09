@@ -643,6 +643,11 @@ body.paper .tk label.f input::placeholder{color:#8a8578}
 body.paper .tk .bsal{border-radius:0;border:2px solid #000;min-height:48px;padding:0 22px;font-size:16px;color:#000}
 body.paper .tk .bsal[aria-pressed="true"]{background:#000;color:var(--paper)}
 body.paper .tk .bsal:hover{background:var(--acid);color:#000}
+body.paper .tk .tq{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+body.paper .tk .tqb{min-height:40px;padding:0 10px;border:2px solid #000;background:transparent;color:#000;font:inherit;font-size:15px;cursor:pointer;font-variant-numeric:tabular-nums}
+body.paper .tk .tqb[aria-pressed="true"]{background:#000;color:var(--paper)}
+body.paper .tk .tqb:hover:not(:disabled){background:var(--acid);color:#000}
+body.paper .tk .tqb:disabled{opacity:.3;cursor:not-allowed}
 body.paper .tk .dhint{font-size:13px;color:var(--muted-p)}
 body.paper .tk .load-note{color:var(--bad-p);font-size:14px}
 body.paper .tk .hold-note{background:var(--acid);color:#000;padding:10px 12px;font-size:14px}
@@ -1562,7 +1567,7 @@ function renderBook(idolId){
         <label class="f">tên bạn *<input id="b_name" required maxlength="40" autocomplete="given-name" placeholder="vd Nam" value="${esc(B.guestName)}"></label>
         <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" autocomplete="tel" placeholder="vd 09xx xxx xxx" value="${esc(B.phone)}"></label>
         <label class="f">ngày *<input id="b_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(B.dateText)}"><small class="dhint">${esc(dateHint(B.dateText))}</small><small class="load-note" id="loadNote" role="status"></small></label>
-        <label class="f">giờ đến *<input id="b_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time required value="${esc(B.time)}"></label>
+        <label class="f">giờ đến *<input id="b_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time required value="${esc(B.time)}"><span class="tq" role="group" aria-label="chọn nhanh giờ đến">${QUICK_TIMES.map(t=>`<button type="button" class="tqb" data-tq="${t}" aria-pressed="${B.time===t}">${t}</button>`).join("")}</span></label>
         <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" placeholder="4" value="${esc(B.guests)}"></label>
       </div>
       <p class="hold-note" id="holdNote" role="status"></p>
@@ -1594,7 +1599,11 @@ function renderBook(idolId){
     const dw=dowOfIso(iso);a.textContent=`${WD_FLY[dw]} · ${iso.slice(8)}.${iso.slice(5,7)}`;z.textContent=hoursOf(dw)};
   const bd=document.getElementById("b_date");bd.addEventListener("input",()=>setTimeout(()=>{B.dateText=bd.value;watchHoldsFor(dmToIso(bd.value),B);paintLoad();tkPaint()},0));
   paintLoad();tkPaint();
-  const bt=document.getElementById("b_time");bt.addEventListener("input",()=>setTimeout(()=>{B.time=bt.value;paintMap(B)},0)); // chờ ô giờ tự định dạng HH:MM xong
+  /* nút chọn nhanh giờ đến (anh Minh 10/11): bấm là điền ô giờ, vẫn gõ được giờ khác. giờ đã qua của hôm nay thì mờ đi */
+  const tqPaint=()=>{const d=dmToIso(B.dateText),now=Date.now();app.querySelectorAll(".tqb").forEach(x=>{x.setAttribute("aria-pressed",String(B.time===x.dataset.tq));x.disabled=!!d&&arrivalPast(d,x.dataset.tq,now)})};
+  const bt=document.getElementById("b_time");bt.addEventListener("input",()=>setTimeout(()=>{B.time=bt.value;paintMap(B);tqPaint()},0)); // chờ ô giờ tự định dạng HH:MM xong
+  app.querySelectorAll(".tqb").forEach(x=>x.onclick=ev=>{ev.preventDefault();B.time=bt.value=x.dataset.tq;paintMap(B);tqPaint()});
+  bd.addEventListener("input",()=>setTimeout(tqPaint,0));tqPaint();
   watchHoldsFor(dmToIso(B.dateText),B);
   document.getElementById("bookForm").onsubmit=async ev=>{
     ev.preventDefault();sync();
@@ -1634,6 +1643,8 @@ const holdKey=(date,table)=>date+"_"+String(table).toUpperCase();
    - gửi đặt bàn cho tối nay khi đã quá 22h30 (tới 6h sáng): giữ tới (giờ đến hoặc lúc gửi, lấy cái muộn hơn) + 35 phút.
    quá giờ mà quản lý chưa bấm "khách đã đến" thì bàn mở lại trên sơ đồ cho khách khác. */
 const HOLD_CUTOFF_MIN=22*60+30,HOLD_LATE_MIN=35;
+/* nút chọn nhanh giờ đến. không có 00:00: giờ đọc theo đúng ngày khách điền, 00:00 sẽ thành rạng sáng hôm đó (đêm hôm trước) */
+const QUICK_TIMES=["22:00","22:30","23:00","23:30"];
 /* tính theo giờ Hà Nội (UTC+7) dù máy khách đặt múi giờ khác, khớp với luật Firestore (22h30 = 15h30 UTC) */
 const VN_MS=7*3600e3,vnDate=ms=>new Date(ms+VN_MS);
 const isoOfVN=ms=>{const d=vnDate(ms);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")};
