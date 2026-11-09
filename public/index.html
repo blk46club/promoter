@@ -269,6 +269,8 @@ footer.foot .soc svg{width:19px;height:19px}
 footer.foot .finfo{margin:14px 0 0;color:var(--concrete);font-size:14px;line-height:1.7}
 footer.foot .finfo a{color:var(--paper)}
 footer.foot .finfo a:hover{color:var(--acid)}
+/* máy tính: thông tin quán sang cột phải; điện thoại giữ nguyên */
+@media (min-width:1000px){footer.foot .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:64px;align-items:start}footer.foot .fmark,footer.foot .fline,footer.foot .soc{grid-column:1}footer.foot .finfo{grid-column:2;grid-row:1 / span 3;margin:0;align-self:center;padding-left:28px;border-left:1px solid var(--line)}}
 /* giờ mở cửa hôm nay + hotline (anh Minh 08/11) */
 .tonight{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:6px 12px;margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);background:var(--card);font-size:14px;line-height:1.45}
 .tonight .dot{width:8px;height:8px;border-radius:50%;background:var(--acid);box-shadow:0 0 8px var(--acid)}
