@@ -62,7 +62,8 @@ const authReady = new Promise((resolve) => {
 //    Mỗi lượt mở lineup tải hết các doc này, nên không để ảnh to ở đây (anh Minh 09/11: ảnh nhỏ trước, ảnh to sau).
 //  - idolPhotos/{id}: ảnh to cho khung lớn trên lineup (main = toàn thân, alt = nghiêng),
 //    chỉ tải khi khách chọn promoter đó.
-export const THUMB_V = 1; // tăng số này khi đổi cách làm ảnh nhỏ, máy quản lý sẽ tự làm lại
+export const THUMB_V = 2; // tăng số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+// v2 (09/11): thêm ang = các góc ảnh hồ sơ có (c cận, f toàn thân, s nghiêng) để tờ hồ sơ trên lineup ghi đúng tên góc
 const THUMB_SIDE = 320, THUMB_Q = 0.7;
 const coverOf = (p) => p.close || p.full || p.side || "";
 const spotOf = (p) => { const main = p.full || p.close || p.side || ""; return { main, alt: p.side && p.side !== main ? p.side : "" }; };
@@ -70,11 +71,12 @@ async function thumbOf(src) {
   if (!src || !src.startsWith("data:")) return src || ""; // ảnh trên Storage: dùng luôn link (Storage tính dung lượng riêng)
   try { return await shrinkSrc(src, THUMB_SIDE, THUMB_Q); } catch (_) { return src; }
 }
+const angOf = (p) => ["close", "full", "side"].filter((k) => p[k]).map((k) => k[0]).join("");
 function publicIdol(body, thumb, hasSpot) {
   const sh = body.show || {};
   const isPublic = !!(body.consent && body.consent.signed && body.consent.adult && body.active !== false);
   const out = {
-    stageName: body.stageName || "", team: body.team || "", thumb: thumb || "", hasSpot: !!hasSpot,
+    stageName: body.stageName || "", team: body.team || "", thumb: thumb || "", hasSpot: !!hasSpot, ang: angOf(body.photos || {}),
     talents: body.talents || [], forte: body.forte || [], show: sh,
     active: body.active !== false, public: isPublic, updatedAt: Date.now(),
   };
