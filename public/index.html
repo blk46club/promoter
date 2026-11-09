@@ -192,10 +192,11 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 footer.foot{border-top:1px solid var(--line);margin-top:24px;padding-block:36px 44px}
 footer.foot .fmark{display:block;height:22px;width:auto}
 footer.foot .fline{margin:16px 0 0;max-width:640px;font-weight:600;font-size:18px;line-height:1.5}
-footer.foot .soc{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
-footer.foot .soc a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--line);background:rgba(240,236,225,.06);color:var(--paper)}
-footer.foot .soc a:hover,footer.foot .soc a:focus-visible{border-color:var(--acid);color:var(--acid)}
-footer.foot .soc svg{width:19px;height:19px}
+/* nút mạng xã hội: ô vàng 52px, icon đen cho nổi (anh Minh 10/11 chọn phương án A) */
+footer.foot .soc{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+footer.foot .soc a{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border:0;background:var(--acid);color:#000}
+footer.foot .soc a:hover,footer.foot .soc a:focus-visible{background:var(--paper);color:#000}
+footer.foot .soc svg{width:26px;height:26px}
 footer.foot .finfo{margin:14px 0 0;color:var(--concrete);font-size:14px;line-height:1.7}
 footer.foot .finfo a{color:var(--paper)}
 footer.foot .finfo a:hover{color:var(--acid)}
