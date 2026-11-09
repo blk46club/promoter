@@ -192,12 +192,11 @@ select.tsel{background:var(--ink);color:var(--paper);border:1px solid var(--line
 footer.foot{border-top:1px solid var(--line);margin-top:24px;padding-block:36px 44px}
 footer.foot .fmark{display:block;height:22px;width:auto}
 footer.foot .fline{margin:16px 0 0;max-width:640px;font-weight:600;font-size:18px;line-height:1.5}
-/* nút mạng xã hội có tên để khách biết bấm vào (anh Minh 10/11) */
-footer.foot .soc{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
-footer.foot .soc a{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 16px 0 12px;border:2px solid var(--paper);background:transparent;color:var(--paper);font-size:15px;font-weight:600;text-decoration:none}
-footer.foot .soc a:hover,footer.foot .soc a:focus-visible{background:var(--acid);border-color:var(--acid);color:#000}
-footer.foot .soc svg{width:22px;height:22px;flex:0 0 auto}
-@media (max-width:520px){footer.foot .soc{display:grid;grid-template-columns:1fr 1fr}}
+/* nút mạng xã hội: ô vàng 52px, icon đen cho nổi (anh Minh 10/11 chọn phương án A) */
+footer.foot .soc{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+footer.foot .soc a{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border:0;background:var(--acid);color:#000}
+footer.foot .soc a:hover,footer.foot .soc a:focus-visible{background:var(--paper);color:#000}
+footer.foot .soc svg{width:26px;height:26px}
 footer.foot .finfo{margin:14px 0 0;color:var(--concrete);font-size:14px;line-height:1.7}
 footer.foot .finfo a{color:var(--paper)}
 footer.foot .finfo a:hover{color:var(--acid)}
@@ -866,7 +865,7 @@ function renderFoot(v){
   const links=Object.entries(SOCIAL).filter(([k,u])=>u&&SOCIAL_ICON[k]&&/^https:\/\//.test(u));
   const box=document.getElementById("socLinks");
   box.hidden=!links.length;
-  box.innerHTML=links.map(([k,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${SOCIAL_ICON[k][0]} của BLK46"><svg viewBox="0 0 24 24" aria-hidden="true">${SOCIAL_ICON[k][1]}</svg><span>${SOCIAL_ICON[k][0]}</span></a>`).join("");
+  box.innerHTML=links.map(([k,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${SOCIAL_ICON[k][0]} của BLK46" title="${SOCIAL_ICON[k][0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${SOCIAL_ICON[k][1]}</svg></a>`).join("");
 }
 
 function setTabs(v){
