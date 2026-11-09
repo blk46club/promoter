@@ -516,7 +516,11 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
 .ev-dh p{margin:0;font-family:var(--display);font-size:18px;letter-spacing:.03em}
 .ev-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 @media (min-width:700px){.ev-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}}
+/* điện thoại: mỗi thứ chỉ hiện đêm gần nhất, bấm "xem thêm" mới mở (anh Minh 09/11) */
+.ev-more{display:block;width:100%;margin-top:12px}
+@media (max-width:899px){.ev-day:not(.all) .ev:nth-child(n+2){display:none}}
 @media (min-width:900px){
+  .ev-more{display:none}
   .ev-nav{display:flex}
   .ev-day{display:none}.ev-day.on{display:block}
   .ev-day+.ev-day{margin-top:0}
@@ -688,7 +692,7 @@ const BADGE_AT=5;         // số lượt tag để thành huy hiệu
 const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
-const S={db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
+const S={evOpen:new Set(),db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
   idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
@@ -1106,6 +1110,7 @@ function evCard(e,n,live){
           ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
           <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
 }
+const evMoreText=(g,open)=>open?"thu gọn ↑":`xem thêm ${g.list.length-1} đêm ${DAY_FULL[g.d].toLowerCase()} ↓`;
 function eventsHTML(){
   const groups=eventGroups();if(!groups.length)return "";
   const n=nightInfo(),live=n.state!=="closed";
@@ -1117,9 +1122,10 @@ function eventsHTML(){
   return `<section class="evs" id="events" aria-label="lịch event">
     <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p></div>
       ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
-    ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
+    ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
       <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
-      <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol></div>`).join("")}
+      <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol>
+      ${g.list.length>1?`<button type="button" class="sq ev-more" aria-expanded="${S.evOpen.has(g.d)}">${evMoreText(g,S.evOpen.has(g.d))}</button>`:""}</div>`).join("")}
   </section>`;
 }
 const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
@@ -1160,6 +1166,9 @@ function renderLineup(){
     if(evNow)evNow.innerHTML=`${DAY_FULL[S.evDay]}<small>${k+1} / ${evDays.length}</small>`};
   const evP=document.getElementById("evPrev"),evN=document.getElementById("evNext");
   if(evP)evP.onclick=()=>evShow(-1);if(evN)evN.onclick=()=>evShow(1);
+  app.querySelectorAll(".ev-more").forEach(b=>b.onclick=()=>{const d=b.closest(".ev-day"),dw=+d.dataset.d,on=d.classList.toggle("all");
+    on?S.evOpen.add(dw):S.evOpen.delete(dw);b.setAttribute("aria-expanded",on);b.textContent=evMoreText(eventGroups().find(g=>g.d===dw),on);
+    if(!on){const t=d.getBoundingClientRect().top;if(t<70)scrollBy(0,t-70)}});
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
   const sheet=document.getElementById("spot");
