@@ -13,7 +13,7 @@ import {
   getStorage, ref, uploadBytes, getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { firebaseConfig } from "./firebase-config.js";
-import { compressImage } from "./image.js";
+import { compressImage, shrinkSrc } from "./image.js";
 
 const app = initializeApp(firebaseConfig);
 // App Check (chống bot gửi đặt bàn hàng loạt): chỉ bật khi firebase-config.js có appCheckKey (khoá reCAPTCHA Enterprise).
@@ -56,14 +56,25 @@ const authReady = new Promise((resolve) => {
   });
 });
 
-// Hồ sơ idol tách 2 nơi:
-//  - idolsPrivate/{id}: đủ mọi trường, chỉ quản lý đọc.
-//  - idols/{id}: chỉ những trường idol đã đồng ý hiển thị, khách đọc được khi public == true.
-function publicIdol(body) {
+// Hồ sơ idol tách 3 nơi:
+//  - idolsPrivate/{id}: đủ mọi trường + ảnh gốc, chỉ quản lý đọc.
+//  - idols/{id}: chỉ những trường idol đã đồng ý hiển thị + 1 ảnh nhỏ (thumb), khách đọc được khi public == true.
+//    Mỗi lượt mở lineup tải hết các doc này, nên không để ảnh to ở đây (anh Minh 09/11: ảnh nhỏ trước, ảnh to sau).
+//  - idolPhotos/{id}: ảnh to cho khung lớn trên lineup (main = toàn thân, alt = nghiêng),
+//    chỉ tải khi khách chọn promoter đó.
+export const THUMB_V = 1; // tăng số này khi đổi cách làm ảnh nhỏ, máy quản lý sẽ tự làm lại
+const THUMB_SIDE = 320, THUMB_Q = 0.7;
+const coverOf = (p) => p.close || p.full || p.side || "";
+const spotOf = (p) => { const main = p.full || p.close || p.side || ""; return { main, alt: p.side && p.side !== main ? p.side : "" }; };
+async function thumbOf(src) {
+  if (!src || !src.startsWith("data:")) return src || ""; // ảnh trên Storage: dùng luôn link (Storage tính dung lượng riêng)
+  try { return await shrinkSrc(src, THUMB_SIDE, THUMB_Q); } catch (_) { return src; }
+}
+function publicIdol(body, thumb, hasSpot) {
   const sh = body.show || {};
   const isPublic = !!(body.consent && body.consent.signed && body.consent.adult && body.active !== false);
   const out = {
-    stageName: body.stageName || "", team: body.team || "", photos: body.photos || {},
+    stageName: body.stageName || "", team: body.team || "", thumb: thumb || "", hasSpot: !!hasSpot,
     talents: body.talents || [], forte: body.forte || [], show: sh,
     active: body.active !== false, public: isPublic, updatedAt: Date.now(),
   };
@@ -91,15 +102,22 @@ function makeDb(staff) {
       return {
         get: async () => { const s = await getDoc(doc(fs, (staff ? "idolsPrivate/" : "idols/") + id)); return { exists: s.exists(), data: () => s.data() }; },
         set: async (body) => {
+          const p = body.photos || {};
+          const thumb = await thumbOf(coverOf(p));
+          const sp = spotOf(p);
+          const pub = publicIdol(body, thumb, !!sp.main);
           const b = writeBatch(fs);
-          b.set(doc(fs, "idolsPrivate/" + id), body);
-          b.set(doc(fs, "idols/" + id), publicIdol(body));
+          b.set(doc(fs, "idolsPrivate/" + id), { ...body, thumb, thumbV: THUMB_V });
+          b.set(doc(fs, "idols/" + id), pub);
+          if (sp.main) b.set(doc(fs, "idolPhotos/" + id), { public: pub.public, main: sp.main, alt: sp.alt, updatedAt: Date.now() });
+          else b.delete(doc(fs, "idolPhotos/" + id));
           await b.commit();
         },
         delete: async () => {
           const b = writeBatch(fs);
           b.delete(doc(fs, "idolsPrivate/" + id));
           b.delete(doc(fs, "idols/" + id));
+          b.delete(doc(fs, "idolPhotos/" + id));
           await b.commit();
         },
       };
@@ -117,6 +135,9 @@ function makeDb(staff) {
       onSnapshot: (next, err) => onSnapshot(colRef(name), (s) => next(wrapSnap(s)), err),
     }),
     doc: docApi,
+    // Ảnh to của một promoter cho khung lớn trên lineup: chỉ gọi khi khách chọn người đó.
+    getSpot: async (id) => { const s = await getDoc(doc(fs, "idolPhotos/" + id)); return s.exists() ? s.data() : null; },
+    thumbV: THUMB_V,
     // Bàn đã có người đặt trong một ngày (tableHolds/{ngày}_{bàn}): công khai, chỉ có ngày + số bàn.
     watchHolds: (date, next, err) => onSnapshot(
       query(collection(fs, "tableHolds"), where("date", "==", date)),
