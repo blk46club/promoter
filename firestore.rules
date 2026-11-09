@@ -146,7 +146,7 @@ service cloud.firestore {
         request.resource.data.time is string && request.resource.data.time.size() <= 5 &&
         request.resource.data.guests is string && request.resource.data.guests.size() <= 3 &&
         request.resource.data.note is string && request.resource.data.note.size() <= 160 &&
-        request.resource.data.idolIds is list && request.resource.data.idolIds.size() >= 1 && request.resource.data.idolIds.size() <= 6 &&
+        request.resource.data.idolIds is list && request.resource.data.idolIds.size() <= 6 &&
         request.resource.data.createdAt is number &&
         (!('salutation' in request.resource.data) || request.resource.data.salutation in ['Mr','Miss']) &&
         (!('holdUntil' in request.resource.data) || request.resource.data.holdUntil is number)
