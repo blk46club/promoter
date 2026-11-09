@@ -205,6 +205,7 @@ footer.foot .finfo a:hover{color:var(--acid)}
 .book-help{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:14px;color:var(--concrete)}
 .book-help a,.book-help button{color:var(--paper);font:inherit;font-weight:600;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .book-help a:hover,.book-help button:hover{color:var(--acid)}
+.book-help a.call-nu{text-decoration:none} /* anh Minh 10/11: số hotline không gạch dưới, "xem menu" vẫn gạch */
 /* điện thoại: thu logo + chữ promoter để menu khách (lineup · đánh giá) vẫn nằm 1 dòng */
 @media (max-width:480px){.mark img{height:14px}.mark span{font-size:19px}.mark{gap:8px}nav.tabs a{padding:6px 8px;letter-spacing:.04em}}
 .cta{display:inline-flex;align-items:center;gap:8px;background:var(--acid);color:var(--ink);border:0;padding:12px 18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px;text-decoration:none;cursor:pointer}
@@ -585,6 +586,19 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
 .ev.now .ev-go:hover{background:var(--paper);color:#000}
 .tk-ev{margin:0;padding:10px 14px;border-bottom:3px solid #000;background:var(--acid);font-family:var(--display);font-size:18px;letter-spacing:.03em}
 .tk-ev[hidden]{display:none}
+/* form voucher + dòng "đã ghi voucher" trên form đặt bàn */
+table.vctable{width:100%;min-width:0;border-collapse:collapse;font-size:14px;margin:6px 0}
+.vctable th{text-align:left;font-weight:400;color:var(--concrete);font-size:12px;padding:4px 6px;border-bottom:1px solid var(--line)}
+.vctable td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.tk-vc{margin:0;padding:12px 14px;border-bottom:3px solid #000;background:var(--acid);color:#000;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:space-between;font-size:14px}
+.tk-vc p{margin:0;flex:1 1 260px}
+.tk-vc b{font-family:var(--display);font-weight:400;font-size:17px;letter-spacing:.03em;margin-right:4px}
+.tk-vc a{color:#000;font-weight:700;white-space:nowrap}
+body.paper .tk .fields.vf{grid-template-columns:minmax(0,1fr)}
+body.paper .tk .fields.vf>*{grid-column:auto}
+@media (min-width:700px){body.paper .tk .fields.vf{grid-template-columns:repeat(2,minmax(0,1fr))}body.paper .tk .fields.vf>.wide{grid-column:1/-1}}
+.tk.vc .tk-meta{max-width:48ch;margin-top:6px}
+.cta.cta-line{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
 @media (min-width:700px){.tk-ev{padding:12px 20px;font-size:20px}}
 
 /* đặt bàn thế nào: 3 bước */
@@ -730,7 +744,7 @@ const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
 const S={evOpen:new Set(),db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
-  idols:[],reviews:[],mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
+  idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   tonight:{iso:"",dj:""},dj:{text:"",name:"",for:""},
@@ -814,6 +828,7 @@ function computeBoard(){
 function route(){
   const h=(location.hash||"#lineup").slice(1);
   if(h==="book")return {view:"book",id:""}; // đặt bàn không chọn promoter: quán xếp người (anh Minh 09/11)
+  if(/^voucher-\d$/.test(h)&&WEEKLY_PROMOS[+h.slice(8)])return {view:"voucher",dow:+h.slice(8)};
   if(h.startsWith("idol-")||h.startsWith("book-"))return {view:"book",id:h.slice(5)};
   if(h.startsWith("table-"))return {view:"table",id:h.slice(6)};
   if(h==="admin")return {view:"admin"};
@@ -854,10 +869,10 @@ function renderFoot(v){
 
 function setTabs(v){
   renderFoot(v);
-  const bc=document.body.classList;bc.toggle("paper",v==="lineup"||v==="book");
-  ["lineup","book","table","admin"].forEach(k=>bc.toggle("v-"+k,k===v));
+  const bc=document.body.classList;bc.toggle("paper",v==="lineup"||v==="book"||v==="voucher");
+  ["lineup","book","voucher","table","admin"].forEach(k=>bc.toggle("v-"+k,k===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{
-    const on=a.dataset.tab===v||(v==="book"&&a.dataset.tab==="lineup");
+    const on=a.dataset.tab===v||((v==="book"||v==="voucher")&&a.dataset.tab==="lineup");
     if(on)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
   });
   document.getElementById("adminTab").hidden=!S.canEdit;
@@ -866,6 +881,7 @@ function setTabs(v){
 function render(){
   const r=route();setTabs(r.view);
   if(r.view==="book")return renderBook(r.id);
+  if(r.view==="voucher")return renderVoucher(r.dow);
   if(r.view==="table")return renderTable(r.id);
   if(r.view==="admin")return renderAdmin();
   return renderLineup();
@@ -1014,16 +1030,16 @@ const EVENTS=[
 const MONTH_POSTERS={"2026-11":"events/lich-thang-11.jpg"};
 /* ưu đãi lặp lại hằng tuần, theo thứ (4 = thứ 5, 0 = chủ nhật). chủ đề từng đêm vẫn ghi ở EVENTS.
    anh Minh 09/11: đăng đủ nội dung + poster ưu đãi (đã biết rủi ro luật 44/2019 điều 5, 12).
-   poster: ảnh trong public/events/. form: link google form khách điền để nhận ưu đãi. để trống thì nút dẫn tới instagram của quán. */
+   poster: ảnh trong public/events/. before: giờ phải tới để được ưu đãi (theo google form cũ của quán).
+   nút nhận voucher mở form ngay trên web (#voucher-4, #voucher-0); gửi xong chuyển sang đặt bàn, điền sẵn thông tin trùng (anh Minh 09/11). */
 const WEEKLY_PROMOS={
-  4:{tag:"LADIES SPECIAL",line:"voucher có hạn cho chị em tới trước 22h45: mỗi chị em 2 ly miễn phí, nhóm 4 chị em được tặng 1 chai.",go:"NHẬN VOUCHER",poster:"events/promo-thu-5.jpg",form:"https://docs.google.com/forms/d/e/1FAIpQLScf7NpShX00nRLU7vHBNyTxX8pUj90gkC0WYWbOXdm_3kyMkQ/viewform"},
-  0:{tag:"FREE BEER",line:"phố hàng nhạc: điền form trước khi tới để nhận 1 bia miễn phí.",go:"NHẬN BIA",poster:"events/promo-chu-nhat.jpg",form:"https://docs.google.com/forms/d/e/1FAIpQLSfiZMEZHemzeBGx1MC1YY_c3YD3Ac2JrIz_e1IEoZk8--YhRg/viewform"},
+  4:{tag:"LADIES SPECIAL",line:"voucher có hạn cho chị em tới trước 22h45: mỗi chị em 2 ly miễn phí, nhóm 4 chị em được tặng 1 chai.",go:"NHẬN VOUCHER",poster:"events/promo-thu-5.jpg",before:"22:45"},
+  0:{tag:"FREE BEER",line:"phố hàng nhạc: điền form trước khi tới để nhận 1 bia miễn phí.",go:"NHẬN BIA",poster:"events/promo-chu-nhat.jpg",before:"22:30"},
 };
 function promoHTML(dow,cls=""){
   const p=WEEKLY_PROMOS[dow];if(!p)return "";
-  const url=p.form||SOCIAL.instagram;if(!url)return "";
   return `<div class="promo${cls?" "+cls:""}"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
-    <div class="promo-r"><a class="promo-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}${p.form?"":`<span>điền form ở bio instagram @blk.hanoi.</span>`}</div></div>`;
+    <div class="promo-r"><a class="promo-go" href="#voucher-${dow}">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}</div></div>`;
 }
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const eventOn=iso=>EVENTS.find(e=>e.date===iso);
@@ -1185,7 +1201,7 @@ function openPromoPoster(dow){
   const d=posterDialog(),alt=`poster ưu đãi ${p.tag.toLowerCase()} mỗi ${DAY_FULL[dow].toLowerCase()} ở blk46`;
   d.setAttribute("aria-label",alt);
   d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(p.poster)}" alt="${esc(alt)}">
-    <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="${esc(p.form||SOCIAL.instagram)}" target="_blank" rel="noopener">${esc(p.go)}</a></div>`;
+    <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="#voucher-${dow}" onclick="this.closest('dialog').close()">${esc(p.go)}</a></div>`;
   d.showModal();
 }
 function evCard(e,n,live){
@@ -1453,14 +1469,81 @@ async function submitRating(b){
   }
 }
 
+/* ---------- form nhận voucher ưu đãi hằng tuần (anh Minh 09/11) ----------
+   khách điền form ngay trên web thay cho google form. gửi xong: ghi vouchers/{id}, rồi chuyển sang #book
+   với tên, số điện thoại, ngày, giờ, số người điền sẵn; khách chỉ điền nốt phần còn thiếu (danh xưng, giờ, bàn).
+   khách không muốn giữ bàn thì bấm "không cần giữ bàn": vẫn có voucher. */
+const addDaysIso=(iso,n)=>{const [y,m,d]=iso.split("-").map(Number);const t=new Date(Date.UTC(y,m-1,d+n));return t.toISOString().slice(0,10)};
+const nextDowIso=dow=>{let d=nightInfo().iso;for(let k=0;k<7&&dowOfIso(d)!==dow;k++)d=addDaysIso(d,1);return d};
+const VC_SIZES={4:["2","3","4+"],0:["1","2","3","4","5","6+"]};
+function renderVoucher(dow){
+  const p=WEEKLY_PROMOS[dow];
+  if(!S.vc||S.vc.dow!==dow)S.vc={dow,name:"",phone:"",dateText:isoToDM(nextDowIso(dow)),time:"",mode:"",size:"",err:"",busy:false,done:false};
+  const V=S.vc,lady=dow===4,before=p.before.replace(":","H");
+  if(V.done){const iso=dmToIso(V.dateText);
+    app.innerHTML=`<section class="done"><div class="eyebrow">đã ghi voucher ${esc(p.tag.toLowerCase())}</div><h1 class="display done-hold">${esc(p.tag)}<span class="y">.</span></h1>
+      <p class="lede">${esc(capName(V.name))} tới trước ${esc(p.before.replace(":","h"))} tối ${esc(DAY_FULL[dow].toLowerCase())}${iso?` ${iso.slice(8)}/${iso.slice(5,7)}`:""}, báo tên và số điện thoại ở cửa để nhận ưu đãi.</p>
+      <div class="rowbtns"><a class="cta" href="#book">giữ bàn luôn</a><a class="cta cta-line" href="#lineup">về trang chính</a><button type="button" class="linkbtn" id="vcAgain">đăng ký cho người khác</button></div></section>`;
+    document.getElementById("vcAgain").onclick=()=>{S.vc=null;render()};return}
+  const can=!!S.db;const sizes=VC_SIZES[dow]||[];
+  const chips=(cls,list,cur,label)=>`<div class="tags" role="radiogroup" aria-label="${label}">${list.map(([v,t])=>`<button type="button" class="chip bsal ${cls}" role="radio" data-v="${v}" aria-checked="${cur===v}" aria-pressed="${cur===v}">${t}</button>`).join("")}</div>`;
+  app.innerHTML=`${banner()}<a class="back" href="#lineup">← về trang chính</a>
+  <div class="book-wrap solo"><section class="tk vc" aria-label="nhận voucher ${esc(p.tag.toLowerCase())}">
+    <div class="tk-head"><div class="tk-who"><p class="tk-pre">NHẬN VOUCHER</p><h1 class="tk-name">${esc(p.tag)}</h1><p class="tk-meta">${esc(p.line)}</p></div></div>
+    <div class="tk-row"><p>MỖI ${esc(DAY_FULL[dow])}</p><p>TỚI TRƯỚC ${esc(before)}</p><p>TẦNG 1, 46 MÃ MÂY</p></div>
+    <form class="idol" id="vcForm">
+      <div class="fields vf">
+        <label class="f">tên bạn *<input id="v_name" required maxlength="40" autocomplete="name" placeholder="vd Linh" value="${esc(V.name)}"></label>
+        <label class="f">số điện thoại *<input id="v_phone" required inputmode="tel" maxlength="12" autocomplete="tel" placeholder="vd 09xx xxx xxx" value="${esc(V.phone)}"></label>
+        <label class="f">ngày tới (${esc(DAY_FULL[dow].toLowerCase())}) *<input id="v_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd ${esc(isoToDM(nextDowIso(dow)))}" data-date required value="${esc(V.dateText)}"><small class="dhint">${esc(dateHint(V.dateText))}</small></label>
+        <label class="f">giờ dự kiến tới<input id="v_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:00" data-time value="${esc(V.time)}"></label>
+        ${lady?`<div class="f wide"><span>bạn đi *</span>${chips("vmode",[["solo","một mình"],["group","theo nhóm"]],V.mode,"đi một mình hay theo nhóm")}</div>
+        ${V.mode==="group"?`<div class="f wide"><span>nhóm mấy chị em</span>${chips("vsize",sizes.map(x=>[x,x]),V.size,"số chị em trong nhóm")}</div>`:""}`
+        :`<div class="f wide"><span>số người *</span>${chips("vsize",sizes.map(x=>[x,x]),V.size,"số người")}</div>`}
+      </div>
+      <div class="err" id="vErr" role="alert">${esc(V.err)}</div>
+      <button class="cta" type="submit" ${!can||V.busy?"disabled":""}>${V.busy?"ĐANG GỬI…":"NHẬN VOUCHER"}</button>
+      <p class="tk-after">gửi xong, web chuyển sang giữ bàn với thông tin bạn vừa điền. không cần giữ bàn thì bỏ qua bước đó, voucher vẫn có.</p>
+      <div class="book-help"><span>ngại điền gọi ngay <a class="call-nu" href="tel:${HOTLINE}">${HOTLINE_SHOW}</a></span>${p.poster?`<button type="button" data-pst="promo-${dow}">xem poster</button>`:""}</div>
+    </form>
+  </section></div>`;
+  const sync=()=>{V.name=val("v_name");V.phone=val("v_phone");V.dateText=val("v_date");V.time=val("v_time")};
+  app.querySelectorAll(".vmode").forEach(x=>x.onclick=()=>{sync();V.mode=x.dataset.v;if(V.mode==="solo")V.size="";V.err="";render()});
+  app.querySelectorAll(".vsize").forEach(x=>x.onclick=()=>{sync();V.size=V.size===x.dataset.v&&lady?"":x.dataset.v;V.err="";render()});
+  const vd=document.getElementById("v_date");vd.addEventListener("input",()=>setTimeout(()=>{V.dateText=vd.value},0));
+  const vt=document.getElementById("v_time");vt.addEventListener("input",()=>setTimeout(()=>{V.time=vt.value},0));
+  document.getElementById("vcForm").onsubmit=async ev=>{
+    ev.preventDefault();sync();
+    const phone=V.phone.replace(/\D/g,""),date=dmToIso(V.dateText),fail=m=>{V.err=m;render()};
+    if(!V.name)return fail("điền tên bạn.");
+    if(phone.length<9||phone.length>11)return fail("số điện thoại chưa đúng.");
+    if(!date)return fail("ngày chưa đúng, gõ kiểu "+isoToDM(nextDowIso(dow))+".");
+    if(date<nightInfo().iso)return fail("ngày này đã qua rồi.");
+    if(dowOfIso(date)!==dow)return fail(`voucher ${p.tag.toLowerCase()} chỉ dùng tối ${DAY_FULL[dow].toLowerCase()}. ${DAY_FULL[dow].toLowerCase()} gần nhất là ${isoToDM(nextDowIso(dow))}.`);
+    if(V.time&&!okTime(V.time))return fail("giờ chưa đúng, gõ kiểu 22:00, hoặc để trống.");
+    if(lady&&!V.mode)return fail("chọn đi một mình hay theo nhóm.");
+    if(!lady&&!V.size)return fail("chọn số người.");
+    const guests=lady?(V.mode==="solo"?"1":V.size.replace("+","")):V.size.replace("+","");
+    V.busy=true;V.err="";render();
+    try{
+      await S.db.createVoucher("v"+rid(12),{promo:p.tag,dow,name:capName(V.name).slice(0,40),phone,date,time:V.time,mode:lady?V.mode:"",guests,source:"web",createdAt:Date.now()});
+      V.busy=false;V.done=true; // quay lại #voucher-N thì thấy màn đã ghi, không gửi trùng
+      /* điền sẵn form đặt bàn: chỉ những ô trùng với form voucher */
+      Object.assign(S.book,{idolKey:"",idolIds:[],salutation:lady?"Miss":"",guestName:capName(V.name),phone:V.phone,dateText:isoToDM(date),time:V.time,guests,note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false,wantFor:S.wantDate,
+        fromVoucher:{tag:p.tag,dow,name:V.name,before:p.before}});
+      location.hash="book";
+    }catch(e){V.busy=false;fail("chưa gửi được, kiểm tra lại thông tin rồi thử lại.")}
+  };
+}
+
 /* ---------- khách đặt bàn từ lineup ---------- */
 function renderBook(idolId){
   const B=S.book;idolId=idolId||"";const anyone=!idolId; // anyone = khách không chọn promoter, quán xếp người
-  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:anyone?[]:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(!anyone&&loadFull(todayStr(),idolId)?isoOfVN(Date.now()+86400e3):todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false})}
+  if(B.idolKey!==idolId){Object.assign(B,{idolKey:idolId,idolIds:anyone?[]:[idolId],salutation:"",guestName:"",phone:"",dateText:isoToDM(!anyone&&loadFull(todayStr(),idolId)?isoOfVN(Date.now()+86400e3):todayStr()),time:"",guests:"",note:"",table:"",doneTable:"",doneUntil:0,err:"",busy:false,done:false,fromVoucher:null})}
   if(S.wantDate&&B.wantFor!==S.wantDate){B.wantFor=S.wantDate;if(S.wantDate>=todayStr())B.dateText=isoToDM(S.wantDate)}
   const i=anyone?{id:"",stageName:"BLK46"}:idolById(idolId);
   if(!anyone&&(!i||!isPublic(i))){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
-  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. quản lý xem yêu cầu từ 17h mỗi ngày. hẹn gặp quý khách ở quán sớm nhất.</p>${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
+  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. quản lý xem yêu cầu từ 17h mỗi ngày. hẹn gặp quý khách ở quán sớm nhất.</p>${B.fromVoucher?`<p class="lede">voucher ${esc(B.fromVoucher.tag.toLowerCase())} đã ghi theo số ${esc(B.phone.replace(/\D/g,""))}. tới trước ${esc(B.fromVoucher.before.replace(":","h"))}, báo tên ở cửa.</p>`:""}${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
   const can=!!S.db;
   const br=anyone?null:computeBoard().find(x=>x.idol.id===idolId);
   const tkMeta=br&&br.n?`★ ${fmt1(br.avg)} · ${br.n} lượt · hạng ${grade(br)}`:"chưa có lượt chấm";
@@ -1471,6 +1554,7 @@ function renderBook(idolId){
       <div class="tk-who"><p class="tk-pre">ĐẶT BÀN CÙNG</p><h1 class="tk-name">${esc(i.stageName)}</h1><p class="tk-meta">${tkMeta}</p></div></div>`}
     <div class="tk-row"><p id="tkDay"></p><p id="tkTime"></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
     <p class="tk-ev" id="tkEv" hidden></p>
+    ${B.fromVoucher?`<div class="tk-vc" role="status"><p><b>ĐÃ GHI VOUCHER ${esc(B.fromVoucher.tag)}</b> cho ${esc(capName(B.fromVoucher.name))}. thông tin bên form voucher đã điền sẵn, chỉ cần điền nốt phần còn trống để giữ bàn.</p><a href="#voucher-${B.fromVoucher.dow}">không cần giữ bàn</a></div>`:""}
     <form class="idol" id="bookForm">
       <div class="fields">
         <div class="f"><span>danh xưng *</span><div class="tags" role="radiogroup" aria-label="danh xưng">${["Mr","Miss"].map(t=>`<button type="button" class="chip bsal" role="radio" data-v="${t}" aria-checked="${B.salutation===t}" aria-pressed="${B.salutation===t}">${t}</button>`).join("")}</div></div>
@@ -1485,8 +1569,8 @@ function renderBook(idolId){
       <label class="f">ghi chú<input id="b_note" maxlength="160" value="${esc(B.note)}" placeholder="sinh nhật, khách nước ngoài…"></label>
       <div class="err" id="bErr" role="alert">${esc(B.err)}</div>
       <button class="cta" type="submit" ${!can||B.busy?"disabled":""}>${B.busy?"ĐANG GỬI…":"GỬI YÊU CẦU ĐẶT BÀN"}</button>
-      <p class="tk-after">gửi xong, quản lý xem yêu cầu từ 17h và gọi lại để xác nhận bàn. không có mức chi tối thiểu.</p>
-      <div class="book-help"><span>ngại điền? <a href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></span><a href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a>${anyone?"":`<button type="button" id="shareIdol">gửi link ${esc(i.stageName)} cho bạn</button><span id="shareMsg" role="status"></span>`}</div>
+      <p class="tk-after">gửi xong, quản lý xem yêu cầu từ 17h và gọi lại để xác nhận bàn.</p>
+      <div class="book-help"><span>ngại điền gọi ngay <a class="call-nu" href="tel:${HOTLINE}">${HOTLINE_SHOW}</a></span><a href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a>${anyone?"":`<button type="button" id="shareIdol">gửi link ${esc(i.stageName)} cho bạn</button><span id="shareMsg" role="status"></span>`}</div>
     </form>
   </section>
   ${anyone?"":`<aside class="prv book-rv" id="promoRv" aria-label="đánh giá của khách cho ${esc(i.stageName)}">${promoReviewsHTML(i)}</aside>`}</div>`;
@@ -1666,6 +1750,7 @@ function adminBookings(p){
     <textarea id="tblList" rows="3" placeholder="V1, V2, C1, C2, D1, SV1…">${esc((S.tables||[]).join(", "))}</textarea>
     <div class="rowbtns"><button class="ghostbtn" id="tblSave">lưu sơ đồ bàn</button><span class="muted" id="tblMsg"></span></div></details>
   ${djCfgHTML()}
+  ${voucherListHTML(f,td)}
   <div id="bookSlot"></div>
   ${list.length?`<div class="bookings">${list.map(bookingCard).join("")}</div>`:`<div class="empty"><b>không có đặt bàn nào ${f==="today"?"hôm nay":""}.</b><span>bấm "tạo đặt bàn" khi khách nhắn đặt, hoặc chờ yêu cầu khách gửi từ lineup.</span></div>`}`;
   p.querySelectorAll("[data-bf]").forEach(x=>x.onclick=()=>{S.bookFilter=x.dataset.bf;render()});
@@ -1678,6 +1763,19 @@ function adminBookings(p){
     try{await S.db.doc("venue/tables").set({list,updatedAt:Date.now()});m.textContent=`đã lưu ${list.length} bàn`}catch(_){m.textContent="chưa lưu được, thử lại"}ts.disabled=false};
   armDjCfg();
   if(S.bookEdit)drawBookForm();
+}
+/* voucher khách đăng ký trên web (vouchers/{id}), lọc theo cùng nút hôm nay / sắp tới / tất cả.
+   cửa đối chiếu theo tên + số điện thoại. khách có đặt bàn cùng số, cùng ngày thì ghi "có đặt bàn". */
+const voucherOf=b=>b&&b.phone?(S.vouchers||[]).find(v=>v.phone===b.phone&&v.date===b.date):null;
+function voucherListHTML(f,td){
+  let list=(S.vouchers||[]).slice();
+  if(f==="today")list=list.filter(v=>v.date===td);else if(f==="upcoming")list=list.filter(v=>v.date>=td);
+  list.sort((a,b)=>(a.date+(a.time||"99")).localeCompare(b.date+(b.time||"99")));
+  const who=v=>v.mode==="solo"?"đi một mình":v.mode==="group"?`nhóm${v.guests?" "+v.guests:""}`:v.guests?`${v.guests} người`:"";
+  return `<details class="tblcfg" id="vcList"${list.length&&f==="today"?" open":""}><summary>voucher khách đăng ký${f==="today"?" hôm nay":f==="upcoming"?" sắp tới":""} · ${list.length}</summary>
+    ${list.length?`<table class="vctable"><thead><tr><th>ngày</th><th>khách</th><th>ưu đãi</th></tr></thead><tbody>${list.map(v=>{const bk=S.bookings.find(b=>b.phone===v.phone&&b.date===v.date&&b.status!=="cancelled");
+      return `<tr><td>${esc(fmtDate(v.date))}${v.time?`<br><span class="muted">${esc(v.time)}</span>`:""}</td><td><b>${esc(v.name)}</b><br><span class="muted">${esc(v.phone)}</span></td><td>${esc((v.promo||"").toLowerCase())}${who(v)?`<br><span class="muted">${esc(who(v))}</span>`:""}${bk?`<br><span class="pill warn">có đặt bàn${bk.table?" · "+esc(bk.table):""}</span>`:""}</td></tr>`}).join("")}</tbody></table>`
+    :`<p class="note" style="margin:6px 0">chưa có khách đăng ký voucher${f==="today"?" cho hôm nay":""}.</p>`}</details>`;
 }
 /* tên DJ trên đầu trang (tonight/{ngày}): mỗi đêm một tên, để trống = HOUSE PARTY */
 function djCfgHTML(){
@@ -1720,7 +1818,7 @@ function bookingCard(b){
     <div class="bk-time"><b>${esc(b.time||"--:--")}</b><span>${esc(fmtDate(b.date))}</span></div>
     <div class="bk-main">
       <div class="rowbtns"><b>${b.guestName?esc(guestLabel(b)):"(chưa có tên)"}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
-        <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}${b.status!=="seated"&&b.status!=="cancelled"&&b.holdUntil?(holdExpired(b)?`<span class="pill bad">quá giờ giữ bàn${b.table?" · bàn đã mở lại":""}</span>`:`<span class="pill warn">giữ đến ${fmtHM(b.holdUntil)}</span>`):""}</div>
+        <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}${voucherOf(b)?`<span class="pill warn">voucher ${esc(String(voucherOf(b).promo||"").toLowerCase())}</span>`:""}${b.status!=="seated"&&b.status!=="cancelled"&&b.holdUntil?(holdExpired(b)?`<span class="pill bad">quá giờ giữ bàn${b.table?" · bàn đã mở lại":""}</span>`:`<span class="pill warn">giữ đến ${fmtHM(b.holdUntil)}</span>`):""}</div>
       <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">khách để quán xếp promoter</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
@@ -1980,6 +2078,7 @@ render();
     db.collection("notes").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.notes=m;soon()},()=>{});
     db.collection("venue").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="tables");S.tables=d?(d.data().list||[]):DEFAULT_TABLES.slice();S.loaded.tables=true;soon()},()=>{S.tables=DEFAULT_TABLES.slice();S.loaded.tables=true});
     db.collection("redeemed").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.redeemed=m;soon()},()=>{});
+    db.collection("vouchers").onSnapshot(s=>{S.vouchers=s.docs.map(d=>({...d.data(),id:d.id}));soon()},()=>{}); // chưa dán luật vouchers thì bỏ qua
   }
   render();
 })();

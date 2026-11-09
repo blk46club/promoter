@@ -152,5 +152,22 @@ service cloud.firestore {
         (!('holdUntil' in request.resource.data) || request.resource.data.holdUntil is number)
       );
     }
+    // Voucher ưu đãi hằng tuần khách đăng ký trên web (anh Minh 09/11): khách chỉ tạo mới, chỉ quản lý đọc / sửa / xoá.
+    match /vouchers/{id} {
+      allow read, update, delete: if isStaff();
+      allow create: if isStaff() || (
+        request.resource.data.keys().hasOnly(['promo','dow','name','phone','date','time','mode','guests','source','createdAt']) &&
+        request.resource.data.source == 'web' &&
+        request.resource.data.promo is string && request.resource.data.promo.size() > 0 && request.resource.data.promo.size() <= 40 &&
+        request.resource.data.dow is int && request.resource.data.dow >= 0 && request.resource.data.dow <= 6 &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 40 &&
+        request.resource.data.phone is string && request.resource.data.phone.matches('^[0-9]{9,11}$') &&
+        request.resource.data.date is string && request.resource.data.date.size() == 10 &&
+        request.resource.data.time is string && request.resource.data.time.size() <= 5 &&
+        request.resource.data.mode in ['solo','group',''] &&
+        request.resource.data.guests is string && request.resource.data.guests.size() <= 3 &&
+        request.resource.data.createdAt is number
+      );
+    }
   }
 }

@@ -153,6 +153,8 @@ function makeDb(staff) {
     watchLoads: (fromDate, next, err) => onSnapshot(
       query(collection(fs, "idolLoad"), where("date", ">=", fromDate)),
       (s) => next(s.docs.map((d) => { const x = d.data(); return { date: x.date, counts: x.counts || {} }; })), err),
+    // Khách đăng ký voucher ưu đãi hằng tuần (vouchers/{id}): khách chỉ được tạo, chỉ quản lý đọc.
+    createVoucher: (id, v) => setDoc(doc(fs, "vouchers/" + id), v),
     // Khách gửi đặt bàn kèm bàn muốn ngồi: ghi đặt bàn + giữ bàn trong một lần.
     // Luật bảo mật chặn giữ trùng: khách chỉ ghi đè được bàn đã quá giờ giữ mà chưa xếp khách vào.
     createBooking: async (bookingId, booking, holdId, hold) => {
