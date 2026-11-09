@@ -1021,7 +1021,7 @@ function promoHTML(dow,cls=""){
   const p=WEEKLY_PROMOS[dow];if(!p)return "";
   const url=p.form||SOCIAL.instagram;if(!url)return "";
   return `<div class="promo${cls?" "+cls:""}"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
-    <div class="promo-r"><a class="promo-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}<span>${p.form?"":"điền form ở bio instagram @blk.hanoi. "}dành cho khách từ 18 tuổi.</span></div></div>`;
+    <div class="promo-r"><a class="promo-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}${p.form?"":`<span>điền form ở bio instagram @blk.hanoi.</span>`}</div></div>`;
 }
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const eventOn=iso=>EVENTS.find(e=>e.date===iso);
