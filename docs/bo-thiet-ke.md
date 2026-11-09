@@ -34,7 +34,7 @@ Cách tự kiểm: chạy `node tools/kiem-token.cjs`. Lệnh này không cần 
 | `--sheet`, `--sheet-2` | #F7F4EC, #FBF9F3 | Vé và thẻ đêm, mẩu đánh giá trên nền giấy |
 | `--sheet-ph`, `--sheet-ph-mark` | #d9d4c7, #c3bdae | Khung ảnh trống trên giấy |
 | `--muted-p` | #4a4842 | Chữ phụ trên giấy |
-| `--hint-p` | #8a8578 | Chữ gợi ý trong ô nhập |
+| `--hint-p` | #6e6a61 | Chữ gợi ý trong ô nhập |
 | `--bad-text`, `--bad-p` | #ff6a6f, #b3000b | Chữ lỗi trên nền tối và trên giấy |
 | `--good` | #7fd18b | Trạng thái ổn |
 | `--tbl`, `--tbl-taken`, `--tbl-taken-edge` | #8a4a3a, #1c0f0c, #6b4a40 | Sơ đồ bàn |
@@ -86,10 +86,11 @@ Bóng dùng kiểu tem dán: `box-shadow:var(--hard) <màu>` (5px), còn khi b�
 | `.pill`, `.tag` | Trạng thái và nhãn, không bấm được |
 | `footer.foot .soc a` | Ô mạng xã hội 52px |
 
-Chỗ còn chồng chéo, để sửa ở bước sau (bước này cần ảnh xem trước):
+Từ PR sửa theo bản soi (10/11):
 
-- `.cta` và `.btn-acid` cùng là nút vàng chính, chỉ khác cỡ.
-- `.ev-mp` là việc phụ nhưng đang mang kiểu nổi nhất trang. Kiểu này do anh chọn ngày 09/11; bản soi ngày 10/11 đề xuất hạ xuống.
+- Trên trang khách (nền giấy), `.cta` mang cùng kiểu với `.btn-acid`. Nút gửi trong vé vẫn là nút đen chữ vàng. Trang quản lý giữ `.cta` nhỏ.
+- `.ev-mp` (poster lịch tháng) hạ xuống thành nút viền đen, không còn tem vàng nổi.
+- Vùng bấm được nới bằng lớp `::after` vô hình. Bàn trên sơ đồ nới theo khoảng trống giữa các bàn (`.tspot.k-*`), được khoảng 43–63px, riêng SV2 và SV4 rộng 32px.
 
 ## Luật
 
@@ -98,5 +99,5 @@ Chỗ còn chồng chéo, để sửa ở bước sau (bước này cần ảnh 
 3. Vùng bấm trên điện thoại tối thiểu 44 × 44px.
 4. Link nằm trong câu thì gạch chân. Số điện thoại thì không gạch.
 5. Chữ thân viết thường, tiêu đề in hoa, không dùng dấu chấm than.
-6. Chữ thường cần độ tương phản từ 4,5:1 trở lên. `--hint-p` trên giấy hiện chỉ đạt khoảng 3:1, đây là việc cần sửa.
+6. Chữ thường cần độ tương phản từ 4,5:1 trở lên. `--hint-p` đã đậm lên #6e6a61, đạt 4,9:1 trên vé.
 7. Mọi thay đổi nhìn thấy được đều phải có ảnh xem trước trên máy tính 1280 và điện thoại 390 trước khi merge.

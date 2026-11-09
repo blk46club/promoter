@@ -53,7 +53,7 @@
   --sheet-ph:#d9d4c7;   /* khung ảnh trống trên giấy */
   --sheet-ph-mark:#c3bdae;
   --muted-p:#4a4842;    /* chữ phụ trên giấy */
-  --hint-p:#8a8578;     /* chữ gợi ý trong ô nhập */
+  --hint-p:#6e6a61;     /* chữ gợi ý trong ô nhập: 4,9:1 trên vé, 4,6:1 trên giấy */
   /* trạng thái */
   --bad-text:#ff6a6f;   /* chữ lỗi trên nền tối */
   --bad-p:#b3000b;      /* chữ lỗi trên giấy */
@@ -730,6 +730,32 @@ body.paper .done .eyebrow{color:var(--concrete)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body{margin:0}
 img{max-width:100%}
+
+/* ---------- sửa theo bản soi 10/11 ---------- */
+/* vùng bấm: nới bằng lớp vô hình, hình giữ nguyên. tối thiểu 44px nơi còn chỗ */
+.mark,nav.tabs a,.book-help a,.book-help button,footer.foot .finfo a,.promo-pst,.promo-slim a,.fly-call{position:relative}
+.mark::after,nav.tabs a::after,.book-help a::after,.book-help button::after,footer.foot .finfo a::after,.promo-pst::after,.promo-slim a::after,.fly-call::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+/* bàn trên sơ đồ: nới theo khoảng trống giữa các bàn (tính trên toạ độ ảnh 2000×870) */
+.tspot::after{content:"";position:absolute;inset:var(--hit,0)}
+.tspot.k-v{--hit:-44% -11%}
+.tspot.k-c{--hit:-12% -12%}
+.tspot.k-d{--hit:-11% -12%}
+.tspot.k-sh{--hit:-25% -8%}
+.tspot.k-sv{--hit:-4% -19%}
+/* trang đang xem trên đầu trang: gạch dưới, không đóng khung (khung trông như nút) */
+nav.tabs a[aria-current="page"]{border-color:transparent;border-bottom-color:var(--acid)}
+/* ưu đãi 1 dòng trong khung thứ đã có ô đầy đủ trên tờ rơi */
+.promo-slim{margin:0 0 14px;font-size:var(--fs-body)}
+.promo-slim b{font-family:var(--display);font-weight:400;letter-spacing:.04em;margin-right:2px}
+.promo-slim a{color:var(--ink);font-weight:700;text-underline-offset:4px}
+/* poster lịch tháng: nút phụ viền đen, không còn tem vàng nổi (vàng để dành cho ĐẶT BÀN) */
+.ev-mp{background:transparent;box-shadow:none;border-width:2px}
+.ev-mp:hover{background:var(--ink);color:var(--paper);transform:none;box-shadow:none}
+.ev-mp:active{transform:none}
+/* một kiểu nút vàng cho trang khách: .cta trên nền giấy giống .btn-acid */
+body.paper .cta:not([type="submit"]){font-family:var(--display);font-weight:400;font-size:var(--fs-md);letter-spacing:.06em;padding:0 24px;min-height:50px;justify-content:center}
+body.paper .cta:not([type="submit"]):hover{filter:none;background:var(--ink);color:var(--acid)}
+body.paper .cta.cta-line:hover{background:transparent;color:inherit;opacity:.8}
 </style>
 </head>
 <body class="paper v-lineup">
@@ -1082,6 +1108,8 @@ const WEEKLY_PROMOS={
 };
 function promoHTML(dow,cls=""){
   const p=WEEKLY_PROMOS[dow];if(!p)return "";
+  /* ô đầy đủ đã nằm trên tờ rơi đầu trang: khung thứ đó chỉ còn 1 dòng, khỏi lặp (bản soi 10/11) */
+  if(cls==="slim")return `<p class="promo-slim"><b>${esc(p.tag)}</b> mỗi ${esc(DAY_FULL[dow].toLowerCase())} · <a href="#voucher-${dow}">${esc(p.go.toLowerCase())}</a></p>`;
   return `<div class="promo${cls?" "+cls:""}"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
     <div class="promo-r"><a class="promo-go" href="#voucher-${dow}">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}</div></div>`;
 }
@@ -1138,8 +1166,8 @@ function flyHTML(){
       <div class="fly-row"><p>${esc(n.time)}</p><p>${esc(n.day)}</p><p>TẦNG 1, 46 MÃ MÂY</p></div>
       ${n.state==="tonight"?"":`<p class="fly-state${t.open?"":" off"}" role="status">${esc(t.text)}</p>`}
       ${evLine}
-      ${promoHTML(n.dow,"on-dark")}
       <div class="fly-btns"><button type="button" class="btn-acid" data-go="book">ĐẶT BÀN</button><button type="button" class="btn-line" data-go="roster">CHỌN PROMOTER</button><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call" href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></div>
+      ${promoHTML(n.dow,"on-dark")}
     </div>${art}`;
 }
 /* thẻ promoter: ảnh nhỏ, số hạng, tên, sao. đủ khách tối nay thì đóng dấu, không chọn được */
@@ -1206,8 +1234,8 @@ function sheetHTML(r,ghost){
 }
 function howHTML(){
   const hm=m=>`${Math.floor(m/60)}h${pad2(m%60)}`;
-  return [["CHỌN PROMOTER","xem sao và lời khách trước, chọn người bạn muốn đi cùng."],
-    ["GỬI YÊU CẦU","điền tên, số điện thoại, giờ tới. quán gọi lại xác nhận bàn."],
+  return [["CHỌN ĐÊM","chọn đêm muốn tới. muốn có promoter đi cùng thì chọn thêm, không bắt buộc."],
+    ["GỬI YÊU CẦU","điền tên, số điện thoại, giờ tới. quản lý gọi lại xác nhận bàn từ 17h."],
     ["TỚI QUÁN",`quán giữ bàn đến ${hm(HOLD_CUTOFF_MIN)}. hẹn muộn hơn thì giữ thêm ${HOLD_LATE_MIN} phút sau giờ hẹn.`]]
     .map(([h,p],k)=>`<div><p class="n">${k+1}</p><div><h3>${h}</h3><p>${p}</p></div></div>`).join("");
 }
@@ -1269,11 +1297,11 @@ function eventsHTML(){
   /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
   let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
   return `<section class="evs" id="events" aria-label="lịch event">
-    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p>${MONTH_POSTERS[up[0].date.slice(0,7)]?`<button type="button" class="ev-mp" data-pst="month">XEM POSTER LỊCH THÁNG ${+up[0].date.slice(5,7)}</button>`:""}</div>
+    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn.</p>${MONTH_POSTERS[up[0].date.slice(0,7)]?`<button type="button" class="ev-mp" data-pst="month">XEM POSTER LỊCH THÁNG ${+up[0].date.slice(5,7)}</button>`:""}</div>
       ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
     ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
       <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
-      ${promoHTML(g.d)}
+      ${promoHTML(g.d,g.d===n.dow?"slim":"")}
       <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol>
       ${g.list.length>1?`<button type="button" class="sq ev-more" aria-expanded="${S.evOpen.has(g.d)}">${evMoreText(g,S.evOpen.has(g.d))}</button>`:""}</div>`).join("")}
   </section>`;
@@ -1606,7 +1634,7 @@ function renderBook(idolId){
         <label class="f">số điện thoại *<input id="b_phone" required inputmode="tel" maxlength="12" autocomplete="tel" placeholder="vd 09xx xxx xxx" value="${esc(B.phone)}"></label>
         <label class="f">ngày *<input id="b_date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 08/11" data-date required value="${esc(B.dateText)}"><small class="dhint">${esc(dateHint(B.dateText))}</small><small class="load-note" id="loadNote" role="status"></small></label>
         <label class="f">giờ đến *<input id="b_time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="vd 22:30" data-time required value="${esc(B.time)}"><span class="tq" role="group" aria-label="chọn nhanh giờ đến">${QUICK_TIMES.map(t=>`<button type="button" class="tqb" data-tq="${t}" aria-pressed="${B.time===t}">${t}</button>`).join("")}</span></label>
-        <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" placeholder="4" value="${esc(B.guests)}"></label>
+        <label class="f">số người<input id="b_guests" inputmode="numeric" maxlength="3" placeholder="vd 4" value="${esc(B.guests)}"></label>
       </div>
       <p class="hold-note" id="holdNote" role="status"></p>
       <div class="f tpick-f"><span>chọn bàn muốn ngồi - bấm vào bàn trong hình (không bắt buộc)</span>${tableMap(B.table)}</div>
@@ -1674,6 +1702,8 @@ const TABLE_SPOTS=[["V1",697,107,172,80],["V2",907,105,172,80],["V3",1133,105,17
   ["C1",958,328,116,116,1],["C2",1145,328,116,116,1],["C3",1295,322,116,116,1],["C4",1485,328,116,116,1],["C5",1670,328,116,116,1],
   ["C6",1668,526,116,116,1],["C7",1527,526,116,116,1],["C8",1125,526,116,116,1],["C9",968,526,116,116,1],["C10",514,556,116,116,1],
   ["D1",1082,677,116,126],["D2",1462,677,116,126],["SV1",690,762,176,86],["SV2",852,725,78,186],["SV3",1688,766,176,86],["SV4",1860,695,78,186]];
+/* nhóm bàn để nới vùng bấm (CSS .tspot.k-*): V hàng trên, C tròn, D cạnh DJ, SV ngang (1, 3) và dọc (2, 4) */
+const spotKind=t=>/^V/.test(t)?"v":/^C/.test(t)?"c":/^D/.test(t)?"d":/^SV[13]$/.test(t)?"sh":"sv";
 const holdKey=(date,table)=>date+"_"+String(table).toUpperCase();
 /* giờ giữ bàn (anh Minh, 06/11/2026):
    - giờ đến từ 22h30 trở về trước: giữ bàn tới 22h30 ngày đặt;
@@ -1721,7 +1751,7 @@ function watchHoldsFor(date,B){
 function tableMap(sel){
   const pct=(v,t)=>(v/t*100).toFixed(2)+"%";
   return `<div class="tmap-wrap"><div class="tmap"><img src="brand/so-do-ban.jpg" alt="sơ đồ bàn BLK46" width="1600" height="696">
-    ${TABLE_SPOTS.map(([t,x,y,w,h,round])=>`<button type="button" class="tspot${round?" round":""}${t===sel?" sel":""}" data-t="${t}" aria-label="bàn ${t}" aria-pressed="${t===sel}" style="left:${pct(x-w/2,2000)};top:${pct(y-h/2,870)};width:${pct(w,2000)};height:${pct(h,870)}"></button>`).join("")}
+    ${TABLE_SPOTS.map(([t,x,y,w,h,round])=>`<button type="button" class="tspot${round?" round":""} k-${spotKind(t)}${t===sel?" sel":""}" data-t="${t}" aria-label="bàn ${t}" aria-pressed="${t===sel}" style="left:${pct(x-w/2,2000)};top:${pct(y-h/2,870)};width:${pct(w,2000)};height:${pct(h,870)}"></button>`).join("")}
   </div></div>
   <div class="tmap-legend"><span><i class="lg free"></i>bàn trống</span><span><i class="lg taken"></i>đã có khách đặt ngày này</span><span><i class="lg sel"></i>bàn bạn chọn</span><span class="tmap-swipe">vuốt ngang để xem cả sơ đồ</span></div>
   <div class="tpick" id="tpick"></div>`;
