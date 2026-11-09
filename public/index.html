@@ -1012,17 +1012,16 @@ const EVENTS=[
 const MONTH_POSTERS={"2026-11":"events/lich-thang-11.jpg"};
 /* ưu đãi lặp lại hằng tuần, theo thứ (4 = thứ 5, 0 = chủ nhật). chủ đề từng đêm vẫn ghi ở EVENTS.
    anh Minh 09/11: đăng đủ nội dung + poster ưu đãi (đã biết rủi ro luật 44/2019 điều 5, 12).
-   poster: ảnh trong public/events/. PROMO_FORM_URL: link form khách điền. để trống thì nút dẫn tới instagram của quán. */
-const PROMO_FORM_URL="";
+   poster: ảnh trong public/events/. form: link google form khách điền để nhận ưu đãi. để trống thì nút dẫn tới instagram của quán. */
 const WEEKLY_PROMOS={
-  4:{tag:"LADIES SPECIAL",line:"voucher có hạn cho chị em tới trước 22h45: mỗi chị em 2 ly miễn phí, nhóm 4 chị em được tặng 1 chai.",go:"NHẬN VOUCHER",poster:"events/promo-thu-5.jpg"},
-  0:{tag:"FREE BEER",line:"phố hàng nhạc: điền form trước khi tới để nhận 1 bia miễn phí.",go:"NHẬN BIA",poster:"events/promo-chu-nhat.jpg"},
+  4:{tag:"LADIES SPECIAL",line:"voucher có hạn cho chị em tới trước 22h45: mỗi chị em 2 ly miễn phí, nhóm 4 chị em được tặng 1 chai.",go:"NHẬN VOUCHER",poster:"events/promo-thu-5.jpg",form:"https://docs.google.com/forms/d/e/1FAIpQLScf7NpShX00nRLU7vHBNyTxX8pUj90gkC0WYWbOXdm_3kyMkQ/viewform"},
+  0:{tag:"FREE BEER",line:"phố hàng nhạc: điền form trước khi tới để nhận 1 bia miễn phí.",go:"NHẬN BIA",poster:"events/promo-chu-nhat.jpg",form:"https://docs.google.com/forms/d/e/1FAIpQLSfiZMEZHemzeBGx1MC1YY_c3YD3Ac2JrIz_e1IEoZk8--YhRg/viewform"},
 };
 function promoHTML(dow,cls=""){
   const p=WEEKLY_PROMOS[dow];if(!p)return "";
-  const url=PROMO_FORM_URL||SOCIAL.instagram;if(!url)return "";
+  const url=p.form||SOCIAL.instagram;if(!url)return "";
   return `<div class="promo${cls?" "+cls:""}"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
-    <div class="promo-r"><a class="promo-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}<span>${PROMO_FORM_URL?"":"điền form ở bio instagram @blk.hanoi. "}dành cho khách từ 18 tuổi.</span></div></div>`;
+    <div class="promo-r"><a class="promo-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}${p.form?"":`<span>điền form ở bio instagram @blk.hanoi.</span>`}</div></div>`;
 }
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const eventOn=iso=>EVENTS.find(e=>e.date===iso);
@@ -1184,7 +1183,7 @@ function openPromoPoster(dow){
   const d=posterDialog(),alt=`poster ưu đãi ${p.tag.toLowerCase()} mỗi ${DAY_FULL[dow].toLowerCase()} ở blk46`;
   d.setAttribute("aria-label",alt);
   d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(p.poster)}" alt="${esc(alt)}">
-    <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="${esc(PROMO_FORM_URL||SOCIAL.instagram)}" target="_blank" rel="noopener">${esc(p.go)}</a></div>`;
+    <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="${esc(p.form||SOCIAL.instagram)}" target="_blank" rel="noopener">${esc(p.go)}</a></div>`;
   d.showModal();
 }
 function evCard(e,n,live){
