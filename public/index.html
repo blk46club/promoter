@@ -500,19 +500,34 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
 .fly-more:hover{color:var(--paper)}
 .evs{padding-block:40px 56px;scroll-margin-top:64px;border-top:3px solid #000}
 @media (min-width:900px){.evs{padding-block:56px 72px}}
-.evs-head{margin-bottom:20px}
+.evs-head{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
 .evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,6vw,76px);line-height:1.14;text-transform:uppercase}
 .evs-head p{margin:8px 0 0;color:var(--muted-p);max-width:56ch;font-size:15px}
 @media (min-width:900px){.evs-head{margin-bottom:28px}.evs-head p{font-size:16px}}
+/* mỗi thứ một khung. điện thoại: các khung xếp dọc. máy tính (từ 900px): mỗi lần một khung, bấm mũi tên để đổi */
+.ev-nav{display:none;align-items:center;gap:12px}
+.ev-nav .sq{font-family:var(--display);font-size:24px;padding:0;width:52px;min-height:52px;display:inline-flex;align-items:center;justify-content:center}
+.ev-nav .sq:hover{background:#000;color:var(--paper)}
+.evs-head .ev-now{margin:0;min-width:250px;text-align:center;font-family:var(--display);font-size:44px;line-height:1.05;color:#000;max-width:none}
+.evs-head .ev-now small{display:block;margin-top:2px;font-family:var(--body);font-size:13px;line-height:1.3;letter-spacing:.08em;color:var(--muted-p)}
+.ev-day+.ev-day{margin-top:36px}
+.ev-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-top:3px solid #000;padding-top:10px;margin-bottom:14px}
+.ev-dh h3{margin:0;font-family:var(--display);font-weight:400;font-size:40px;line-height:1.1}
+.ev-dh p{margin:0;font-family:var(--display);font-size:18px;letter-spacing:.03em}
 .ev-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 @media (min-width:700px){.ev-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}}
-@media (min-width:1100px){.ev-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:699px){.ev-list:not(.all) .ev:nth-child(n+5){display:none}}
+@media (min-width:900px){
+  .ev-nav{display:flex}
+  .ev-day{display:none}.ev-day.on{display:block}
+  .ev-day+.ev-day{margin-top:0}
+  .ev-dh h3{display:none}
+  .ev-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 .ev{border:3px solid #000;background:#F7F4EC;display:flex;flex-direction:column;min-width:0}
 .ev-pic{aspect-ratio:4/5;background:#000;border-bottom:3px solid #000;overflow:hidden}
 .ev-pic img{display:block;width:100%;height:100%;object-fit:cover}
 .ev-top{display:flex;align-items:stretch;border-bottom:3px solid #000}
-.ev-d{flex:none;width:100px;background:#000;color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;gap:2px}
+.ev-d{flex:none;width:96px;background:#000;color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;gap:2px}
 .ev-d b{font-family:var(--display);font-weight:400;font-size:36px;line-height:1}
 .ev-d span{font-family:var(--display);font-size:14px;letter-spacing:.06em}
 .ev-h{padding:10px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
@@ -527,8 +542,6 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
 .ev.now{background:var(--acid)}
 .ev.now .ev-go{background:#000;color:var(--paper)}
 .ev.now .ev-go:hover{background:var(--paper);color:#000}
-.ev-more{margin-top:16px}
-@media (min-width:700px){.ev-more{display:none}}
 .tk-ev{margin:0;padding:10px 14px;border-bottom:3px solid #000;background:var(--acid);font-family:var(--display);font-size:18px;letter-spacing:.03em}
 .tk-ev[hidden]{display:none}
 @media (min-width:700px){.tk-ev{padding:12px 20px;font-size:20px}}
@@ -1075,24 +1088,38 @@ function howHTML(){
     ["TỚI QUÁN",`quán giữ bàn đến ${hm(HOLD_CUTOFF_MIN)}. hẹn muộn hơn thì giữ thêm ${HOLD_LATE_MIN} phút sau giờ hẹn.`]]
     .map(([h,p],k)=>`<div><p class="n">${k+1}</p><div><h3>${h}</h3><p>${p}</p></div></div>`).join("");
 }
-function eventsHTML(){
-  const up=upcomingEvents();if(!up.length)return "";
-  const n=nightInfo(),live=n.state!=="closed";
-  const months=[...new Set(up.map(e=>+e.date.slice(5,7)))];
-  const head=months.length===1?`Tháng ${months[0]}<br>ở blk46`:`Sắp tới<br>ở blk46`;
-  return `<section class="evs" id="events" aria-label="lịch event">
-    <div class="evs-head"><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h, thứ 5 tới chủ nhật. chọn đêm rồi giữ bàn qua promoter.</p></div>
-    <ol class="ev-list" id="evList">${up.map(e=>{
-      const dw=dowOfIso(e.date),now=live&&e.date===n.iso;
-      return `<li class="ev${now?" now":""}">
+/* lịch event gom theo thứ trong tuần (anh Minh 09/11): mỗi thứ một khung */
+const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
+const DAY_ORDER=[1,2,3,4,5,6,0]; // thứ 2 → chủ nhật
+function eventGroups(){
+  const up=upcomingEvents();
+  return DAY_ORDER.map(d=>({d,list:up.filter(e=>dowOfIso(e.date)===d)})).filter(g=>g.list.length);
+}
+function evCard(e,n,live){
+  const now=live&&e.date===n.iso;
+  return `<li class="ev${now?" now":""}">
         ${e.poster?`<div class="ev-pic"><img src="${esc(e.poster)}" alt="poster ${esc(e.name)}" loading="lazy" onerror="this.parentNode.remove()"></div>`:""}
-        <div class="ev-top"><div class="ev-d"><b>${e.date.slice(8)}.${e.date.slice(5,7)}</b><span>${WD_FLY[dw]}</span></div>
+        <div class="ev-top"><div class="ev-d"><b>${e.date.slice(8)}.${e.date.slice(5,7)}</b></div>
           <div class="ev-h">${now?`<p class="ev-tag">TỐI NAY</p>`:""}<h3>${esc(e.name)}</h3></div></div>
         <div class="ev-b"><p>${esc(e.line)}</p>
           ${e.dj?`<p class="x"><b>guest dj:</b> ${esc(e.dj.toLowerCase())}</p>`:""}
           ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
-          <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`}).join("")}</ol>
-    ${up.length>4?`<button type="button" class="sq ev-more" id="evMore" aria-expanded="false" aria-controls="evList">xem cả ${up.length} đêm</button>`:""}
+          <button type="button" class="ev-go" data-go="roster" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
+}
+function eventsHTML(){
+  const groups=eventGroups();if(!groups.length)return "";
+  const n=nightInfo(),live=n.state!=="closed";
+  const up=groups.flatMap(g=>g.list);
+  const months=[...new Set(up.map(e=>+e.date.slice(5,7)))];
+  const head=months.length===1?`Tháng ${months[0]}<br>ở blk46`:`Sắp tới<br>ở blk46`;
+  /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
+  let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
+  return `<section class="evs" id="events" aria-label="lịch event">
+    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn qua promoter.</p></div>
+      ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
+    ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
+      <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
+      <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol></div>`).join("")}
   </section>`;
 }
 const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
@@ -1126,8 +1153,13 @@ function renderLineup(){
   </section>
   <section class="how" aria-label="đặt bàn thế nào">${howHTML()}</section>
   ${eventsHTML()}`;
-  const evMore=document.getElementById("evMore");
-  if(evMore)evMore.onclick=()=>{const l=document.getElementById("evList"),on=l.classList.toggle("all");evMore.setAttribute("aria-expanded",on);evMore.textContent=on?"thu gọn":`xem cả ${l.children.length} đêm`};
+  /* mũi tên đổi thứ (chỉ hiện trên máy tính), vòng tròn: chủ nhật → thứ 5 */
+  const evDays=[...app.querySelectorAll(".ev-day")],evNow=document.getElementById("evNow");
+  const evShow=step=>{let k=evDays.findIndex(x=>x.classList.contains("on"));k=(k+step+evDays.length)%evDays.length;
+    evDays.forEach((x,j)=>x.classList.toggle("on",j===k));S.evDay=+evDays[k].dataset.d;
+    if(evNow)evNow.innerHTML=`${DAY_FULL[S.evDay]}<small>${k+1} / ${evDays.length}</small>`};
+  const evP=document.getElementById("evPrev"),evN=document.getElementById("evNext");
+  if(evP)evP.onclick=()=>evShow(-1);if(evN)evN.onclick=()=>evShow(1);
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
   const sheet=document.getElementById("spot");
