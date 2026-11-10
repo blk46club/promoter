@@ -114,6 +114,13 @@ Từ PR sửa theo bản soi (10/11):
 - `.ev-mp` (poster lịch tháng) hạ xuống thành nút viền đen, không còn tem vàng nổi.
 - Vùng bấm được nới bằng lớp `::after` vô hình. Bàn trên sơ đồ nới theo khoảng trống giữa các bàn (`.tspot.k-*`), được khoảng 43–63px, riêng SV2 và SV4 rộng 32px.
 
+## Khung nổi
+
+| Class | Dùng cho |
+|---|---|
+| `.pdlg` | Xem to poster đêm, poster lịch tháng, poster ưu đãi |
+| `.sdlg` | Hồ sơ promoter, mở khi khách bấm thẻ ở lineup (từ 10/11). Dưới 900px phủ kín màn, từ 900px là khung giữa màn. Nút đặt bàn luôn dính ở đáy khung. Nút back trên điện thoại chỉ đóng khung. |
+
 ## Luật
 
 1. Không gõ mã màu hay cỡ chữ mới. Lấy token trong `:root`; thiếu thì thêm token có chú thích rồi mới dùng.

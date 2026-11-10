@@ -388,7 +388,7 @@ label.f input,label.f select{background:var(--ink);border:1px solid var(--line);
 .empty{border:1px dashed var(--line);padding:28px;display:grid;gap:8px;color:var(--concrete)}
 .empty b{color:var(--paper)}
 /* ---------- hướng 2: tờ rơi trên nền giấy cho lineup + đặt bàn (anh Minh 09/11) ----------
-   nền giấy, chữ đen; khối đen (tờ rơi, tờ hồ sơ, chân trang) tràn hết bề ngang.
+   nền giấy, chữ đen; khối đen (tờ rơi, chân trang) tràn hết bề ngang. tờ hồ sơ là khung nổi đen.
    trang quản lý và tablet chấm điểm vẫn nền đen. */
 body.paper{background:var(--paper);color:var(--ink);color-scheme:light}
 body.paper::after{mix-blend-mode:multiply;opacity:.07;
@@ -494,7 +494,7 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .pc-ph{display:block;position:relative;aspect-ratio:3/4;background:var(--sheet-ph);color:var(--sheet-ph-mark);overflow:hidden}
 .pc-ph svg{position:absolute;left:12%;bottom:0;width:76%;display:block}
 .pc-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.pc[aria-pressed="true"] .pc-ph{outline:4px solid var(--ink)}
+@media (hover:hover){.pc:not([disabled]):hover .pc-ph{outline:4px solid var(--ink)}}
 .pc:hover .pc-ph img{filter:contrast(1.08)}
 .pc-no{position:absolute;left:0;top:0;z-index:1;background:var(--ink);color:var(--paper);font-family:var(--display);font-size:var(--fs-lead);line-height:1.4;padding:1px 9px}
 .pc-stamp{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;background:rgba(240,236,225,.45)}
@@ -503,19 +503,28 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .pc.full img{filter:grayscale(1)!important}
 .pc-name{display:block;margin-top:8px;font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.15;text-transform:uppercase;overflow-wrap:anywhere}
 .pc-meta{display:block;font-size:var(--fs-sm);color:var(--muted-p)}
-.pc-sel{display:inline-block;margin-top:4px;background:var(--acid);color:var(--ink);font-family:var(--display);font-size:var(--fs-xs);letter-spacing:.08em;padding:2px 8px}
-.pc[aria-pressed="false"] .pc-sel{visibility:hidden}
 .pc.ghost{cursor:default;opacity:.55}
 .cards.many .pc-name{font-size:var(--fs-md)}
 .cards.many .pc-meta{font-size:var(--fs-xs)}
-@media (min-width:700px){.pc-no{font-size:var(--fs-md);padding:2px 10px}.pc-name,.cards.many .pc-name{font-size:var(--fs-2xl);margin-top:10px}.pc-meta,.cards.many .pc-meta{font-size:var(--fs-ui)}.pc-sel{margin-top:6px;font-size:var(--fs-sm)}}
+@media (min-width:700px){.pc-no{font-size:var(--fs-md);padding:2px 10px}.pc-name,.cards.many .pc-name{font-size:var(--fs-2xl);margin-top:10px}.pc-meta,.cards.many .pc-meta{font-size:var(--fs-ui)}}
 
-/* tờ hồ sơ của người đang chọn: khối đen dưới các thẻ */
-.sheet{margin-top:32px;display:grid;grid-template-columns:minmax(0,1fr);scroll-margin-top:64px}
-@media (min-width:900px){.sheet{grid-template-columns:minmax(0,7fr) minmax(0,5fr);margin-top:44px}}
+/* tờ hồ sơ promoter: khung nổi đè lên lineup, mở khi khách bấm thẻ (anh Minh 10/11).
+   điện thoại và tablet dọc: phủ kín màn. từ 900px: khung giữa màn. khung đứng yên, tờ hồ sơ cuộn bên trong để nút × luôn ở góc */
+.sdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:100%;max-width:none;height:100%;max-height:none;margin:0;overflow:hidden;overscroll-behavior:contain}
+.sdlg[open]{display:flex;flex-direction:column;animation:fadein .2s ease-out}
+.sdlg::backdrop{background:rgba(0,0,0,.86)}
+.sdlg :focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+@media (min-width:900px){.sdlg{width:min(1180px,calc(100vw - 48px));height:auto;max-height:calc(100dvh - 48px);margin:auto}}
+.sdlg-x{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;background:var(--ink);color:var(--paper);font-size:var(--fs-2xl);line-height:1;cursor:pointer;z-index:2}
+.sdlg-x:hover{background:var(--acid);color:var(--ink)}
+html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
+/* nút đặt bàn luôn thấy ở đáy khung, kể cả khi tờ hồ sơ dài; viền đen che chữ cuộn phía sau */
+.sdlg .sheet-cta{position:sticky;bottom:16px;z-index:1;box-shadow:0 0 0 16px var(--ink)}
+.sheet{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;display:grid;grid-template-columns:minmax(0,1fr);align-content:start}
+@media (min-width:900px){.sheet{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}}
 .sheet-pics{padding:14px;display:grid;gap:8px;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));align-content:start}
 .sheet-pics.one{grid-template-columns:minmax(0,300px)}
-@media (min-width:900px){.sheet-pics{padding:24px;gap:12px;position:sticky;top:62px;align-self:start}.sheet-pics.one{grid-template-columns:minmax(0,360px)}}
+@media (min-width:900px){.sheet-pics{padding:24px;gap:12px;position:sticky;top:0;align-self:start}.sheet-pics.one{grid-template-columns:minmax(0,360px)}}
 .sheet-pics figure{margin:0;min-width:0}
 .sheet-pics .fr{aspect-ratio:3/4;background:var(--frame);color:var(--frame-mark);position:relative;overflow:hidden}
 .sheet-pics .fr svg{position:absolute;left:10%;bottom:0;width:80%;display:block}
@@ -523,7 +532,7 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .sheet-pics .fr img.lq{filter:blur(10px);transform:scale(1.06)}
 .sheet-pics figcaption{margin-top:6px;font-size:var(--fs-xs);color:var(--concrete)}
 .sheet-info{padding:8px 16px 22px;display:grid;gap:16px;align-content:start;min-width:0}
-@media (min-width:900px){.sheet-info{padding:28px 32px;gap:18px;border-left:1px solid var(--line)}}
+@media (min-width:900px){.sheet-info{padding:28px 64px 28px 32px;gap:18px;border-left:1px solid var(--line)}}
 .sheet-back{justify-self:start;background:none;border:0;padding:6px 0;color:var(--concrete);font:inherit;font-size:var(--fs-ui);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 @media (min-width:900px){.sheet-back{display:none}}
 .sheet-eb{margin:0;font-size:var(--fs-2xs);letter-spacing:.18em;text-transform:uppercase;color:var(--concrete);font-weight:500}
@@ -540,7 +549,7 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .sheet-st .l span:first-child{color:var(--paper-3)}
 .sheet-st i{display:block;height:3px;background:rgba(240,236,225,.16);margin-top:4px;position:relative}
 .sheet-st i b{position:absolute;inset:0 auto 0 0;background:var(--acid)}
-body.paper .sheet .note{margin:0;color:var(--concrete)}
+.sheet .note{margin:0;color:var(--concrete)}
 .sheet blockquote{margin:0;font-size:var(--fs-md);line-height:1.45;font-weight:500;overflow-wrap:anywhere}
 .sheet blockquote span{display:block;margin-top:6px;font-size:var(--fs-sm);font-weight:400;color:var(--concrete)}
 @media (min-width:900px){.sheet blockquote{font-size:var(--fs-lg)}}
@@ -814,7 +823,7 @@ const BADGE_AT=5;         // số lượt tag để thành huy hiệu
 const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
-const S={evOpen:new Set(),db:null,user:null,assets:null,canEdit:false,canWrite:null,sel:null,
+const S={evOpen:new Set(),db:null,user:null,assets:null,canEdit:false,canWrite:null,sheetId:null,
   idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
@@ -951,6 +960,7 @@ function setTabs(v){
 }
 function render(){
   const r=route();setTabs(r.view);
+  if(r.view!=="lineup"){const d=document.getElementById("sdlg");if(d&&d.open){d._nav=true;d.close()}} // rời lineup thì đóng khung hồ sơ
   if(r.view==="book")return renderBook(r.id);
   if(r.view==="voucher")return renderVoucher(r.dow);
   if(r.view==="table")return renderTable(r.id);
@@ -1171,13 +1181,13 @@ function flyHTML(){
       ${promoHTML(n.dow,"on-dark")}
     </div>${art}`;
 }
-/* thẻ promoter: ảnh nhỏ, số hạng, tên, sao. đủ khách tối nay thì đóng dấu, không chọn được */
+/* thẻ promoter: ảnh nhỏ, số hạng, tên, sao. bấm thì mở khung hồ sơ. đủ khách tối nay thì đóng dấu, không bấm được */
 function cardHTML(r,td){
-  const i=r.idol,cid=coverId(i),ld=loadOf(td,i.id),fl=ld>=LOAD_MAX,sel=i.id===S.sel;
+  const i=r.idol,cid=coverId(i),ld=loadOf(td,i.id),fl=ld>=LOAD_MAX;
   const meta=(r.n?`★ ${fmt1(r.avg)} · hạng ${grade(r)}`:"chưa có hạng")+(ld&&!fl?` · <span class="nw">${loadTile(ld)}</span>`:"");
-  return `<button type="button" class="pc${fl?" full":""}" data-id="${esc(i.id)}" ${fl&&!sel?"disabled":""} aria-pressed="${sel}" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
+  return `<button type="button" class="pc${fl?" full":""}" data-id="${esc(i.id)}" ${fl?"disabled":""} aria-haspopup="dialog" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
     <span class="pc-ph">${SIL}${cid?`<img src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:""}<span class="pc-no">${r.rank?pad2(r.rank):"—"}</span>${fl?`<span class="pc-stamp"><b>fully booked</b></span>`:""}</span>
-    <span class="pc-name">${esc(i.stageName)}</span><span class="pc-meta">${meta}</span><span class="pc-sel" aria-hidden="true">ĐANG CHỌN</span></button>`;
+    <span class="pc-name">${esc(i.stageName)}</span><span class="pc-meta">${meta}</span></button>`;
 }
 /* ảnh 3 góc cho tờ hồ sơ.
    quản lý / bản chạy thử có đủ i.photos. khách chỉ có i.thumb (ảnh nhỏ của góc bìa) + ảnh to tải khi chọn người:
@@ -1220,7 +1230,7 @@ function sheetHTML(r,ghost){
   const eb=ghost?"ví dụ bố cục":`${r.rank?"#"+pad2(r.rank):"chưa có hạng"}${g!=="?"?" · hạng "+g:""}${i.team?" · team "+esc(i.team):""}`;
   return `<div class="sheet-pics${pics.length<=1?" one":""}" style="--n:${Math.max(1,pics.length)}">${(pics.length?pics:[{}]).map(x=>`<figure><div class="fr">${SIL}${x.src?`<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}</div>${x.l?`<figcaption>${x.l}</figcaption>`:""}</figure>`).join("")}</div>
     <div class="sheet-info">
-      ${ghost?"":`<button type="button" class="sheet-back" data-go="roster">↑ xem người khác</button>`}
+      ${ghost?"":`<button type="button" class="sheet-back" data-x>← xem người khác</button>`}
       <p class="sheet-eb">${eb}</p>
       <h3 class="sheet-name">${esc(i.stageName)}</h3>
       <dl class="sheet-dl">${dl.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
@@ -1306,27 +1316,23 @@ function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
   const empty=!loading&&!rows.length;
-  /* promoter đủ khách tối nay thì không chọn được (anh Minh 07/11): đang chọn người đã đủ thì chuyển sang người còn trống */
-  const tdy=todayStr();const isFull=id=>loadFull(tdy,id);
-  if(!rows.find(r=>r.idol.id===S.sel&&!isFull(r.idol.id))){const f=rows.find(r=>!isFull(r.idol.id))||rows[0];S.sel=f?f.idol.id:null}
-  const cur=rows.find(r=>r.idol.id===S.sel);
+  const tdy=todayStr();
   fetchTonight();
   app.innerHTML=`
   ${banner()}
   <section class="bleed fly" aria-label="tối nay ở blk46">${flyHTML()}</section>
   <section class="ros" id="roster" aria-label="chọn promoter">
     <div class="ros-head">
-      <div><h2>Chọn người takecare<br>cuộc chơi tối nay</h2><p>xếp theo sao khách chấm. mỗi promoter nhận tối đa ${LOAD_MAX} bàn đặt trước mỗi tối, đủ rồi thì đóng dấu.</p></div>
+      <div><h2>Chọn người takecare<br>cuộc chơi tối nay</h2><p>bấm vào thẻ để xem hồ sơ. xếp theo sao khách chấm. mỗi promoter nhận tối đa ${LOAD_MAX} bàn đặt trước mỗi tối, đủ rồi thì đóng dấu.</p></div>
       <div class="ros-per" role="group" aria-label="khoảng thời gian">
         <button type="button" class="sq" id="pMonth" aria-pressed="${S.period==="month"}">tháng này</button>
         <button type="button" class="sq" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
       </div>
     </div>
-    ${empty&&S.canEdit?`<div class="empty" style="margin-bottom:20px"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện. khối đen bên dưới là ví dụ bố cục, không phải người thật.</span></div>`:""}
+    ${empty&&S.canEdit?`<div class="empty" style="margin-bottom:20px"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện.</span></div>`:""}
     ${empty&&!S.canEdit?`<div class="empty"><b>lineup đang cập nhật.</b><span>gọi <a href="tel:${HOTLINE}">${HOTLINE_SHOW}</a> để đặt bàn.</span></div>`:""}
     ${rows.length?`<div class="cards${rows.length>6?" many":""}" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>`
       :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-name">&nbsp;</span></div>`).join("")}</div>`:""}
-    ${rows.length||(empty&&S.canEdit)?`<article class="bleed sheet" id="spot" aria-live="polite" aria-label="hồ sơ promoter đang chọn">${sheetHTML(cur,!cur)}</article>`:""}
     ${rows.length?`<p class="note grade-note">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>`:""}
   </section>
   ${eventsHTML()}`;
@@ -1342,30 +1348,60 @@ function renderLineup(){
     if(!on){const t=d.getBoundingClientRect().top;if(t<70)scrollBy(0,t-70)}});
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
-  const sheet=document.getElementById("spot");
-  const show=(id,anim)=>{
-    const r=rows.find(x=>x.idol.id===id);if(!r||!sheet)return;
-    sheet.innerHTML=sheetHTML(r,false);
-    if(anim){sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim")}
-  };
-  S.reshowSpot=id=>{if(S.sel===id&&sheet&&sheet.isConnected)show(id,false)};
-  /* bấm thẻ: chọn người đó, tờ hồ sơ cuộn vào tầm mắt nếu đang khuất (điện thoại). bấm lại thẻ đang chọn trên máy tính = sang đặt bàn */
+  /* bấm thẻ (hoặc Enter, Space): mở khung hồ sơ. phím mũi tên chỉ dời ô đang chọn */
   const cards=[...app.querySelectorAll(".pc[data-id]:not([disabled])")];
-  const toSheet=()=>{if(!sheet)return;const t=sheet.getBoundingClientRect().top;if(t>innerHeight-120||t<0)sheet.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
-  const pick=(b,focus)=>{
-    if(S.sel!==b.dataset.id){S.sel=b.dataset.id;cards.forEach(x=>x.setAttribute("aria-pressed",x===b));show(S.sel,true)}
-    if(focus)b.focus();
-  };
   cards.forEach((b,k)=>{
-    b.onclick=()=>{if(S.sel===b.dataset.id&&matchMedia("(hover:hover)").matches){location.hash="book-"+b.dataset.id;return}pick(b);toSheet()};
+    b.onclick=()=>openSheet(b.dataset.id,rows);
     b.onkeydown=e=>{
       const cols=Math.max(1,Math.round(b.parentElement.clientWidth/b.offsetWidth));
       const d={ArrowRight:1,ArrowLeft:-1,ArrowDown:cols,ArrowUp:-cols}[e.key];
-      if(d){e.preventDefault();const n=cards[Math.min(cards.length-1,Math.max(0,k+d))];pick(n,true)}
-      if(e.key==="Enter"){e.preventDefault();location.hash="book-"+b.dataset.id}
+      if(d){e.preventDefault();cards[Math.min(cards.length-1,Math.max(0,k+d))].focus()}
     };
   });
+  reshowSheet(rows);
 }
+/* ---------- khung hồ sơ promoter (anh Minh 10/11) ----------
+   khung nổi đè lên lineup, lineup đứng yên ở chỗ đang cuộn. đóng bằng ×, "← xem người khác", bấm ra ngoài, Esc,
+   hoặc nút back / vuốt lùi trên điện thoại (khung thêm một bước vào lịch sử trình duyệt nên back chỉ đóng khung, không rời trang).
+   bấm "đặt bàn" trong khung: thay bước đó bằng trang đặt bàn, để back từ đặt bàn về thẳng lineup. */
+function sheetDialog(){
+  let d=document.getElementById("sdlg");if(d)return d;
+  d=document.createElement("dialog");d.id="sdlg";d.className="sdlg";document.body.append(d);
+  d.addEventListener("click",e=>{
+    if(e.target===d||e.target.closest("[data-x]")){d.close();return}
+    const a=e.target.closest("a[href^='#']");if(!a)return;
+    e.preventDefault();const h=a.getAttribute("href"),own=history.state&&history.state.sdlg;
+    d._nav=true;d.close();if(own)location.replace(h);else location.hash=h;
+  });
+  d.addEventListener("close",()=>{
+    document.documentElement.classList.remove("sdlg-on");
+    const id=S.sheetId;S.sheetId=null;
+    if(!d._nav){
+      const c=id&&app.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(c)c.focus({preventScroll:true});
+      if(history.state&&history.state.sdlg)history.back();
+    }
+    d._nav=false;
+  });
+  addEventListener("popstate",()=>{if(d.open)d.close()});
+  return d;
+}
+function openSheet(id,rows){
+  const r=(rows||computeBoard()).find(x=>x.idol.id===id);if(!r)return;
+  const d=sheetDialog();S.sheetId=id;
+  d.setAttribute("aria-label",`hồ sơ ${r.idol.stageName}`);
+  d.innerHTML=`<button type="button" class="sdlg-x" data-x aria-label="đóng hồ sơ">×</button><article class="sheet anim">${sheetHTML(r,false)}</article>`;
+  if(d.open)return;
+  d.showModal();document.documentElement.classList.add("sdlg-on");
+  if(!(history.state&&history.state.sdlg))history.pushState({sdlg:id},"");
+}
+/* dữ liệu mới về khi khung đang mở (ảnh to, lượt chấm, số bàn): vẽ lại tờ hồ sơ, giữ chỗ đang cuộn */
+function reshowSheet(rows){
+  const d=document.getElementById("sdlg");if(!d||!d.open||!S.sheetId)return;
+  const r=(rows||computeBoard()).find(x=>x.idol.id===S.sheetId),a=d.querySelector(".sheet");
+  if(!r||!a){d.close();return}
+  const y=a.scrollTop;a.classList.remove("anim");a.innerHTML=sheetHTML(r,false);a.scrollTop=y;
+}
+S.reshowSpot=id=>{if(id===S.sheetId)reshowSheet()};
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
 /* nút "giữ bàn đêm này" ở lịch event: nhớ ngày đó, form đặt bàn điền sẵn ngày */
 document.addEventListener("click",e=>{const p=e.target.closest&&e.target.closest("[data-pst]");if(p){e.preventDefault();openPoster(p.dataset.pst);return}
