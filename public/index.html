@@ -563,7 +563,8 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
 .evs{padding-block:40px 56px;scroll-margin-top:64px;border-top:3px solid var(--ink)}
 @media (min-width:900px){.evs{padding-block:56px 72px}}
 .evs-head{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
-.evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,6vw,76px);line-height:1.3;text-transform:uppercase}
+/* "sự kiện tháng 11 ở blk46" luôn 1 dòng (anh Minh 10/11): cỡ chữ theo bề rộng màn, chữ rộng ~9,6 lần cỡ chữ */
+.evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(24px,calc((100vw - 32px) / 10),76px);line-height:1.3;text-transform:uppercase;white-space:nowrap}
 .evs-head p{margin:8px 0 0;color:var(--muted-p);max-width:56ch;font-size:var(--fs-body)}
 @media (min-width:900px){.evs-head{margin-bottom:28px}.evs-head p{font-size:var(--fs-lead)}}
 /* mỗi thứ một khung. điện thoại: các khung xếp dọc. máy tính (từ 900px): mỗi lần một khung, bấm mũi tên để đổi */
@@ -647,13 +648,6 @@ body.paper .tk .fields.vf>*{grid-column:auto}
 .cta.cta-line{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
 @media (min-width:700px){.tk-ev{padding:12px 20px;font-size:var(--fs-lg)}}
 
-/* đặt bàn thế nào: 3 bước */
-.how{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding-block:8px 48px}
-.how>div{border-top:3px solid var(--ink);padding-top:12px;display:flex;gap:16px}
-.how .n{margin:0;font-family:var(--display);font-size:var(--fs-d-l);line-height:1;color:var(--ink)}
-.how h3{margin:2px 0 4px;font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);letter-spacing:.03em}
-.how p{margin:0;color:var(--muted-p);font-size:var(--fs-body)}
-@media (min-width:700px){.how{grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;padding-bottom:64px}.how>div{display:block;padding-top:14px}.how .n{font-size:var(--fs-d-xl)}.how h3{margin-top:8px;font-size:var(--fs-xl)}.how p{font-size:var(--fs-lead)}}
 
 /* đặt bàn: tờ vé */
 .tk{border:3px solid var(--ink);background:var(--sheet);margin-top:8px;min-width:0}
@@ -1239,13 +1233,6 @@ function sheetHTML(r,ghost){
         :`${night?`<p class="sheet-load">tối nay còn ${LOAD_MAX-ld} chỗ đặt trước</p>`:""}<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`}
     </div>`;
 }
-function howHTML(){
-  const hm=m=>`${Math.floor(m/60)}h${pad2(m%60)}`;
-  return [["CHỌN ĐÊM","chọn đêm muốn tới. muốn có promoter đi cùng thì chọn thêm, không bắt buộc."],
-    ["GỬI YÊU CẦU","điền tên, số điện thoại, giờ tới. quản lý gọi lại xác nhận bàn từ 17h."],
-    ["TỚI QUÁN",`quán giữ bàn đến ${hm(HOLD_CUTOFF_MIN)}. hẹn muộn hơn thì giữ thêm ${HOLD_LATE_MIN} phút sau giờ hẹn.`]]
-    .map(([h,p],k)=>`<div><p class="n">${k+1}</p><div><h3>${h}</h3><p>${p}</p></div></div>`).join("");
-}
 /* lịch event gom theo thứ trong tuần (anh Minh 09/11): mỗi thứ một khung */
 const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const DAY_ORDER=[1,2,3,4,5,6,0]; // thứ 2 → chủ nhật
@@ -1300,7 +1287,7 @@ function eventsHTML(){
   const n=nightInfo(),live=n.state!=="closed";
   const up=groups.flatMap(g=>g.list);
   const months=[...new Set(up.map(e=>+e.date.slice(5,7)))];
-  const head=months.length===1?`Tháng ${months[0]}<br>ở blk46`:`Sắp tới<br>ở blk46`;
+  const head=months.length===1?`Sự kiện tháng ${months[0]} ở BLK46`:`Sự kiện sắp tới ở BLK46`; // 1 dòng cả máy tính và điện thoại (anh Minh 10/11)
   /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
   let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
   return `<section class="evs" id="events" aria-label="lịch event">
@@ -1342,7 +1329,6 @@ function renderLineup(){
     ${rows.length||(empty&&S.canEdit)?`<article class="bleed sheet" id="spot" aria-live="polite" aria-label="hồ sơ promoter đang chọn">${sheetHTML(cur,!cur)}</article>`:""}
     ${rows.length?`<p class="note grade-note">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>`:""}
   </section>
-  <section class="how" aria-label="đặt bàn thế nào">${howHTML()}</section>
   ${eventsHTML()}`;
   /* mũi tên đổi thứ (chỉ hiện trên máy tính), vòng tròn: chủ nhật → thứ 5 */
   const evDays=[...app.querySelectorAll(".ev-day")],evNow=document.getElementById("evNow");

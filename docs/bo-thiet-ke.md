@@ -81,7 +81,7 @@ Từ 10/11, 32 chỗ cỡ chữ lẻ đã được gom vào thang. Những chỗ
 |---|---|---|
 | Tên thứ trong lịch | 40px | 44px |
 | Tên promoter trên thẻ, máy tính | 26px | 28px |
-| Nút gửi và tiêu đề 3 bước, điện thoại | 21px | 22px |
+| Nút gửi đặt bàn, điện thoại | 21px | 22px |
 | Chữ "promoter" cạnh logo, điện thoại | 19px | 18px |
 | Nút "đổi người" | 17px | 18px |
 | Ô mã bàn trên tablet | 40px | 44px |
