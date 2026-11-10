@@ -92,11 +92,14 @@ Ngoài ra còn vài chỗ chỉ lệch 1px hoặc chỉ nằm trong trang quản
 
 Bóng dùng kiểu tem dán: `box-shadow:var(--hard) <màu>` (5px), còn khi bấm thì dùng `var(--hard-press)` (3px).
 
+`--hard-lg` (10px) chỉ dùng cho tấm poster dán trên tờ flyer đầu trang lineup.
+
 ## Nút
 
 | Class | Vai trò |
 |---|---|
-| `.btn-acid` | Hành động chính lớn (ĐẶT BÀN, GIỮ BÀN). Một màn chỉ có một nút này. |
+| `.btn-acid` | Hành động chính lớn trên nền đen và nền giấy (ĐẶT BÀN, GIỮ BÀN). Một màn chỉ có một nút này. |
+| `.btn-ink` | Hành động chính trên tờ flyer vàng: nút đen chữ vàng, vì nút vàng chìm trên nền vàng. |
 | `button.btn-line`, `a.btn-line` | Hành động phụ đặt cạnh nút chính |
 | `.cta` | Hành động chính nhỏ (form, quản lý) |
 | `.cta.cta-line` | Hành động phụ nhỏ |
@@ -104,15 +107,32 @@ Bóng dùng kiểu tem dán: `box-shadow:var(--hard) <màu>` (5px), còn khi b�
 | `.chip` | Lọc, chọn một trong nhiều |
 | `.tqb`, `.bsal` | Chọn nhanh trong vé đặt bàn |
 | `.promo-go` | Nút trong ô ưu đãi |
-| `.ev-mp` | Tem vàng "XEM POSTER LỊCH THÁNG 11" |
+| `.wk-n` | Ô đêm trong dải tuần. Đêm đang chọn có nền vàng (`aria-pressed="true"`). |
+| `.sq` | Chọn một trong vài mục liền nhau: tuần trong dải đêm, "tháng này / từ đầu" ở lineup. |
+| `.wk-mp` | Link "xem poster lịch tháng 11" dưới dải đêm |
 | `.pill`, `.tag` | Trạng thái và nhãn, không bấm được |
 | `footer.foot .soc a` | Ô mạng xã hội 52px |
 
 Từ PR sửa theo bản soi (10/11):
 
 - Trên trang khách (nền giấy), `.cta` mang cùng kiểu với `.btn-acid`. Nút gửi trong vé vẫn là nút đen chữ vàng. Trang quản lý giữ `.cta` nhỏ.
-- `.ev-mp` (poster lịch tháng) hạ xuống thành nút viền đen, không còn tem vàng nổi.
 - Vùng bấm được nới bằng lớp `::after` vô hình. Bàn trên sơ đồ nới theo khoảng trống giữa các bàn (`.tspot.k-*`), được khoảng 43–63px, riêng SV2 và SV4 rộng 32px.
+
+## Trang lineup: tờ flyer vàng (từ 10/11)
+
+Trang lineup không còn nền giấy. Từ trên xuống có ba khối:
+
+| Khối | Class | Ghi chú |
+|---|---|---|
+| Tờ flyer | `.fly` | Nền vàng acid tràn hết bề ngang, chữ đen. Đây là cặp màu "yellow canvas" trong guideline. Hiện đêm đang chọn: tên đêm, cuống vé `.fly-row`, nút `.btn-ink`, ô ưu đãi `.promo`. |
+| Dải đêm | `.wk` | Nền đen, mỗi tuần 4 ô `.wk-n`. Bấm một ô thì tờ flyer đổi sang đêm đó và nút chính thành GIỮ BÀN ĐÊM NÀY. |
+| Lineup | `.ros` | Nền đen, thẻ ảnh `.pc` nền giấy dán băng keo vàng, hơi nghiêng. Thẻ hạng 1 nền vàng (`.pc.top`), thẻ kín bàn nền tối có dấu (`.pc.full`). Dưới 700px các thẻ xếp một hàng vuốt ngang. |
+
+Tên đêm (`.fly-dj`) không dùng token cỡ chữ. JS tính bề rộng dòng dài nhất khi ngắt tên làm 2 dòng (`flyFit`, theo bảng bề rộng chữ Anton `AW`) rồi ghi vào `--f`. CSS chia bề rộng cột cho `--f`, nên tên nào cũng vừa 2 dòng. Trần là 132px trên điện thoại và 168px trên máy tính.
+
+Tấm poster bên phải tờ flyer (`.fly-art`) chỉ vẽ từ 1024px. Dưới mức đó JS không tạo thẻ ảnh, nên điện thoại không tải file poster.
+
+Mũi tên và ống nghe là hình vẽ SVG (`ICO_ARW`, `ICO_TEL`), không dùng ký tự mũi tên.
 
 ## Khung nổi
 
@@ -124,7 +144,7 @@ Từ PR sửa theo bản soi (10/11):
 ## Luật
 
 1. Không gõ mã màu hay cỡ chữ mới. Lấy token trong `:root`; thiếu thì thêm token có chú thích rồi mới dùng.
-2. Vàng acid dành cho hành động chính. Một màn có một nút vàng là đủ.
+2. Vàng acid dành cho hành động chính, hoặc làm nền cả tờ flyer đầu trang lineup. Một màn có một nút chính: nút vàng trên nền đen và nền giấy, nút đen trên nền vàng.
 3. Vùng bấm trên điện thoại tối thiểu 44 × 44px.
 4. Link nằm trong câu thì gạch chân. Số điện thoại thì không gạch.
 5. Chữ thân viết thường, tiêu đề in hoa, không dùng dấu chấm than.
