@@ -1851,7 +1851,7 @@ function tableSelect(id,cur,exceptId,optional,date){
   if(!list.length)return `<span class="pill warn">chưa có danh sách bàn</span>`;
   const opt=t=>`<option value="${esc(t)}" ${t===c?"selected":""} ${busy.has(t)&&t!==c?"disabled":""}>${esc(t)}${busy.has(t)&&t!==c?(now.has(t)?" · đang có khách":" · đã có khách đặt"):""}</option>`;
   const groups=[];list.forEach(t=>{const z=tableZone(t);let g=groups.find(x=>x[0]===z);if(!g)groups.push(g=[z,[]]);g[1].push(t)});
-  return `<select id="${id}" class="tsel"><option value="">${optional?"chưa xếp bàn":"chọn bàn"}</option>${groups.map(([z,ts])=>`<optgroup label="${esc(z)}">${ts.map(opt).join("")}</optgroup>`).join("")}</select>`;
+  return `<select id="${esc(id)}" class="tsel"><option value="">${optional?"chưa xếp bàn":"chọn bàn"}</option>${groups.map(([z,ts])=>`<optgroup label="${esc(z)}">${ts.map(opt).join("")}</optgroup>`).join("")}</select>`;
 }
 const STATUS={requested:["chờ xác nhận","warn"],confirmed:["đã xác nhận",""],seated:["đang ngồi",""],cancelled:["đã huỷ","off"]};
 function adminBookings(p){
