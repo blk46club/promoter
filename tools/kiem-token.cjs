@@ -4,8 +4,8 @@
 // Chạy: node tools/kiem-token.cjs   (không cần cài gì)
 const fs = require("fs"), path = require("path");
 const FILE = path.join(__dirname, "..", "public", "index.html");
-// cỡ chữ px ngoài thang còn lại ngày 09/11/2026. gom bớt được thì hạ số này xuống, đừng nâng lên.
-const FS_LEFT_MAX = 32;
+// từ 10/11/2026 mọi cỡ chữ px đều lấy từ thang (--fs-*, --fs-d-*). tiêu đề lớn dùng clamp().
+const FS_LEFT_MAX = 0;
 
 const html = fs.readFileSync(FILE, "utf8");
 const a = html.indexOf("<style>"), b = html.indexOf("</style>");

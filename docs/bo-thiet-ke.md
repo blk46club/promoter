@@ -62,9 +62,31 @@ Hai chỗ web đang lệch guideline:
 | `--fs-xl` | 24px | |
 | `--fs-2xl` | 28px | |
 
-Tiêu đề display dùng `clamp()` theo bề rộng màn hình, không cần token.
+Cỡ chữ display (Anton) cho số, tên đêm và tiêu đề khối:
 
-Còn 32 chỗ gõ cỡ chữ ngoài thang: 10, 17, 19, 21, 22, 26, 30, 36, 40, 44, 56, 64 và 84px. Em chưa gom các chỗ này vì gom sẽ làm chữ to hoặc nhỏ đi 1–2px. Việc đó cần ảnh xem trước. Máy kiểm chặn không cho con số 32 tăng thêm.
+| Token | Cỡ | Dùng cho |
+|---|---|---|
+| `--fs-d-xs` | 22px | Tên trong thẻ, ô ưu đãi, nút gửi |
+| `--fs-d-s` | 30px | Số liệu hồ sơ, tiêu đề bước |
+| `--fs-d-m` | 36px | Ngày trong lịch |
+| `--fs-d-l` | 44px | Tên thứ, số bước, sao chấm |
+| `--fs-d-xl` | 56px | Số hạng, số bước trên máy tính |
+| `--fs-d-2xl` | 84px | Điểm sao lớn trên hồ sơ |
+
+Tiêu đề lớn dùng `clamp()` theo bề rộng màn hình, không cần token.
+
+Từ 10/11, 32 chỗ cỡ chữ lẻ đã được gom vào thang. Những chỗ đổi cỡ thấy được:
+
+| Chỗ | Trước | Sau |
+|---|---|---|
+| Tên thứ trong lịch | 40px | 44px |
+| Tên promoter trên thẻ, máy tính | 26px | 28px |
+| Nút gửi và tiêu đề 3 bước, điện thoại | 21px | 22px |
+| Chữ "promoter" cạnh logo, điện thoại | 19px | 18px |
+| Nút "đổi người" | 17px | 18px |
+| Ô mã bàn trên tablet | 40px | 44px |
+
+Ngoài ra còn vài chỗ chỉ lệch 1px hoặc chỉ nằm trong trang quản lý: 10→11, 17→18, 64→56. Máy kiểm sẽ báo đỏ nếu có ai gõ cỡ chữ px mới.
 
 ## Bóng
 
