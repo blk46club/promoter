@@ -78,13 +78,29 @@ body.paper .g-item>small code{color:var(--ink)}
       <div class="g-item"><footer class="foot" style="border:0;margin:0;padding:0"><nav class="soc" style="margin:0"><a href="#nut-toi" aria-label="ví dụ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg></a></nav></footer><small><code>footer.foot .soc a</code> ô mạng xã hội 52px.</small></div>
     </div>
     <div class="g-row" style="margin-top:22px">
-      <div class="g-item" style="max-width:560px"><div class="promo on-dark"><p class="promo-t">LADIES SPECIAL</p><p class="promo-l">ví dụ ô ưu đãi trên nền đen.</p><div class="promo-r"><a class="promo-go" href="#nut-toi">NHẬN VOUCHER</a><span>trước 22h45</span></div></div><small><code>.promo.on-dark</code> ô ưu đãi, nút <code>.promo-go</code> đen chữ vàng.</small></div>
+      <div class="g-item" style="width:min(560px,100%)"><div class="wk" style="box-shadow:none;clip-path:none"><div class="wk-row" style="--n:2;margin-inline:0"><button type="button" class="wk-n" aria-pressed="true"><span class="wk-d"><b>12.11</b><span>THỨ 5 · TỐI NAY</span></span><span class="wk-t">LADIES NIGHT</span><span class="wk-x">21.00 – 3.00 · ladies special</span></button><button type="button" class="wk-n" aria-pressed="false"><span class="wk-d"><b>13.11</b><span>THỨ 6</span></span><span class="wk-t">WALK OF FAME</span><span class="wk-x">21.00 – 4.00 · có poster</span></button></div><div class="wk-foot"><div class="wk-weeks"><button type="button" class="sq" aria-pressed="true">TUẦN NÀY · 12–15.11</button><button type="button" class="sq" aria-pressed="false">19–22.11</button></div><p class="wk-hint"><button type="button" class="wk-mp">xem poster lịch tháng 11</button></p></div></div><small><code>.wk-n</code> ô đêm trong dải tuần: đêm đang chọn nền vàng, dính liền tờ flyer phía trên. <code>.sq</code> chọn tuần. <code>.wk-mp</code> link poster lịch tháng.</small></div>
+    </div>
+  </section>
+
+  <section class="g-sec" id="nut-vang">
+    <style>#nut-vang .fly code{color:inherit;background:none}</style>
+    <h2>Trên tờ flyer vàng</h2>
+    <p>đầu trang lineup (.fly): nền vàng acid, chữ đen. trên nền vàng thì nút chính là nút đen chữ vàng, vì nút vàng chìm mất.</p>
+    <div class="fly" style="display:block;padding:20px;box-shadow:none;clip-path:none">
+      <div class="g-row">
+        <div class="g-item"><button class="btn-ink" style="flex:none">ĐẶT BÀN TỐI NAY</button><small style="color:var(--ink)"><code>.btn-ink</code> hành động chính trên nền vàng. một màn một nút.</small></div>
+        <div class="g-item"><button class="btn-line">CHỌN PROMOTER</button><small style="color:var(--ink)"><code>.fly .btn-line</code> hành động phụ, viền đen.</small></div>
+        <div class="g-item"><div class="fly-row" style="font-size:var(--fs-lead)"><p>21.00 – 3.00</p><p>THỨ 5 · 12.11</p><p>TẦNG 1, 46 MÃ MÂY</p></div><small style="color:var(--ink)"><code>.fly-row</code> cuống vé: giờ, ngày, địa chỉ, ngăn bằng nét đứt.</small></div>
+      </div>
+      <div class="g-row" style="margin-top:14px">
+        <div class="g-item" style="max-width:560px"><div class="promo"><div class="promo-m"><p class="promo-t">LADIES SPECIAL · MỖI THỨ 5</p><p class="promo-l">ví dụ ô ưu đãi trên tờ flyer.</p></div><div class="promo-r"><a class="promo-go" href="#nut-vang">NHẬN VOUCHER</a><button type="button" class="promo-pst">xem poster</button></div></div><small style="color:var(--ink)"><code>.promo</code> ô giấy viền đen, bóng tem 5px. nút <code>.promo-go</code> đen chữ vàng.</small></div>
+      </div>
     </div>
   </section>
 
   <section class="g-sec" id="nut-giay">
     <h2>Trên nền giấy</h2>
-    <p>lineup, đặt bàn, voucher (body.paper). khung dưới chạy trong trang riêng để giữ đúng nền giấy.</p>
+    <p>đặt bàn, voucher (body.paper). lineup từ PR tờ flyer vàng không còn nền giấy. khung dưới chạy trong trang riêng để giữ đúng nền giấy.</p>
     <iframe class="g-paper" id="paper" title="mẫu trên nền giấy"></iframe>
   </section>
 
@@ -92,7 +108,7 @@ body.paper .g-item>small code{color:var(--ink)}
     <h2>Luật ngắn</h2>
     <ol class="g-rules">
       <li>không gõ mã màu hay cỡ chữ mới. lấy token trong :root, thiếu thì thêm token rồi mới dùng.</li>
-      <li>vàng acid dành cho hành động chính. một màn một nút vàng là đủ.</li>
+      <li>vàng acid dành cho hành động chính, hoặc làm nền cả tờ flyer đầu trang lineup. một màn một nút chính: nút vàng trên nền đen, nút đen trên nền vàng.</li>
       <li>vùng bấm tối thiểu 44 × 44px trên điện thoại.</li>
       <li>link nằm trong câu thì gạch chân. số điện thoại không gạch.</li>
       <li>chữ thân viết thường. tiêu đề in hoa, không dấu chấm than.</li>
@@ -108,10 +124,6 @@ body.paper .g-item>small code{color:var(--ink)}
       <div class="g-item"><button class="cta">gửi yêu cầu</button><small><code>.cta</code></small></div>
       <div class="g-item"><button class="cta cta-line">đăng ký cho người khác</button><small><code>.cta.cta-line</code></small></div>
       <div class="g-item"><button class="ghostbtn">xem thêm</button><small><code>.ghostbtn</code> trên giấy: viền đen 2px.</small></div>
-      <div class="g-item"><a class="ev-mp" href="#">XEM POSTER LỊCH THÁNG 11</a><small><code>.ev-mp</code> tem vàng có bóng. đang dùng cho việc phụ (xem bản soi).</small></div>
-    </div>
-    <div class="g-row" style="margin-top:22px">
-      <div class="g-item" style="max-width:520px"><div class="promo"><p class="promo-t">FREE BEER</p><p class="promo-l">ví dụ ô ưu đãi trong khung thứ trên giấy.</p><div class="promo-r"><a class="promo-go" href="#">NHẬN BIA</a><button type="button" class="promo-pst">xem poster</button></div></div><small><code>.promo</code> trên giấy: ô đen chữ vàng.</small></div>
     </div>
     <div class="g-row" style="margin-top:22px">
       <div class="g-item" style="width:min(520px,100%)">

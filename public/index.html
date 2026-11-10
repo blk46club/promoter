@@ -85,6 +85,7 @@
   /* bóng cứng kiểu tem dán: box-shadow:var(--hard) <màu> */
   --hard:5px 5px 0;
   --hard-press:3px 3px 0;
+  --hard-lg:10px 10px 0; /* bóng của poster dán trên tờ flyer vàng */
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -395,8 +396,6 @@ body.paper::after{mix-blend-mode:multiply;opacity:.07;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
 body.paper header.top{color:var(--paper)}
 body.paper #app :focus-visible{outline-color:var(--ink)}
-body.paper #app .bleed :focus-visible{outline-color:var(--acid)}
-.bleed{position:relative;background:var(--ink);color:var(--paper);box-shadow:0 0 0 100vmax var(--ink);clip-path:inset(0 -100vmax)}
 body.paper footer.foot{background:var(--ink);color:var(--paper);border-top:0;margin-top:0}
 body.paper .banner{border-color:var(--ink);color:var(--muted-p)}
 body.paper .banner[data-kind="warn"]{border:0;background:var(--acid);color:var(--ink)}
@@ -417,54 +416,75 @@ body.v-lineup .hbook{display:inline-flex}
 .hbook:hover{background:var(--paper)}
 @media (max-width:699px){nav.tabs a.hx{display:none}body.v-lineup nav.tabs a[data-tab="lineup"]{display:none}}
 
-/* tờ rơi đầu trang */
-.fly{display:grid;grid-template-columns:minmax(0,1fr);gap:40px;padding-block:28px 44px}
-@media (min-width:900px){.fly{padding-block:56px 72px;grid-template-columns:minmax(0,7fr) minmax(0,5fr);align-items:center;gap:48px}}
-.fly-main{display:grid;gap:18px;min-width:0}
-@media (min-width:900px){.fly-main{gap:22px}}
-.fly-pre{margin:0;font-family:var(--display);font-size:var(--fs-body);letter-spacing:.22em;color:var(--concrete)}
-.fly-dj{margin:-8px 0 0;font-family:var(--display);font-weight:400;font-size:clamp(64px,10vw,132px);line-height:1.05;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance}
-.fly-dj.long{font-size:clamp(44px,6.5vw,92px)}
-.fly-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-block:2px solid var(--paper)}
-.fly-row p{margin:0;padding:10px 0;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.04em;min-width:0}
-.fly-row p:nth-child(2){border-left:2px solid var(--paper);padding-left:12px}
-.fly-row p:nth-child(3){grid-column:1/-1;border-top:2px solid var(--paper)}
-@media (min-width:700px){
-  .fly-row{grid-template-columns:auto auto minmax(0,1fr)}
-  .fly-row p{font-size:var(--fs-xl);padding:12px 16px}
-  .fly-row p:first-child{padding-left:0}
-  .fly-row p:nth-child(3){grid-column:auto;border-top:0;border-left:2px solid var(--paper)}
-}
-.fly-state{margin:0;display:flex;align-items:center;gap:10px;font-size:var(--fs-body);font-weight:700;color:var(--acid)}
+/* tờ rơi đầu trang, hướng "tờ flyer vàng" (anh Minh chọn 10/11): nền vàng, chữ đen, tràn hết bề ngang.
+   nội dung theo đêm đang chọn ở dải tuần ngay bên dưới (mặc định là đêm đang nói tới) */
+.fly{position:relative;background:var(--acid);color:var(--ink);box-shadow:0 0 0 100vmax var(--acid);clip-path:inset(0 -100vmax);display:grid;grid-template-columns:minmax(0,1fr);gap:40px;padding-block:20px 28px;scroll-margin-top:64px}
+.fly :focus-visible{outline-color:var(--ink)}
+.fly ::selection{background:var(--ink);color:var(--acid)}
+@media (min-width:1024px){.fly{--art:min(392px,32vw);--gap:clamp(32px,5vw,64px);padding-block:32px 44px;grid-template-columns:minmax(0,1fr) var(--art);align-items:center;gap:var(--gap)}}
+.fly-main{display:grid;gap:14px;min-width:0}
+@media (min-width:900px){.fly-main{gap:20px}}
+.fly-pre{margin:0;font-family:var(--display);font-size:var(--fs-body);letter-spacing:.22em}
+/* tên đêm: to hết cỡ mà vẫn vừa 2 dòng. --f do JS ghi (flyFit) = bề rộng dòng dài nhất, tính theo cỡ chữ.
+   từ 900px còn chặn theo bề rộng và chiều cao màn để nút đặt bàn không tụt khỏi màn đầu. tên có dấu thì dãn dòng ra */
+.fly-dj{margin:0;font-family:var(--display);font-weight:400;font-size:min(132px,calc((100vw - 32px) / var(--f,4)));line-height:1;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance}
+.fly-dj.vn{line-height:1.22}
+@media (min-width:1024px){.fly-dj{font-size:min(168px,14vw,var(--cap,19vh),calc((min(100vw,1180px) - 32px - var(--art) - var(--gap)) / var(--f,4)))}.fly-dj.vn{--cap:16vh}}
+/* cuống vé: giờ, ngày, địa chỉ trên dải đen, ngăn bằng nét đứt */
+.fly-row{display:flex;flex-wrap:wrap;background:var(--ink);color:var(--paper);font-family:var(--display);font-size:var(--fs-lead);letter-spacing:.02em}
+.fly-row p{margin:0;padding:10px;flex:1 1 auto;white-space:nowrap;border-right:2px dashed var(--acid)}
+.fly-row p:last-child{border-right:0}
+.fly-row .yr{display:none}
+@media (min-width:900px){.fly-row{justify-self:start;font-size:var(--fs-xl)}.fly-row p{padding:10px 24px}.fly-row .yr{display:inline}}
+@media (min-width:1024px) and (max-width:1179px){.fly-row p{padding:10px 16px}.fly-row .yr{display:none}}
+.fly-state{margin:0;display:flex;align-items:center;gap:10px;font-size:var(--fs-body);font-weight:700}
 .fly-state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
-.fly-state.off{color:var(--concrete)}
-.fly-lede{margin:0;font-size:var(--fs-md);max-width:46ch;color:var(--paper-2)}
-@media (min-width:900px){.fly-pre{font-size:var(--fs-md)}.fly-lede{font-size:var(--fs-md)}}
-.fly-btns{display:flex;gap:12px 12px;flex-wrap:wrap;align-items:center}
+.fly-lede{margin:0;font-size:var(--fs-md);max-width:46ch}
+@media (min-width:900px){.fly-pre{font-size:var(--fs-md)}}
+.fly-btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+/* nút chính trên nền vàng: đen chữ vàng (trên nền vàng thì nút vàng chìm mất) */
+.btn-ink{display:inline-flex;align-items:center;justify-content:center;gap:12px;flex:1 1 100%;background:var(--ink);color:var(--acid);border:0;text-decoration:none;font-family:var(--display);font-size:var(--fs-d-xs);letter-spacing:.06em;padding:0 24px;min-height:56px;cursor:pointer}
+.btn-ink:hover{background:var(--paper);color:var(--ink)}
+.btn-ink svg{flex:none}
 .btn-acid{display:inline-flex;align-items:center;justify-content:center;background:var(--acid);color:var(--ink);border:0;text-decoration:none;font-family:var(--display);font-size:var(--fs-md);letter-spacing:.06em;padding:0 24px;min-height:50px;cursor:pointer}
 .btn-acid:hover{background:var(--paper)}
 .btn-line{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--paper);color:var(--paper);text-decoration:none;font-weight:500;padding:0 18px;min-height:50px}
 .btn-line:hover{background:var(--paper);color:var(--ink)}
 button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md);font-weight:400;letter-spacing:.06em;cursor:pointer}
-.fly-call{color:var(--paper);font-weight:500;text-underline-offset:4px;padding-block:12px}
-.fly-call:hover{color:var(--acid)}
-@media (max-width:699px){.fly-btns .btn-acid,.fly-btns button.btn-line{flex:1 1 auto}}
-.fly-art{position:relative;padding:18px 18px 40px;width:100%;max-width:440px;justify-self:center}
-.fly-art .pic{aspect-ratio:4/5;background:var(--frame);transform:rotate(1.5deg);overflow:hidden;position:relative}
+.fly .btn-line{flex:1.3 1 0;border-color:var(--ink);color:var(--ink);font-size:var(--fs-lead);padding:0 8px;min-height:44px}
+.fly .btn-line:hover{background:var(--ink);color:var(--acid)}
+/* xem menu và gọi: điện thoại là 2 ô viền (ô gọi chỉ có hình ống nghe), máy tính là chữ */
+.fly-call{display:inline-flex;align-items:center;justify-content:center;flex:1 1 0;min-height:44px;border:2px solid var(--ink);color:var(--ink);font-size:var(--fs-ui);font-weight:500;text-decoration:none;padding:0 8px}
+.fly-call:hover{background:var(--ink);color:var(--acid)}
+.fly-call.tel{flex:0 0 48px;padding:0}
+.fly-call.tel span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.fly-links{display:contents}
+@media (min-width:700px){
+  .btn-ink{flex:0 0 auto;padding:0 20px}
+  .fly .btn-line{flex:0 0 auto;font-size:var(--fs-d-xs);padding:0 16px;min-height:52px}
+  .fly-call{flex:0 0 auto;border:0;padding:0;font-size:var(--fs-body);text-decoration:underline;text-underline-offset:4px}
+  .fly-call:hover{background:none;color:var(--ink);text-decoration-thickness:2px}
+  .fly-call.tel{flex:0 0 auto;text-decoration:none}
+  .fly-call.tel span{position:static;width:auto;height:auto;clip-path:none}
+  .fly-call.tel svg{display:none}
+  .fly-links{display:inline-flex;align-items:center;gap:18px;margin-left:4px}
+}
+/* poster dán bên phải tờ rơi: chỉ có từ 1024px (điện thoại không vẽ, nên không tải ảnh) */
+.fly-art{position:relative;padding:18px 18px 0;width:100%;max-width:392px;justify-self:center}
+.fly-art .pic{aspect-ratio:4/5;background:var(--frame);transform:rotate(2.5deg);overflow:hidden;position:relative;box-shadow:var(--hard-lg) var(--ink)}
 .fly-art .pic>img{width:100%;height:100%;object-fit:cover;display:block}
-.fly-art .tape{position:absolute;height:28px;background:rgba(237,208,41,.9)}
-.fly-art .tape.l{left:0;top:6px;width:124px;transform:rotate(-14deg)}
-.fly-art .tape.r{right:0;top:30px;width:104px;transform:rotate(18deg)}
-/* chưa có ảnh quán: tấm poster thể loại nhạc dán lên tờ rơi (chỉ máy tính) */
+.fly-art .tape{position:absolute;height:28px;background:rgba(0,0,0,.88)}
+.fly-art .tape.l{left:-12px;top:10px;width:120px;transform:rotate(-15deg)}
+.fly-art .tape.r{right:-8px;top:38px;width:100px;transform:rotate(18deg)}
+/* chưa có poster lẫn ảnh quán: tấm thể loại nhạc */
 .fly-art.poster .pic{background:var(--paper);color:var(--ink);display:grid;align-content:center;justify-items:center;gap:26px;padding:36px 28px}
 .fly-art.poster .pic img{width:78%;height:auto;filter:invert(1)}
 .fly-art.poster .pic p{margin:0;font-family:var(--display);font-size:clamp(28px,2.6vw,36px);line-height:1.12;text-align:center;letter-spacing:.02em}
-@media (max-width:899px){.fly-art.poster{display:none}}
-/* poster event dán lên tờ rơi: giữ đúng tỉ lệ poster, bấm vào xem to */
+/* poster event: giữ đúng tỉ lệ poster, bấm vào xem to */
 .fly-art.pst .pic{display:block;width:100%;padding:0;border:0;aspect-ratio:auto;background:var(--ink);cursor:zoom-in;color:inherit}
 .fly-art.pst .pic>img{height:auto}
-.fly-cap{margin:16px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.06em;color:var(--paper)}
-.fly-cap b{color:var(--acid);font-weight:400}
+.fly-cap{margin:26px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.06em}
+.fly-cap b{font-weight:400}
 /* xem poster to */
 .pdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
 .pdlg::backdrop{background:rgba(0,0,0,.86)}
@@ -475,38 +495,63 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .sticker{position:absolute;left:-6px;bottom:0;width:140px;height:140px;border-radius:50%;background:var(--acid);color:var(--ink);display:grid;place-content:center;justify-items:center;text-align:center;transform:rotate(-10deg);padding:12px;z-index:1}
 .sticker b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-s);line-height:1.1}
 .sticker span{font-size:var(--fs-sm);font-weight:700;line-height:1.25}
+.fly .sticker{background:var(--ink);color:var(--acid)}
 
-/* chọn promoter: thẻ ảnh 3:4 trên nền giấy */
-.ros{padding-block:40px 36px;scroll-margin-top:64px}
-@media (min-width:900px){.ros{padding-block:64px 44px}}
-.ros-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px 20px;flex-wrap:wrap;margin-bottom:20px}
-.ros-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,6vw,76px);line-height:1.3;text-transform:uppercase}
-.ros-head p{margin:8px 0 0;color:var(--muted-p);max-width:56ch;font-size:var(--fs-body)}
-@media (min-width:900px){.ros-head{margin-bottom:28px}.ros-head p{font-size:var(--fs-lead)}}
-.ros-per{display:flex;gap:8px}
+/* chọn promoter: nền đen, mỗi người một tấm ảnh dán băng keo trên nền giấy. điện thoại: một dải vuốt ngang */
+.ros{padding-block:24px 40px;border-top:1px solid var(--line);scroll-margin-top:64px}
+@media (min-width:900px){.ros{padding-block:44px 64px}}
+.ros-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px 20px;flex-wrap:wrap}
+.ros-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:var(--fs-d-m);line-height:1.3;text-transform:uppercase}
+.ros-head p{margin:8px 0 0;color:var(--paper-3);max-width:68ch;font-size:var(--fs-ui)}
+@media (min-width:900px){.ros-head h2{font-size:var(--fs-d-xl)}.ros-head p{font-size:var(--fs-body)}}
+@media (min-width:1100px){.ros-head h2 br{display:none}}
+.ros-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:1 1 100%}
+@media (min-width:900px){.ros-tools{flex:0 0 auto}}
+.ros-per{display:flex;flex:none}
+.ros-per .sq{white-space:nowrap;padding:0 14px}
+@media (min-width:700px){.ros-per .sq{padding:0 18px}}
+.ros-per .sq+.sq{border-left:0}
+.ros-swipe{margin:0!important;display:flex;align-items:center;gap:6px;font-size:var(--fs-sm)!important;color:var(--paper-3)}
+@media (min-width:700px){.ros-swipe{display:none}}
 .sq{font:inherit;font-size:var(--fs-body);background:transparent;color:var(--ink);border:2px solid var(--ink);padding:0 18px;min-height:44px;cursor:pointer}
 .sq[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .sq:hover{background:var(--acid);color:var(--ink)}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;align-items:start}
-.cards.many{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 8px}
-@media (min-width:700px){.cards,.cards.many{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px 16px}}
-.pc{display:block;min-width:0;background:transparent;border:0;padding:0;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.ros .sq,.wk .sq{color:var(--paper);border-color:var(--paper);font-size:var(--fs-ui);font-weight:500}
+.ros .sq[aria-pressed="true"],.wk .sq[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+.ros .sq:hover,.wk .sq:hover{background:var(--acid);color:var(--ink)}
+.ros .empty{margin-top:20px}
+.cards{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:24px;margin-inline:-16px;padding:28px 24px 12px;scrollbar-width:none}
+.cards::-webkit-scrollbar{display:none}
+.cards>.pc{flex:0 0 min(196px,56vw);scroll-snap-align:start}
+@media (min-width:700px){.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:32px 24px;overflow:visible;margin-inline:0;padding:44px 8px 0}}
+.pc{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--paper);border:0;padding:8px 8px 14px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;transform:rotate(-1.2deg)}
+.pc:nth-child(4n+2){transform:rotate(.8deg)}
+.pc:nth-child(4n+3){transform:rotate(-.6deg)}
+.pc:nth-child(4n){transform:rotate(1deg)}
+.pc-tape{position:absolute;left:50%;top:-9px;width:56px;height:18px;margin-left:-28px;background:rgba(237,208,41,.92);border:1px solid rgba(0,0,0,.25);transform:rotate(-4deg)}
 .pc-ph{display:block;position:relative;aspect-ratio:3/4;background:var(--sheet-ph);color:var(--sheet-ph-mark);overflow:hidden}
 .pc-ph svg{position:absolute;left:12%;bottom:0;width:76%;display:block}
 .pc-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-@media (hover:hover){.pc:not([disabled]):hover .pc-ph{outline:4px solid var(--ink)}}
+@media (hover:hover){.pc:not([disabled]):hover{outline:4px solid var(--acid)}}
 .pc:hover .pc-ph img{filter:contrast(1.08)}
-.pc-no{position:absolute;left:0;top:0;z-index:1;background:var(--ink);color:var(--paper);font-family:var(--display);font-size:var(--fs-lead);line-height:1.4;padding:1px 9px}
-.pc-stamp{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;background:rgba(240,236,225,.45)}
-.pc-stamp b{border:3px solid var(--ink);background:var(--paper);color:var(--ink);font-family:var(--display);font-weight:400;font-size:var(--fs-ui);letter-spacing:.04em;padding:3px 8px;transform:rotate(-8deg);text-transform:uppercase;white-space:nowrap}
-.pc.full{cursor:not-allowed}
-.pc.full img{filter:grayscale(1)!important}
-.pc-name{display:block;margin-top:8px;font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.15;text-transform:uppercase;overflow-wrap:anywhere}
-.pc-meta{display:block;font-size:var(--fs-sm);color:var(--muted-p)}
-.pc.ghost{cursor:default;opacity:.55}
-.cards.many .pc-name{font-size:var(--fs-md)}
-.cards.many .pc-meta{font-size:var(--fs-xs)}
-@media (min-width:700px){.pc-no{font-size:var(--fs-md);padding:2px 10px}.pc-name,.cards.many .pc-name{font-size:var(--fs-2xl);margin-top:10px}.pc-meta,.cards.many .pc-meta{font-size:var(--fs-ui)}}
+.pc-no{position:absolute;left:-8px;top:18px;z-index:1;min-width:44px;height:44px;padding:0 8px;background:var(--acid);color:var(--ink);border:2px solid var(--ink);font-family:var(--display);font-size:var(--fs-d-s);line-height:40px;text-align:center}
+.pc-txt{display:block;padding:0 4px}
+.pc-name{display:block;font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.3;text-transform:uppercase;overflow-wrap:anywhere}
+.pc-meta{display:block;font-size:var(--fs-sm);color:var(--muted-p);font-variant-numeric:tabular-nums}
+/* người đứng đầu: thẻ vàng */
+.pc.top{background:var(--acid)}
+.pc.top .pc-no{background:var(--ink);color:var(--acid)}
+.pc.top .pc-meta{color:var(--ink)}
+.pc.top:not([disabled]):hover{outline-color:var(--paper)}
+/* đủ khách tối nay: thẻ tối, đóng dấu, không bấm được */
+.pc.full{background:var(--frame);color:var(--paper-2);cursor:not-allowed}
+.pc.full .pc-ph{background:var(--ink);color:var(--frame-mark)}
+.pc.full .pc-no{background:var(--frame);color:var(--concrete)}
+.pc.full .pc-meta{color:var(--paper-3)}
+.pc.full img{filter:grayscale(1) brightness(.55)!important}
+.pc-stamp{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center}
+.pc-stamp b{border:2px solid var(--acid);color:var(--acid);background:rgba(0,0,0,.6);font-family:var(--display);font-weight:400;font-size:var(--fs-md);letter-spacing:.08em;padding:4px 10px;transform:rotate(-12deg);text-transform:uppercase;white-space:nowrap}
+.pc.ghost{cursor:default;opacity:.4}
 
 /* tờ hồ sơ promoter: khung nổi đè lên lineup, mở khi khách bấm thẻ (anh Minh 10/11).
    điện thoại và tablet dọc: phủ kín màn. từ 900px: khung giữa màn. khung đứng yên, tờ hồ sơ cuộn bên trong để nút × luôn ở góc */
@@ -562,84 +607,49 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 .sheet.anim .sheet-pics img{animation:fadein .3s ease-out}
 .sheet.anim .sheet-name{animation:stamp .26s ease-out}
 @keyframes fadein{from{opacity:0}}
-body.paper .grade-note{padding-block:14px 0;margin:0}
+.grade-note{padding-block:16px 0;margin:0;font-size:var(--fs-sm)}
 
-/* lịch event (anh Minh 09/11): thẻ chữ, có chỗ cho poster */
-.fly-ev{margin:0;font-size:var(--fs-md);font-weight:500;max-width:46ch}
-.fly-ev .x{display:block;margin-top:4px;font-size:var(--fs-body);font-weight:400;color:var(--paper-2)}
-.fly-more{font:inherit;font-size:var(--fs-body);font-weight:500;background:none;border:0;color:var(--acid);padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:4px;white-space:nowrap}
-.fly-more:hover{color:var(--paper)}
-.evs{padding-block:40px 56px;scroll-margin-top:64px;border-top:3px solid var(--ink)}
-@media (min-width:900px){.evs{padding-block:56px 72px}}
-.evs-head{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
-/* "sự kiện tháng 11 ở blk46" luôn 1 dòng (anh Minh 10/11): cỡ chữ theo bề rộng màn, chữ rộng ~9,6 lần cỡ chữ */
-.evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(24px,calc((100vw - 32px) / 10),76px);line-height:1.3;text-transform:uppercase;white-space:nowrap}
-.evs-head p{margin:8px 0 0;color:var(--muted-p);max-width:56ch;font-size:var(--fs-body)}
-@media (min-width:900px){.evs-head{margin-bottom:28px}.evs-head p{font-size:var(--fs-lead)}}
-/* mỗi thứ một khung. điện thoại: các khung xếp dọc. máy tính (từ 900px): mỗi lần một khung, bấm mũi tên để đổi */
-.ev-nav{display:none;align-items:center;gap:12px}
-.ev-nav .sq{font-family:var(--display);font-size:var(--fs-xl);padding:0;width:52px;min-height:52px;display:inline-flex;align-items:center;justify-content:center}
-.ev-nav .sq:hover{background:var(--ink);color:var(--paper)}
-.evs-head .ev-now{margin:0;min-width:250px;text-align:center;font-family:var(--display);font-size:var(--fs-d-l);line-height:1.05;color:var(--ink);max-width:none}
-.evs-head .ev-now small{display:block;margin-top:2px;font-family:var(--body);font-size:var(--fs-sm);line-height:1.3;letter-spacing:.08em;color:var(--muted-p)}
-.ev-day+.ev-day{margin-top:36px}
-.ev-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-top:3px solid var(--ink);padding-top:10px;margin-bottom:14px}
-.ev-dh h3{margin:0;font-family:var(--display);font-weight:400;font-size:var(--fs-d-l);line-height:1.1}
-.ev-dh p{margin:0;font-family:var(--display);font-size:var(--fs-md);letter-spacing:.03em}
-.ev-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
-@media (min-width:700px){.ev-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}}
-/* điện thoại: mỗi thứ chỉ hiện đêm gần nhất, bấm "xem thêm" mới mở (anh Minh 09/11) */
-.ev-more{display:block;width:100%;margin-top:12px}
-@media (max-width:899px){.ev-day:not(.all) .ev:nth-child(n+2){display:none}}
-@media (min-width:900px){
-  .ev-more{display:none}
-  .ev-nav{display:flex}
-  .ev-day{display:none}.ev-day.on{display:block}
-  .ev-day+.ev-day{margin-top:0}
-  .ev-dh h3{display:none}
-  .ev-list{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-/* ưu đãi hằng tuần (thứ 5, chủ nhật): ô vàng, ở đầu khung thứ đó và trên tờ rơi đêm đó */
-.promo{background:var(--acid);color:var(--ink);border:3px solid var(--ink);box-shadow:var(--hard) var(--ink);padding:14px 16px 16px;margin:0 0 18px}
-.promo.on-dark{box-shadow:var(--hard) var(--paper);margin:4px 0 0;max-width:560px}
+/* dòng giới thiệu đêm trên tờ rơi */
+.fly-ev{margin:0;font-size:var(--fs-body);font-weight:500;max-width:60ch}
+@media (min-width:900px){.fly-ev{font-size:var(--fs-md)}}
+.fly-ev .x{display:block;margin-top:4px;font-size:var(--fs-body);font-weight:400;color:var(--muted-p)}
+.fly-more{font:inherit;font-weight:700;background:none;border:0;color:var(--ink);padding:10px 0;cursor:pointer;text-decoration:underline;text-underline-offset:4px;white-space:nowrap}
+/* dải các đêm trong tuần, ngay dưới tờ rơi (thay mục lịch cuối trang): bấm một đêm thì tờ rơi đổi sang đêm đó.
+   đêm đang chọn có nền vàng, nối liền với tờ rơi ở trên */
+.wk{padding-bottom:24px;scroll-margin-top:64px}
+.wk-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-inline:-16px}
+@media (min-width:900px){.wk-row{grid-template-columns:repeat(var(--n,4),minmax(0,1fr));margin-inline:0;border-left:1px solid var(--line)}}
+.wk-n{font:inherit;display:flex;flex-direction:column;gap:2px;min-width:0;text-align:left;background:var(--ink);color:var(--paper);border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 12px 14px;cursor:pointer}
+.wk-n:hover{background:var(--card-2)}
+.wk-n[aria-pressed="true"]{background:var(--acid);color:var(--ink)}
+.wk-n[aria-pressed="true"]:focus-visible{outline-color:var(--ink);outline-offset:-5px}
+.wk-d{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.wk-d b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-s);line-height:1.1}
+.wk-d span{font-family:var(--display);font-size:var(--fs-body);letter-spacing:.04em}
+.wk-t{font-family:var(--display);font-size:var(--fs-md);line-height:1.3;overflow-wrap:anywhere}
+.wk-x{font-size:var(--fs-sm);color:var(--paper-3);font-variant-numeric:tabular-nums}
+.wk-n[aria-pressed="true"] .wk-x{color:var(--ink)}
+@media (min-width:900px){.wk-n{padding:16px 20px 18px}.wk-d b{font-size:var(--fs-d-l)}.wk-d span{font-size:var(--fs-md)}.wk-t{font-size:var(--fs-d-xs)}}
+.wk-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 24px;margin-top:16px}
+.wk-weeks{display:flex;flex:1 1 100%}
+.wk-weeks .sq{flex:1 1 auto;font-family:var(--display);font-size:var(--fs-lead);font-weight:400;letter-spacing:.04em;padding:0 8px}
+.wk-weeks .sq+.sq{border-left:0}
+@media (min-width:900px){.wk-weeks{flex:0 0 auto}.wk-weeks .sq{font-size:var(--fs-md);padding:0 18px}}
+.wk-hint{margin:0;font-size:var(--fs-ui);color:var(--paper-3)}
+.wk-hint span{display:none}
+@media (min-width:900px){.wk-hint span{display:inline}}
+.wk-mp{font:inherit;font-weight:700;background:none;border:0;padding:0;min-height:44px;color:var(--paper);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.wk-mp:hover{color:var(--acid)}
+/* ưu đãi hằng tuần (thứ 5, chủ nhật): ô giấy viền đen dán trên tờ rơi của đêm đó */
+.promo{background:var(--paper);color:var(--ink);border:2px solid var(--ink);box-shadow:var(--hard) var(--ink);padding:14px 16px 16px;margin:8px 5px 5px 0;max-width:640px}
 .promo p{margin:0}
-.promo-t{font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.3;letter-spacing:.04em}
-.promo-l{margin-top:4px!important;font-size:var(--fs-body);font-weight:500;max-width:52ch}
-.promo-r{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:12px}
-.promo-r span{font-size:var(--fs-sm)}
-.promo-go{display:inline-flex;align-items:center;min-height:46px;padding:0 18px;background:var(--ink);color:var(--acid);font-family:var(--display);font-size:var(--fs-md);letter-spacing:.05em;text-decoration:none}
-/* trong khung thứ trên nền giấy: ô đen, để không lẫn với thẻ "tối nay" màu vàng */
-.promo:not(.on-dark){background:var(--ink);color:var(--paper);box-shadow:var(--hard) var(--acid)}
-.promo:not(.on-dark) .promo-t{color:var(--acid)}
-.promo:not(.on-dark) .promo-go{background:var(--acid);color:var(--ink)}
-.promo:not(.on-dark) .promo-go:hover{background:var(--paper);outline:0}
-.promo:not(.on-dark) .promo-pst{color:var(--paper)}
-.promo:not(.on-dark) .promo-r span{color:var(--paper-2)}
-.promo-pst{font:inherit;font-size:var(--fs-ui);font-weight:700;background:none;border:0;padding:4px 0;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:4px}
-.promo-go:hover{background:var(--white);color:var(--ink);outline:3px solid var(--ink);outline-offset:-3px}
-@media (min-width:900px){.promo{display:flex;align-items:center;gap:24px}.promo-m{flex:1}.promo-r{margin-top:0;flex:none;flex-direction:column;align-items:flex-start}.promo.on-dark{display:block}.promo.on-dark .promo-r{margin-top:12px;flex-direction:row}}
-.ev{border:3px solid var(--ink);background:var(--sheet);display:flex;flex-direction:column;min-width:0}
-.ev-pst{font:inherit;font-size:var(--fs-ui);font-weight:700;background:none;border:0;padding:4px 0;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:4px;align-self:flex-start}
-/* nút poster lịch tháng: ô vàng nổi như tem dán, để khách thấy mà bấm */
-.ev-mp{display:inline-flex;align-items:center;gap:10px;margin-top:16px;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.05em;background:var(--acid);color:var(--ink);border:3px solid var(--ink);box-shadow:var(--hard) var(--ink);padding:0 22px;min-height:54px;cursor:pointer;transition:transform .12s,box-shadow .12s}
-.ev-mp:hover{transform:translate(2px,2px);box-shadow:var(--hard-press) var(--ink)}
-.ev-mp:active{transform:translate(5px,5px);box-shadow:none}
-.ev-top{display:flex;align-items:stretch;border-bottom:3px solid var(--ink)}
-.ev-d{flex:none;width:96px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;gap:2px}
-.ev-d b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-m);line-height:1}
-.ev-d span{font-family:var(--display);font-size:var(--fs-ui);letter-spacing:.06em}
-.ev-h{padding:10px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.ev-tag{margin:0;font-size:var(--fs-xs);font-weight:700;letter-spacing:.14em}
-.ev-h h3{margin:0;font-family:var(--display);font-weight:400;font-size:var(--fs-xl);line-height:1.18;text-transform:uppercase;overflow-wrap:anywhere}
-.ev-b{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
-.ev-b p{margin:0;font-size:var(--fs-body)}
-.ev-b .x{color:var(--muted-p);font-size:var(--fs-ui)}
-.ev-b .x b{color:var(--ink);font-weight:700}
-.ev-go{margin-top:auto;align-self:flex-start;font-family:var(--display);font-size:var(--fs-body);letter-spacing:.06em;background:transparent;border:2px solid var(--ink);color:var(--ink);padding:0 14px;min-height:44px;cursor:pointer}
-.ev-go:hover{background:var(--ink);color:var(--paper)}
-.ev.now{background:var(--acid)}
-.ev.now .ev-go{background:var(--ink);color:var(--paper)}
-.ev.now .ev-go:hover{background:var(--paper);color:var(--ink)}
+.promo-t{font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.25;letter-spacing:.04em}
+.promo-l{margin-top:4px!important;font-size:var(--fs-ui);max-width:52ch}
+.promo-r{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin-top:12px}
+.promo-go{display:inline-flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:48px;padding:0 20px;background:var(--ink);color:var(--acid);font-family:var(--display);font-size:var(--fs-md);letter-spacing:.06em;text-decoration:none}
+.promo-go:hover{background:var(--acid);color:var(--ink);outline:3px solid var(--ink);outline-offset:-3px}
+.promo-pst{font:inherit;font-size:var(--fs-ui);font-weight:700;background:none;border:0;padding:0;min-height:44px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+@media (min-width:900px){.promo{display:flex;align-items:center;gap:20px;padding:12px 16px 12px 20px}.promo-m{flex:1;min-width:0}.promo-r{margin-top:0;flex:none}.promo-go{flex:none;min-height:44px}}
 .tk-ev{margin:0;padding:10px 14px;border-bottom:3px solid var(--ink);background:var(--acid);font-family:var(--display);font-size:var(--fs-md);letter-spacing:.03em}
 .tk-ev[hidden]{display:none}
 /* form voucher + dòng "đã ghi voucher" trên form đặt bàn */
@@ -743,8 +753,8 @@ img{max-width:100%}
 
 /* ---------- sửa theo bản soi 10/11 ---------- */
 /* vùng bấm: nới bằng lớp vô hình, hình giữ nguyên. tối thiểu 44px nơi còn chỗ */
-.mark,nav.tabs a,.book-help a,.book-help button,footer.foot .finfo a,.promo-pst,.promo-slim a,.fly-call{position:relative}
-.mark::after,nav.tabs a::after,.book-help a::after,.book-help button::after,footer.foot .finfo a::after,.promo-pst::after,.promo-slim a::after,.fly-call::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+.mark,nav.tabs a,.book-help a,.book-help button,footer.foot .finfo a,.promo-pst,.fly-call,.hbook{position:relative}
+.mark::after,nav.tabs a::after,.book-help a::after,.book-help button::after,footer.foot .finfo a::after,.promo-pst::after,.fly-call::after,.hbook::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
 /* bàn trên sơ đồ: nới theo khoảng trống giữa các bàn (tính trên toạ độ ảnh 2000×870) */
 .tspot::after{content:"";position:absolute;inset:var(--hit,0)}
 .tspot.k-v{--hit:-44% -11%}
@@ -754,21 +764,13 @@ img{max-width:100%}
 .tspot.k-sv{--hit:-4% -19%}
 /* trang đang xem trên đầu trang: gạch dưới, không đóng khung (khung trông như nút) */
 nav.tabs a[aria-current="page"]{border-color:transparent;border-bottom-color:var(--acid)}
-/* ưu đãi 1 dòng trong khung thứ đã có ô đầy đủ trên tờ rơi */
-.promo-slim{margin:0 0 14px;font-size:var(--fs-body)}
-.promo-slim b{font-family:var(--display);font-weight:400;letter-spacing:.04em;margin-right:2px}
-.promo-slim a{color:var(--ink);font-weight:700;text-underline-offset:4px}
-/* poster lịch tháng: nút phụ viền đen, không còn tem vàng nổi (vàng để dành cho ĐẶT BÀN) */
-.ev-mp{background:transparent;box-shadow:none;border-width:2px}
-.ev-mp:hover{background:var(--ink);color:var(--paper);transform:none;box-shadow:none}
-.ev-mp:active{transform:none}
 /* một kiểu nút vàng cho trang khách: .cta trên nền giấy giống .btn-acid */
 body.paper .cta:not([type="submit"]){font-family:var(--display);font-weight:400;font-size:var(--fs-md);letter-spacing:.06em;padding:0 24px;min-height:50px;justify-content:center}
 body.paper .cta:not([type="submit"]):hover{filter:none;background:var(--ink);color:var(--acid)}
 body.paper .cta.cta-line:hover{background:transparent;color:inherit;opacity:.8}
 </style>
 </head>
-<body class="paper v-lineup">
+<body class="v-lineup">
 
 <header class="top">
   <div class="wrap">
@@ -784,9 +786,9 @@ body.paper .cta.cta-line:hover{background:transparent;color:inherit;opacity:.8}
 </header>
 
 <main class="wrap" id="app">
-  <section class="bleed fly" aria-label="tối nay ở blk46"><div class="fly-main">
+  <section class="fly" aria-label="tối nay ở blk46"><div class="fly-main">
     <p class="fly-pre">BLK46 PRESENTS</p>
-    <h1 class="fly-dj">HOUSE PARTY</h1>
+    <h1 class="fly-dj" style="--f:2.4">HOUSE PARTY</h1>
     <p class="fly-lede">đang tải lineup…</p>
   </div></section>
 </main>
@@ -823,7 +825,7 @@ const BADGE_AT=5;         // số lượt tag để thành huy hiệu
 const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
-const S={evOpen:new Set(),db:null,user:null,assets:null,canEdit:false,canWrite:null,sheetId:null,
+const S={flyDate:"",flyWeek:"",db:null,user:null,assets:null,canEdit:false,canWrite:null,sheetId:null,
   idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
@@ -949,7 +951,7 @@ function renderFoot(v){
 
 function setTabs(v){
   renderFoot(v);
-  const bc=document.body.classList;bc.toggle("paper",v==="lineup"||v==="book"||v==="voucher");
+  const bc=document.body.classList;bc.toggle("paper",v==="book"||v==="voucher"); // lineup từ 10/11 nền đen + tờ flyer vàng
   ["lineup","book","voucher","table","admin"].forEach(k=>bc.toggle("v-"+k,k===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{
     const on=a.dataset.tab===v||((v==="book"||v==="voucher")&&a.dataset.tab==="lineup");
@@ -1117,11 +1119,9 @@ const WEEKLY_PROMOS={
   4:{tag:"LADIES SPECIAL",line:"voucher có hạn cho chị em tới trước 22h45: mỗi chị em 2 ly miễn phí, nhóm 4 chị em được tặng 1 chai.",go:"NHẬN VOUCHER",poster:"events/promo-thu-5.jpg",before:"22:45"},
   0:{tag:"FREE BEER",line:"phố hàng nhạc: điền form trước khi tới để nhận 1 bia miễn phí.",go:"NHẬN BIA",poster:"events/promo-chu-nhat.jpg",before:"22:30"},
 };
-function promoHTML(dow,cls=""){
+function promoHTML(dow){
   const p=WEEKLY_PROMOS[dow];if(!p)return "";
-  /* ô đầy đủ đã nằm trên tờ rơi đầu trang: khung thứ đó chỉ còn 1 dòng, khỏi lặp (bản soi 10/11) */
-  if(cls==="slim")return `<p class="promo-slim"><b>${esc(p.tag)}</b> mỗi ${esc(DAY_FULL[dow].toLowerCase())} · <a href="#voucher-${dow}">${esc(p.go.toLowerCase())}</a></p>`;
-  return `<div class="promo${cls?" "+cls:""}"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
+  return `<div class="promo"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
     <div class="promo-r"><a class="promo-go" href="#voucher-${dow}">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}</div></div>`;
 }
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
@@ -1152,42 +1152,85 @@ function fetchTonight(){
     paintDj();
   }).catch(()=>{});
 }
-/* chữ to nhất trên tờ rơi: tên DJ quản lý nhập > tên event > HOUSE PARTY */
-function flyHead(n){
-  const ev=eventOn(n.iso),dj=(S.tonight.iso===n.iso&&S.tonight.dj)||"";
-  return {ev,head:dj||(ev&&ev.name)||DJ_FALLBACK,pre:"BLK46 PRESENTS"+(dj&&ev?" · "+ev.name:"")};
+/* chữ to nhất trên tờ rơi: tên DJ quản lý nhập (chỉ đêm đang nói tới) > tên event > HOUSE PARTY */
+function flyHead(n,iso=n.iso){
+  const ev=eventOn(iso),dj=(iso===n.iso&&S.tonight.iso===n.iso&&S.tonight.dj)||"";
+  return {ev,head:dj||(ev&&ev.name)||DJ_FALLBACK,pre:"BLK46 PRESENTS"+(dj&&ev?" · "+ev.name:iso===n.iso&&n.state!=="closed"?" · TỐI NAY":"")};
 }
-function paintDj(){const el=document.getElementById("flyDj");if(!el)return;const h=flyHead(nightInfo());el.textContent=h.head;el.classList.toggle("long",h.head.length>14);const p=document.getElementById("flyPre");if(p)p.textContent=h.pre}
+/* đêm đang hiện trên tờ rơi: đêm khách bấm ở dải tuần, không thì đêm đang nói tới */
+const flySel=n=>S.flyDate&&S.flyDate>n.iso&&eventOn(S.flyDate)?S.flyDate:n.iso;
+/* bề rộng từng chữ Anton, tính bằng phần nghìn cỡ chữ (đo 10/11). dùng để tính cỡ chữ tên đêm sao cho vừa 2 dòng, không phải đo lại trên máy khách */
+const AW={A:485,B:479,C:474,D:493,E:412,F:399,G:485,H:499,I:227,J:466,K:472,L:397,M:746,N:498,O:486,P:472,Q:494,R:477,S:461,T:396,U:474,V:469,W:712,X:484,Y:446,Z:410,"1":331," ":234,"#":546,":":242,".":229,",":236,"&":520,"'":214,"-":311,"/":405,"+":355,"!":229};
+const flyW=t=>[...t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/Đ/g,"D")].reduce((a,c)=>a+(AW[c]||500),0)/1000;
+/* --f = bề rộng (tính theo cỡ chữ) của dòng dài nhất khi ngắt tên làm 2 dòng đều nhất, cộng 3% cho chắc */
+const flyFit=t=>{const w=t.trim().split(/\s+/);let b=flyW(w.join(" "));for(let i=1;i<w.length;i++)b=Math.min(b,Math.max(flyW(w.slice(0,i).join(" ")),flyW(w.slice(i).join(" "))));return Math.max(1.6,+(b*1.03).toFixed(3))};
+const flyVN=t=>/[^\x00-\x7f]/.test(t);
+function paintDj(){const el=document.getElementById("flyDj");if(!el)return;const n=nightInfo(),h=flyHead(n,flySel(n));el.textContent=h.head;el.style.setProperty("--f",flyFit(h.head));el.classList.toggle("vn",flyVN(h.head));const p=document.getElementById("flyPre");if(p)p.textContent=h.pre}
 const SIL=`<svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="38" r="20" fill="currentColor"/><path d="M10 120c2-32 19-48 40-48s38 16 40 48z" fill="currentColor"/></svg>`;
+/* hình vẽ dùng chung: mũi tên và ống nghe, cùng nét (thay cho ký tự mũi tên, theo bản soi impeccable 10/11) */
+const ICO_ARW=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>`;
+const ICO_TEL=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1C10.7 20 4 13.3 4 5a1 1 0 0 1 1-1z"/></svg>`;
+const WIDE=matchMedia("(min-width:1024px)"); // poster bên phải tờ rơi chỉ vẽ (và tải) từ 1024px
+const ddmm=iso=>iso.slice(8)+"."+iso.slice(5,7);
 function flyHTML(){
-  const n=nightInfo(),t=tonightInfo(),h=flyHead(n),dj=h.head,ev=h.ev,up=upcomingEvents();
-  const evLine=ev||up.length?`<p class="fly-ev">${ev?esc(ev.line):""}${ev&&ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev&&ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${up.length?` <button type="button" class="fly-more" data-go="events">lịch tháng ${+up[0].date.slice(5,7)}&nbsp;↓</button>`:""}</p>`:"";
-  const rating=GOOGLE_RATING&&GOOGLE_RATING.stars?`<div class="sticker"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?`<br>${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></div>`:"";
-  const pe=up.find(e=>e.poster),mp=!pe&&up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];
-  const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
-  const art=pe
-    ?`<div class="fly-art pst"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${rating}${pe.date!==n.iso?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
-    :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button><span class="tape l" aria-hidden="true"></span>${rating}</div>`
-    :VENUE_PHOTO
-    ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div><span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>${rating}</div>`
-    :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div><span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>${rating}</div>`;
+  const n=nightInfo(),sel=flySel(n),isNow=sel===n.iso,t=tonightInfo(),h=flyHead(n,sel),dj=h.head,ev=h.ev,dw=dowOfIso(sel);
+  const up=EVENTS.filter(e=>e.date>=sel).sort((a,b)=>a.date<b.date?-1:1);
+  const evLine=ev?`<p class="fly-ev">${esc(ev.line)}${ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${ev.poster&&!WIDE.matches?` <button type="button" class="fly-more" data-pst="${ev.date}">xem poster</button>`:""}</p>`:"";
+  let art="";
+  if(WIDE.matches){
+    const rating=GOOGLE_RATING&&GOOGLE_RATING.stars?`<div class="sticker"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?`<br>${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></div>`:"";
+    const pe=up.find(e=>e.poster),mp=!pe&&up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];
+    const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
+    art=pe
+      ?`<div class="fly-art pst"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${rating}${pe.date!==sel?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
+      :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button>${tape}${rating}</div>`
+      :VENUE_PHOTO
+      ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div>${tape}${rating}</div>`
+      :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div>${tape}${rating}</div>`;
+  }
   return `<div class="fly-main">
       <p class="fly-pre" id="flyPre">${esc(h.pre)}</p>
-      <h1 class="fly-dj${dj.length>14?" long":""}" id="flyDj">${esc(dj)}</h1>
-      <div class="fly-row"><p>${esc(n.time)}</p><p>${esc(n.day)}</p><p>TẦNG 1, 46 MÃ MÂY</p></div>
-      ${n.state==="tonight"?"":`<p class="fly-state${t.open?"":" off"}" role="status">${esc(t.text)}</p>`}
+      <h1 class="fly-dj${flyVN(dj)?" vn":""}" id="flyDj" style="--f:${flyFit(dj)}">${esc(dj)}</h1>
+      <div class="fly-row"><p>${esc(hoursOf(dw))}</p><p>${WD_FLY[dw]} · ${ddmm(sel)}<span class="yr">.${sel.slice(0,4)}</span></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
+      ${!isNow||n.state==="tonight"?"":`<p class="fly-state" role="status">${esc(t.text)}</p>`}
       ${evLine}
-      <div class="fly-btns"><button type="button" class="btn-acid" data-go="book">ĐẶT BÀN</button><button type="button" class="btn-line" data-go="roster">CHỌN PROMOTER</button><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call" href="tel:${HOTLINE}">gọi ${HOTLINE_SHOW}</a></div>
-      ${promoHTML(n.dow,"on-dark")}
+      <div class="fly-btns"><button type="button" class="btn-ink" data-go="book" data-ev="${sel}">${isNow&&n.state==="tonight"?"ĐẶT BÀN TỐI NAY":isNow?"ĐẶT BÀN":"GIỮ BÀN ĐÊM NÀY"}${ICO_ARW}</button><button type="button" class="btn-line" data-go="roster"${isNow?"":` data-ev="${sel}"`}>CHỌN PROMOTER</button><span class="fly-links"><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call tel" href="tel:${HOTLINE}">${ICO_TEL}<span>gọi ${HOTLINE_SHOW}</span></a></span></div>
+      ${promoHTML(dw)}
     </div>${art}`;
 }
-/* thẻ promoter: ảnh nhỏ, số hạng, tên, sao. bấm thì mở khung hồ sơ. đủ khách tối nay thì đóng dấu, không bấm được */
+/* dải các đêm trong tuần: event gom theo tuần (thứ 2 → chủ nhật), mỗi lần hiện một tuần */
+const isoWeek=iso=>addDaysIso(iso,-((dowOfIso(iso)+6)%7));
+function weeksOf(){
+  const m=new Map();upcomingEvents().forEach(e=>{const k=isoWeek(e.date);if(!m.has(k))m.set(k,[]);m.get(k).push(e)});
+  return [...m].map(([k,list])=>({k,list}));
+}
+function weekLabel(w,n){
+  const a=w.list[0].date,b=w.list[w.list.length-1].date;
+  const span=a===b?ddmm(a):a.slice(5,7)===b.slice(5,7)?`${a.slice(8)}–${ddmm(b)}`:`${ddmm(a)}–${ddmm(b)}`;
+  return (w.k===isoWeek(n.iso)?"TUẦN NÀY · ":"")+span;
+}
+function nightsHTML(){
+  const ws=weeksOf();if(!ws.length)return "";
+  const n=nightInfo(),sel=flySel(n);
+  let k=ws.findIndex(w=>w.k===S.flyWeek);if(k<0)k=ws.findIndex(w=>w.k===isoWeek(sel));if(k<0)k=0;S.flyWeek=ws[k].k;
+  const list=ws[k].list,mp=MONTH_POSTERS[list[0].date.slice(0,7)];
+  const tab=e=>{const dw=dowOfIso(e.date),p=WEEKLY_PROMOS[dw],x=[hoursOf(dw)];if(p)x.push(p.tag.toLowerCase());if(e.poster)x.push("có poster");
+    return `<button type="button" class="wk-n" data-night="${e.date}" aria-pressed="${e.date===sel}"><span class="wk-d"><b>${ddmm(e.date)}</b><span>${DAY_FULL[dw]}${e.date===n.iso&&n.state!=="closed"?" · TỐI NAY":""}</span></span><span class="wk-t">${esc(e.name)}</span><span class="wk-x">${esc(x.join(" · "))}</span></button>`};
+  return `<section class="wk" id="events" aria-label="các đêm sắp tới">
+    <div class="wk-row" role="group" aria-label="chọn đêm" style="--n:${Math.max(4,list.length)}">${list.map(tab).join("")}</div>
+    <div class="wk-foot">${ws.length>1?`<div class="wk-weeks" role="group" aria-label="chọn tuần">${ws.map(w=>`<button type="button" class="sq" data-week="${w.k}" aria-pressed="${w.k===ws[k].k}">${esc(weekLabel(w,n))}</button>`).join("")}</div>`:""}
+      <p class="wk-hint"><span>bấm vào một đêm để xem và giữ bàn đêm đó. </span>${mp?`<button type="button" class="wk-mp" data-pst="month">xem poster lịch tháng ${+list[0].date.slice(5,7)}</button>`:""}</p></div>
+  </section>`;
+}
+/* thẻ promoter: tấm ảnh dán băng keo, số hạng, tên, sao. bấm thì mở khung hồ sơ. đủ khách tối nay thì đóng dấu, không bấm được */
 function cardHTML(r,td){
   const i=r.idol,cid=coverId(i),ld=loadOf(td,i.id),fl=ld>=LOAD_MAX;
   const meta=(r.n?`★ ${fmt1(r.avg)} · hạng ${grade(r)}`:"chưa có hạng")+(ld&&!fl?` · <span class="nw">${loadTile(ld)}</span>`:"");
-  return `<button type="button" class="pc${fl?" full":""}" data-id="${esc(i.id)}" ${fl?"disabled":""} aria-haspopup="dialog" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
-    <span class="pc-ph">${SIL}${cid?`<img src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:""}<span class="pc-no">${r.rank?pad2(r.rank):"—"}</span>${fl?`<span class="pc-stamp"><b>fully booked</b></span>`:""}</span>
-    <span class="pc-name">${esc(i.stageName)}</span><span class="pc-meta">${meta}</span></button>`;
+  return `<button type="button" class="pc${fl?" full":""}${r.rank===1?" top":""}" data-id="${esc(i.id)}" ${fl?"disabled":""} aria-haspopup="dialog" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
+    <span class="pc-tape" aria-hidden="true"></span>
+    <span class="pc-ph">${SIL}${cid?`<img src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:""}${fl?`<span class="pc-stamp"><b>fully booked</b></span>`:""}</span>
+    <span class="pc-no">${r.rank?pad2(r.rank):"—"}</span>
+    <span class="pc-txt"><span class="pc-name">${esc(i.stageName)}</span><span class="pc-meta">${meta}</span></span></button>`;
 }
 /* ảnh 3 góc cho tờ hồ sơ.
    quản lý / bản chạy thử có đủ i.photos. khách chỉ có i.thumb (ảnh nhỏ của góc bìa) + ảnh to tải khi chọn người:
@@ -1243,13 +1286,7 @@ function sheetHTML(r,ghost){
         :`${night?`<p class="sheet-load">tối nay còn ${LOAD_MAX-ld} chỗ đặt trước</p>`:""}<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`}
     </div>`;
 }
-/* lịch event gom theo thứ trong tuần (anh Minh 09/11): mỗi thứ một khung */
 const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
-const DAY_ORDER=[1,2,3,4,5,6,0]; // thứ 2 → chủ nhật
-function eventGroups(){
-  const up=upcomingEvents();
-  return DAY_ORDER.map(d=>({d,list:up.filter(e=>dowOfIso(e.date)===d)})).filter(g=>g.list.length);
-}
 const evDayText=e=>`${WD_FLY[dowOfIso(e.date)]} ${e.date.slice(8)}.${e.date.slice(5,7)}`;
 /* xem poster to: data-pst = ngày của đêm, hoặc "month" cho poster lịch tháng */
 function openPoster(key){
@@ -1280,36 +1317,6 @@ function openPromoPoster(dow){
     <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="#voucher-${dow}" onclick="this.closest('dialog').close()">${esc(p.go)}</a></div>`;
   d.showModal();
 }
-function evCard(e,n,live){
-  const now=live&&e.date===n.iso;
-  return `<li class="ev${now?" now":""}">
-        <div class="ev-top"><div class="ev-d"><b>${e.date.slice(8)}.${e.date.slice(5,7)}</b></div>
-          <div class="ev-h">${now?`<p class="ev-tag">TỐI NAY</p>`:""}<h3>${esc(e.name)}</h3></div></div>
-        <div class="ev-b"><p>${esc(e.line)}</p>
-          ${e.dj?`<p class="x"><b>guest dj:</b> ${esc(e.dj.toLowerCase())}</p>`:""}
-          ${e.dress?`<p class="x"><b>dress code:</b> ${esc(e.dress)}</p>`:""}
-          ${e.poster?`<button type="button" class="ev-pst" data-pst="${e.date}">xem poster</button>`:""}
-          <button type="button" class="ev-go" data-go="book" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div></li>`;
-}
-const evMoreText=(g,open)=>open?"thu gọn ↑":`xem thêm ${g.list.length-1} đêm ${DAY_FULL[g.d].toLowerCase()} ↓`;
-function eventsHTML(){
-  const groups=eventGroups();if(!groups.length)return "";
-  const n=nightInfo(),live=n.state!=="closed";
-  const up=groups.flatMap(g=>g.list);
-  const months=[...new Set(up.map(e=>+e.date.slice(5,7)))];
-  const head=months.length===1?`Sự kiện tháng ${months[0]} ở BLK46`:`Sự kiện sắp tới ở BLK46`; // 1 dòng cả máy tính và điện thoại (anh Minh 10/11)
-  /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
-  let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
-  return `<section class="evs" id="events" aria-label="lịch event">
-    <div class="evs-head"><div><h2>${head}</h2><p>mở cửa từ ${OPEN_FROM}h. chọn đêm rồi giữ bàn.</p>${MONTH_POSTERS[up[0].date.slice(0,7)]?`<button type="button" class="ev-mp" data-pst="month">XEM POSTER LỊCH THÁNG ${+up[0].date.slice(5,7)}</button>`:""}</div>
-      ${groups.length>1?`<div class="ev-nav" role="group" aria-label="đổi thứ trong tuần"><button type="button" class="sq" id="evPrev" aria-label="xem thứ trước">←</button><p class="ev-now" id="evNow" aria-live="polite">${DAY_FULL[groups[k].d]}<small>${k+1} / ${groups.length}</small></p><button type="button" class="sq" id="evNext" aria-label="xem thứ sau">→</button></div>`:""}</div>
-    ${groups.map((g,j)=>`<div class="ev-day${j===k?" on":""}${S.evOpen.has(g.d)?" all":""}" data-d="${g.d}" role="region" aria-label="các tối ${DAY_FULL[g.d].toLowerCase()}">
-      <div class="ev-dh"><h3>${DAY_FULL[g.d]}</h3><p>${CLOSE_AT[g.d]!=null?esc(hoursOf(g.d)):""}</p></div>
-      ${promoHTML(g.d,g.d===n.dow?"slim":"")}
-      <ol class="ev-list">${g.list.map(e=>evCard(e,n,live)).join("")}</ol>
-      ${g.list.length>1?`<button type="button" class="sq ev-more" aria-expanded="${S.evOpen.has(g.d)}">${evMoreText(g,S.evOpen.has(g.d))}</button>`:""}</div>`).join("")}
-  </section>`;
-}
 const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
 const goRoster=()=>goTo("roster");
 function renderLineup(){
@@ -1320,32 +1327,32 @@ function renderLineup(){
   fetchTonight();
   app.innerHTML=`
   ${banner()}
-  <section class="bleed fly" aria-label="tối nay ở blk46">${flyHTML()}</section>
+  <section class="fly" id="fly" aria-label="tờ rơi của đêm đang chọn">${flyHTML()}</section>
+  ${nightsHTML()}
   <section class="ros" id="roster" aria-label="chọn promoter">
     <div class="ros-head">
-      <div><h2>Chọn người takecare<br>cuộc chơi tối nay</h2><p>bấm vào thẻ để xem hồ sơ. xếp theo sao khách chấm. mỗi promoter nhận tối đa ${LOAD_MAX} bàn đặt trước mỗi tối, đủ rồi thì đóng dấu.</p></div>
-      <div class="ros-per" role="group" aria-label="khoảng thời gian">
+      <div><h2>Chọn người takecare <br>cuộc chơi tối nay</h2><p>bấm vào thẻ để xem hồ sơ. xếp theo sao khách chấm. mỗi promoter nhận tối đa ${LOAD_MAX} bàn đặt trước mỗi tối, đủ rồi thì đóng dấu.</p></div>
+      <div class="ros-tools"><div class="ros-per" role="group" aria-label="khoảng thời gian">
         <button type="button" class="sq" id="pMonth" aria-pressed="${S.period==="month"}">tháng này</button>
         <button type="button" class="sq" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
-      </div>
+      </div>${rows.length>2?`<p class="ros-swipe">vuốt ngang · ${rows.length} người ${ICO_ARW}</p>`:""}</div>
     </div>
-    ${empty&&S.canEdit?`<div class="empty" style="margin-bottom:20px"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện.</span></div>`:""}
+    ${empty&&S.canEdit?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện.</span></div>`:""}
     ${empty&&!S.canEdit?`<div class="empty"><b>lineup đang cập nhật.</b><span>gọi <a href="tel:${HOTLINE}">${HOTLINE_SHOW}</a> để đặt bàn.</span></div>`:""}
-    ${rows.length?`<div class="cards${rows.length>6?" many":""}" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>`
-      :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-name">&nbsp;</span></div>`).join("")}</div>`:""}
+    ${rows.length?`<div class="cards" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>`
+      :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-txt"><span class="pc-name">&nbsp;</span></span></div>`).join("")}</div>`:""}
     ${rows.length?`<p class="note grade-note">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>`:""}
-  </section>
-  ${eventsHTML()}`;
-  /* mũi tên đổi thứ (chỉ hiện trên máy tính), vòng tròn: chủ nhật → thứ 5 */
-  const evDays=[...app.querySelectorAll(".ev-day")],evNow=document.getElementById("evNow");
-  const evShow=step=>{let k=evDays.findIndex(x=>x.classList.contains("on"));k=(k+step+evDays.length)%evDays.length;
-    evDays.forEach((x,j)=>x.classList.toggle("on",j===k));S.evDay=+evDays[k].dataset.d;
-    if(evNow)evNow.innerHTML=`${DAY_FULL[S.evDay]}<small>${k+1} / ${evDays.length}</small>`};
-  const evP=document.getElementById("evPrev"),evN=document.getElementById("evNext");
-  if(evP)evP.onclick=()=>evShow(-1);if(evN)evN.onclick=()=>evShow(1);
-  app.querySelectorAll(".ev-more").forEach(b=>b.onclick=()=>{const d=b.closest(".ev-day"),dw=+d.dataset.d,on=d.classList.toggle("all");
-    on?S.evOpen.add(dw):S.evOpen.delete(dw);b.setAttribute("aria-expanded",on);b.textContent=evMoreText(eventGroups().find(g=>g.d===dw),on);
-    if(!on){const t=d.getBoundingClientRect().top;if(t<70)scrollBy(0,t-70)}});
+  </section>`;
+  /* dải tuần: bấm một đêm thì tờ rơi đổi sang đêm đó (tên đêm khuất thì cuộn lên cho khách thấy), bấm tuần thì đổi 4 đêm đang hiện */
+  app.querySelectorAll("[data-night]").forEach(b=>b.onclick=()=>{
+    const d=b.dataset.night;S.flyDate=d;S.flyWeek="";render();
+    const nb=app.querySelector(`[data-night="${d}"]`);if(nb)nb.focus({preventScroll:true});
+    const h=document.getElementById("flyDj");if(h&&h.getBoundingClientRect().top<64)goTo("fly");
+  });
+  app.querySelectorAll("[data-week]").forEach(b=>b.onclick=()=>{
+    const w=b.dataset.week;S.flyWeek=w;render();
+    const nb=app.querySelector(`[data-week="${w}"]`);if(nb)nb.focus({preventScroll:true});
+  });
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
   /* bấm thẻ (hoặc Enter, Space): mở khung hồ sơ. phím mũi tên chỉ dời ô đang chọn */
@@ -1360,6 +1367,7 @@ function renderLineup(){
   });
   reshowSheet(rows);
 }
+WIDE.addEventListener("change",()=>{if(route().view==="lineup")render()});
 /* ---------- khung hồ sơ promoter (anh Minh 10/11) ----------
    khung nổi đè lên lineup, lineup đứng yên ở chỗ đang cuộn. đóng bằng ×, "← xem người khác", bấm ra ngoài, Esc,
    hoặc nút back / vuốt lùi trên điện thoại (khung thêm một bước vào lịch sử trình duyệt nên back chỉ đóng khung, không rời trang).
