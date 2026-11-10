@@ -640,13 +640,6 @@ body.paper .tk .fields.vf>*{grid-column:auto}
 .cta.cta-line{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
 @media (min-width:700px){.tk-ev{padding:12px 20px;font-size:var(--fs-lg)}}
 
-/* đặt bàn thế nào: 3 bước */
-.how{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding-block:8px 48px}
-.how>div{border-top:3px solid var(--ink);padding-top:12px;display:flex;gap:16px}
-.how .n{margin:0;font-family:var(--display);font-size:44px;line-height:1;color:var(--ink)}
-.how h3{margin:2px 0 4px;font-family:var(--display);font-weight:400;font-size:21px;letter-spacing:.03em}
-.how p{margin:0;color:var(--muted-p);font-size:var(--fs-body)}
-@media (min-width:700px){.how{grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;padding-bottom:64px}.how>div{display:block;padding-top:14px}.how .n{font-size:56px}.how h3{margin-top:8px;font-size:var(--fs-xl)}.how p{font-size:var(--fs-lead)}}
 
 /* đặt bàn: tờ vé */
 .tk{border:3px solid var(--ink);background:var(--sheet);margin-top:8px;min-width:0}
@@ -1232,13 +1225,6 @@ function sheetHTML(r,ghost){
         :`${night?`<p class="sheet-load">tối nay còn ${LOAD_MAX-ld} chỗ đặt trước</p>`:""}<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`}
     </div>`;
 }
-function howHTML(){
-  const hm=m=>`${Math.floor(m/60)}h${pad2(m%60)}`;
-  return [["CHỌN ĐÊM","chọn đêm muốn tới. muốn có promoter đi cùng thì chọn thêm, không bắt buộc."],
-    ["GỬI YÊU CẦU","điền tên, số điện thoại, giờ tới. quản lý gọi lại xác nhận bàn từ 17h."],
-    ["TỚI QUÁN",`quán giữ bàn đến ${hm(HOLD_CUTOFF_MIN)}. hẹn muộn hơn thì giữ thêm ${HOLD_LATE_MIN} phút sau giờ hẹn.`]]
-    .map(([h,p],k)=>`<div><p class="n">${k+1}</p><div><h3>${h}</h3><p>${p}</p></div></div>`).join("");
-}
 /* lịch event gom theo thứ trong tuần (anh Minh 09/11): mỗi thứ một khung */
 const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const DAY_ORDER=[1,2,3,4,5,6,0]; // thứ 2 → chủ nhật
@@ -1335,7 +1321,6 @@ function renderLineup(){
     ${rows.length||(empty&&S.canEdit)?`<article class="bleed sheet" id="spot" aria-live="polite" aria-label="hồ sơ promoter đang chọn">${sheetHTML(cur,!cur)}</article>`:""}
     ${rows.length?`<p class="note grade-note">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>`:""}
   </section>
-  <section class="how" aria-label="đặt bàn thế nào">${howHTML()}</section>
   ${eventsHTML()}`;
   /* mũi tên đổi thứ (chỉ hiện trên máy tính), vòng tròn: chủ nhật → thứ 5 */
   const evDays=[...app.querySelectorAll(".ev-day")],evNow=document.getElementById("evNow");
