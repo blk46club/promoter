@@ -69,6 +69,8 @@ function luuNgay(iso) {
   sh.clear();
   sh.setName("đặt bàn");
   sh.getRange(1, 1, 1, HEADER.length).setValues([HEADER]).setFontWeight("bold");
+  // chữ khách gõ luôn vào Sheet dưới dạng chữ: ô bắt đầu bằng = + - @ thì thêm dấu ' phía trước
+  rows.forEach((r) => r.forEach((c, i) => { if (typeof c === "string" && /^[=+\-@\t\r\n]/.test(c)) r[i] = "'" + c; }));
   if (rows.length) sh.getRange(2, 1, rows.length, HEADER.length).setValues(rows);
   else sh.getRange(2, 1).setValue("không có đặt bàn nào đêm này");
   if (rows.length) sh.autoResizeColumns(1, HEADER.length);
