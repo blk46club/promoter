@@ -556,7 +556,8 @@ body.paper .grade-note{padding-block:14px 0;margin:0}
 .evs{padding-block:40px 56px;scroll-margin-top:64px;border-top:3px solid var(--ink)}
 @media (min-width:900px){.evs{padding-block:56px 72px}}
 .evs-head{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
-.evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,6vw,76px);line-height:1.3;text-transform:uppercase}
+/* "sự kiện tháng 11 ở blk46" luôn 1 dòng (anh Minh 10/11): cỡ chữ theo bề rộng màn, chữ rộng ~9,6 lần cỡ chữ */
+.evs-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(24px,calc((100vw - 32px) / 10),76px);line-height:1.3;text-transform:uppercase;white-space:nowrap}
 .evs-head p{margin:8px 0 0;color:var(--muted-p);max-width:56ch;font-size:var(--fs-body)}
 @media (min-width:900px){.evs-head{margin-bottom:28px}.evs-head p{font-size:var(--fs-lead)}}
 /* mỗi thứ một khung. điện thoại: các khung xếp dọc. máy tính (từ 900px): mỗi lần một khung, bấm mũi tên để đổi */
@@ -1279,7 +1280,7 @@ function eventsHTML(){
   const n=nightInfo(),live=n.state!=="closed";
   const up=groups.flatMap(g=>g.list);
   const months=[...new Set(up.map(e=>+e.date.slice(5,7)))];
-  const head=months.length===1?`Tháng ${months[0]}<br>ở blk46`:`Sắp tới<br>ở blk46`;
+  const head=months.length===1?`Sự kiện tháng ${months[0]} ở BLK46`:`Sự kiện sắp tới ở BLK46`; // 1 dòng cả máy tính và điện thoại (anh Minh 10/11)
   /* khung mở sẵn trên máy tính: thứ khách đã chọn, không thì thứ của đêm đang nói tới trên tờ rơi */
   let k=groups.findIndex(g=>g.d===S.evDay);if(k<0)k=groups.findIndex(g=>g.d===n.dow);if(k<0)k=0;S.evDay=groups[k].d;
   return `<section class="evs" id="events" aria-label="lịch event">
