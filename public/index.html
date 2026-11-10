@@ -501,7 +501,7 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .ros{padding-block:24px 40px;border-top:1px solid var(--line);scroll-margin-top:64px}
 @media (min-width:900px){.ros{padding-block:44px 64px}}
 .ros-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px 20px;flex-wrap:wrap}
-.ros-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:var(--fs-d-m);line-height:1.3;text-transform:uppercase}
+.ros-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:var(--fs-d-m);line-height:1.3;text-transform:uppercase;text-wrap:balance}
 .ros-head p{margin:8px 0 0;color:var(--paper-3);max-width:68ch;font-size:var(--fs-ui)}
 @media (min-width:900px){.ros-head h2{font-size:var(--fs-d-xl)}.ros-head p{font-size:var(--fs-body)}}
 @media (min-width:1100px){.ros-head h2 br{display:none}}
@@ -608,6 +608,9 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 .sheet.anim .sheet-name{animation:stamp .26s ease-out}
 @keyframes fadein{from{opacity:0}}
 .grade-note{padding-block:16px 0;margin:0;font-size:var(--fs-sm)}
+/* không để dòng cuối chỉ còn một hai chữ (bộ dò impeccable 10/11): câu ngắn thì chia đều các dòng. trình duyệt cũ bỏ qua, không hại gì */
+.grade-note,.promo-l,.tk-meta{text-wrap:balance}
+.ros-head p,.fly-ev{text-wrap:pretty}
 
 /* dòng giới thiệu đêm trên tờ rơi */
 .fly-ev{margin:0;font-size:var(--fs-body);font-weight:500;max-width:60ch}
