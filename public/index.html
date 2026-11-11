@@ -246,6 +246,8 @@ footer.foot .soc svg{width:26px;height:26px}
 footer.foot .finfo{margin:14px 0 0;color:var(--concrete);font-size:var(--fs-ui);line-height:1.7}
 footer.foot .finfo a{color:var(--paper)}
 footer.foot .finfo a:hover{color:var(--acid)}
+footer.foot .grate{white-space:nowrap}footer.foot .grate::before{content:"\A";white-space:pre}footer.foot .gsep{display:none}footer.foot .grate b{color:var(--acid);font-weight:700}
+@media (min-width:1000px){footer.foot .grate::before{content:none}footer.foot .gsep{display:inline}} /* điện thoại: điểm google xuống dòng riêng ngay dưới "xem bản đồ"; máy tính: cùng dòng */
 /* máy tính: thông tin quán sang cột phải; điện thoại giữ nguyên */
 @media (min-width:1000px){footer.foot .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:64px;align-items:start}footer.foot .fmark,footer.foot .fline,footer.foot .soc{grid-column:1}footer.foot .finfo{grid-column:2;grid-row:1 / span 3;margin:0;align-self:center;padding-left:28px;border-left:1px solid var(--line)}}
 .nw{white-space:nowrap}
@@ -491,7 +493,6 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .fly-art.pst .pic>img{height:auto}
 .fly-cap{margin:26px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.06em}
 .fly-cap b{font-weight:400}
-.fly-art:has(.fly-cap) .sticker{bottom:58px} /* có dòng "SẮP TỚI" dưới poster: nhãn sao nằm trên ảnh, không đè chữ */
 /* xem poster to */
 .pdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
 .pdlg::backdrop{background:rgba(0,0,0,.86)}
@@ -499,15 +500,6 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .pdlg-x{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;background:var(--ink);color:var(--paper);font-size:var(--fs-2xl);line-height:1;cursor:pointer;z-index:1}
 .pdlg-bar{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:14px 16px}
 .pdlg-bar p{margin:0;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.04em}
-.sticker{position:absolute;left:-6px;bottom:0;width:140px;height:140px;border-radius:50%;background:var(--acid);color:var(--ink);display:grid;place-content:center;justify-items:center;text-align:center;transform:rotate(-10deg);padding:12px;z-index:1}
-.sticker b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-s);line-height:1.1}
-.sticker span{font-size:var(--fs-sm);font-weight:700;line-height:1.25}
-.fly .sticker{background:var(--ink);color:var(--acid)}
-/* màn hẹp không có poster bên phải: điểm google nằm ngay dưới dải giờ/ngày/địa chỉ, bấm mở google maps */
-.g-rate{justify-self:start;display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none;font-size:var(--fs-body);font-weight:600}
-.g-rate b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);line-height:1;background:var(--ink);color:var(--acid);padding:6px 10px;transform:rotate(-3deg)}
-.g-rate span{text-decoration:underline;text-underline-offset:3px}
-
 /* chọn promoter: nền đen, mỗi người một tấm ảnh dán băng keo trên nền giấy. điện thoại: một dải vuốt ngang */
 .ros{padding-block:24px 40px;border-top:1px solid var(--line);scroll-margin-top:64px}
 @media (min-width:900px){.ros{padding-block:44px 64px}}
@@ -811,7 +803,7 @@ body.paper .cta.cta-line:hover{background:transparent;color:inherit;opacity:.8}
   <div class="wrap">
     <img class="fmark" src="brand/blk46.svg" alt="BLK46®" width="156" height="22">
     <p class="fline">mỗi tối một bữa tiệc. mang năng lượng tới, phần còn lại để blk.</p>
-    <p class="finfo">tầng 1, 46 mã mây, hà nội · <a href="https://share.google/SntJEvVotOjQeHLYL" target="_blank" rel="noopener">xem bản đồ</a><br>thứ 5, chủ nhật: <span class="nw">21h – 3h sáng</span><br>thứ 6, thứ 7: <span class="nw">21h – 4h sáng</span> · nghỉ thứ 2, 3, 4<br>hotline <a href="tel:0852839239">0852 839 239</a> · <a href="https://blkmenu.vercel.app" target="_blank" rel="noopener">menu</a></p>
+    <p class="finfo">tầng 1, 46 mã mây, hà nội · <a href="https://share.google/SntJEvVotOjQeHLYL" target="_blank" rel="noopener">xem bản đồ</a><span class="grate"><span class="gsep" aria-hidden="true"> · </span><b>★ 4,9</b> trên google · 176 đánh giá</span><!-- điểm google maps anh Minh AN đọc ngày 11/11/2026, gõ tay: số đổi thì sửa ở đây --><br>thứ 5, chủ nhật: <span class="nw">21h – 3h sáng</span><br>thứ 6, thứ 7: <span class="nw">21h – 4h sáng</span> · nghỉ thứ 2, 3, 4<br>hotline <a href="tel:0852839239">0852 839 239</a> · <a href="https://blkmenu.vercel.app" target="_blank" rel="noopener">menu</a></p>
     <nav class="soc" id="socLinks" aria-label="mạng xã hội của quán"></nav>
   </div>
 </footer>
@@ -1100,9 +1092,6 @@ function promoReviewsHTML(i){
 // Ảnh dọc trong quán cho khung bên phải tờ rơi: chép ảnh vào public/brand/ rồi ghi đường dẫn ở đây, vd "brand/trong-quan.jpg".
 // Thứ tự khung bên phải: poster đêm gần nhất có poster > poster lịch tháng > ảnh quán > tấm thể loại nhạc (chỉ máy tính).
 const VENUE_PHOTO="";
-// Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn.
-// Số anh Minh AN đọc trên Google Maps ngày 11/11/2026. Cập nhật tay khi số đổi nhiều.
-const GOOGLE_RATING={stars:4.9,n:176};
 // Link mã QR ở màn cảm ơn trên tablet. Tạm dùng link hồ sơ Google của quán (giống nút "xem bản đồ"): khách quét, bấm "đánh giá".
 // Có link "xin đánh giá" từ Google Business (dạng https://g.page/r/…/review, mở thẳng ô viết) thì thay vào đây rồi chạy: python3 tools/tao-qr.py
 // Để trống = không hiện khối QR. Google không cho chỉ mời khách hài lòng: khối này hiện cho mọi bàn, không lọc theo sao.
@@ -1197,21 +1186,19 @@ function flyHTML(){
   const evLine=ev?`<p class="fly-ev">${esc(ev.line)}${ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${ev.poster&&!WIDE.matches?` <button type="button" class="fly-more" data-pst="${ev.date}">xem poster</button>`:""}</p>`:"";
   let art="";
   if(WIDE.matches){
-    const rating=GOOGLE_RATING&&GOOGLE_RATING.stars?`<div class="sticker"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?`<br>${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></div>`:"";
     const pe=up.find(e=>e.poster),mp=!pe&&up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];
     const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
     art=pe
-      ?`<div class="fly-art pst"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${rating}${pe.date!==sel?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
-      :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button>${tape}${rating}</div>`
+      ?`<div class="fly-art pst"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${pe.date!==sel?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
+      :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button>${tape}</div>`
       :VENUE_PHOTO
-      ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div>${tape}${rating}</div>`
-      :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div>${tape}${rating}</div>`;
+      ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div>${tape}</div>`
+      :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div>${tape}</div>`;
   }
   return `<div class="fly-main">
       <p class="fly-pre" id="flyPre">${esc(h.pre)}</p>
       <h1 class="fly-dj${flyVN(dj)?" vn":""}" id="flyDj" style="--f:${flyFit(dj)}">${esc(dj)}</h1>
       <div class="fly-row"><p>${esc(hoursOf(dw))}</p><p>${WD_FLY[dw]} · ${ddmm(sel)}<span class="yr">.${sel.slice(0,4)}</span></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
-      ${GOOGLE_RATING&&GOOGLE_RATING.stars&&!WIDE.matches?`<a class="g-rate" href="${MAP_URL}" target="_blank" rel="noopener"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?` · ${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></a>`:""}
       ${!isNow||n.state==="tonight"?"":`<p class="fly-state" role="status">${esc(t.text)}</p>`}
       ${evLine}
       <div class="fly-btns"><button type="button" class="btn-ink" data-go="book" data-ev="${sel}">${isNow&&n.state==="tonight"?"ĐẶT BÀN TỐI NAY":isNow?"ĐẶT BÀN":"GIỮ BÀN ĐÊM NÀY"}${ICO_ARW}</button><button type="button" class="btn-line" data-go="roster"${isNow?"":` data-ev="${sel}"`}>CHỌN PROMOTER</button><span class="fly-links"><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call tel" href="tel:${HOTLINE}">${ICO_TEL}<span>gọi ${HOTLINE_SHOW}</span></a></span></div>
