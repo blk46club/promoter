@@ -491,6 +491,7 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .fly-art.pst .pic>img{height:auto}
 .fly-cap{margin:26px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.06em}
 .fly-cap b{font-weight:400}
+.fly-art:has(.fly-cap) .sticker{bottom:58px} /* có dòng "SẮP TỚI" dưới poster: nhãn sao nằm trên ảnh, không đè chữ */
 /* xem poster to */
 .pdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
 .pdlg::backdrop{background:rgba(0,0,0,.86)}
@@ -502,6 +503,10 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .sticker b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-s);line-height:1.1}
 .sticker span{font-size:var(--fs-sm);font-weight:700;line-height:1.25}
 .fly .sticker{background:var(--ink);color:var(--acid)}
+/* màn hẹp không có poster bên phải: điểm google nằm ngay dưới dải giờ/ngày/địa chỉ, bấm mở google maps */
+.g-rate{justify-self:start;display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none;font-size:var(--fs-body);font-weight:600}
+.g-rate b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);line-height:1;background:var(--ink);color:var(--acid);padding:6px 10px;transform:rotate(-3deg)}
+.g-rate span{text-decoration:underline;text-underline-offset:3px}
 
 /* chọn promoter: nền đen, mỗi người một tấm ảnh dán băng keo trên nền giấy. điện thoại: một dải vuốt ngang */
 .ros{padding-block:24px 40px;border-top:1px solid var(--line);scroll-margin-top:64px}
@@ -1095,8 +1100,9 @@ function promoReviewsHTML(i){
 // Ảnh dọc trong quán cho khung bên phải tờ rơi: chép ảnh vào public/brand/ rồi ghi đường dẫn ở đây, vd "brand/trong-quan.jpg".
 // Thứ tự khung bên phải: poster đêm gần nhất có poster > poster lịch tháng > ảnh quán > tấm thể loại nhạc (chỉ máy tính).
 const VENUE_PHOTO="";
-// Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn tròn.
-const GOOGLE_RATING=null;
+// Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn.
+// Số anh Minh AN đọc trên Google Maps ngày 11/11/2026. Cập nhật tay khi số đổi nhiều.
+const GOOGLE_RATING={stars:4.9,n:176};
 // Link mã QR ở màn cảm ơn trên tablet. Tạm dùng link hồ sơ Google của quán (giống nút "xem bản đồ"): khách quét, bấm "đánh giá".
 // Có link "xin đánh giá" từ Google Business (dạng https://g.page/r/…/review, mở thẳng ô viết) thì thay vào đây rồi chạy: python3 tools/tao-qr.py
 // Để trống = không hiện khối QR. Google không cho chỉ mời khách hài lòng: khối này hiện cho mọi bàn, không lọc theo sao.
@@ -1205,6 +1211,7 @@ function flyHTML(){
       <p class="fly-pre" id="flyPre">${esc(h.pre)}</p>
       <h1 class="fly-dj${flyVN(dj)?" vn":""}" id="flyDj" style="--f:${flyFit(dj)}">${esc(dj)}</h1>
       <div class="fly-row"><p>${esc(hoursOf(dw))}</p><p>${WD_FLY[dw]} · ${ddmm(sel)}<span class="yr">.${sel.slice(0,4)}</span></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
+      ${GOOGLE_RATING&&GOOGLE_RATING.stars&&!WIDE.matches?`<a class="g-rate" href="${MAP_URL}" target="_blank" rel="noopener"><b>★ ${fmt1(+GOOGLE_RATING.stars)}</b><span>trên google maps${GOOGLE_RATING.n?` · ${(+GOOGLE_RATING.n).toLocaleString("vi-VN")} đánh giá`:""}</span></a>`:""}
       ${!isNow||n.state==="tonight"?"":`<p class="fly-state" role="status">${esc(t.text)}</p>`}
       ${evLine}
       <div class="fly-btns"><button type="button" class="btn-ink" data-go="book" data-ev="${sel}">${isNow&&n.state==="tonight"?"ĐẶT BÀN TỐI NAY":isNow?"ĐẶT BÀN":"GIỮ BÀN ĐÊM NÀY"}${ICO_ARW}</button><button type="button" class="btn-line" data-go="roster"${isNow?"":` data-ev="${sel}"`}>CHỌN PROMOTER</button><span class="fly-links"><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call tel" href="tel:${HOTLINE}">${ICO_TEL}<span>gọi ${HOTLINE_SHOW}</span></a></span></div>
