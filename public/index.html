@@ -283,6 +283,7 @@ textarea{width:100%;background:var(--card);border:1px solid var(--line);padding:
 .ok{color:var(--good);font-size:var(--fs-sm)}
 .done{padding-block:48px;display:grid;gap:12px}
 .done .display{font-size:clamp(44px,9vw,96px)}
+.done .display:not(.done-hold){padding-top:.18em} /* màn cảm ơn trên tablet: chừa chỗ dấu hỏi trên chữ hoa, không đè dòng "bàn …" phía trên */
 /* GIỮ CHỖ: nhỏ hơn 30% và đủ line-height để dấu Ữ, Ỗ không đè dòng "đã gửi yêu cầu" */
 .done .display.done-hold{font-size:clamp(31px,6.3vw,67px);line-height:1.2}
 
@@ -357,6 +358,11 @@ form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--li
 label.f,div.f{display:grid;gap:4px;align-content:start;font-size:var(--fs-xs);color:var(--concrete);min-width:0}
 .tpick-f{gap:8px}
 .hold-note{color:var(--acid);font-size:var(--fs-ui);line-height:1.45;margin:0;text-transform:none}.hold-note:empty{display:none}.hold-note.bad{color:var(--bad-text)}
+.gqr{display:flex;align-items:center;gap:20px;margin-top:20px;padding:16px;background:var(--paper);color:var(--ink);max-width:500px;box-shadow:var(--hard) var(--acid)}
+.gqr img{width:148px;height:148px;flex:none;background:var(--white);image-rendering:pixelated}
+.gqr p{margin:0;font-size:var(--fs-lead);line-height:1.4}
+.gqr b{display:block;font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);line-height:1.1;text-transform:uppercase;margin-bottom:6px}
+@media (min-width:700px){.gqr img{width:184px;height:184px}}
 .done .hold-note{font-size:var(--fs-lead);margin:12px 0 20px;max-width:46ch}
 .tmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line)}
 .tmap{position:relative;min-width:600px;line-height:0}
@@ -1091,6 +1097,9 @@ function promoReviewsHTML(i){
 const VENUE_PHOTO="";
 // Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn tròn.
 const GOOGLE_RATING=null;
+// Link "xin đánh giá" của hồ sơ Google (dạng https://g.page/r/…/review) và ảnh QR tạo sẵn từ đúng link đó.
+// Để trống = không hiện khối QR ở màn cảm ơn trên tablet. Google không cho chỉ mời khách hài lòng: khối này hiện cho mọi bàn, không lọc theo sao.
+const GOOGLE_REVIEW_URL="",GOOGLE_REVIEW_QR="brand/google-review-qr.svg";
 /* lịch event (anh Minh 09/11): tên đêm theo poster lịch tháng 11 (events/lich-thang-11.jpg),
    phần còn lại theo file Canva "EVENT- BLK46 - Q4". poster không ghi các tối ladies night thường và phố hàng nhạc.
    chỉ ghi phần khách cần biết. KHÔNG ghi kịch bản: moment, giờ diễn, trò chơi, quà bất ngờ, decor (quán khác có vào xem).
@@ -1500,6 +1509,7 @@ function renderTable(bid){
     const tip=tableTips(b);
     app.innerHTML=`<section class="done"><div class="eyebrow">bàn ${esc(b.table||"")} · ${esc(guestLabel(b))}</div><h1 class="display">CẢM ƠN<span class="y">.</span></h1>
     <p class="lede">${tip?`tip ${vnd(tip)} sẽ được cộng vào bill khi bạn thanh toán. `:""}keep it loud. see you out there.</p>
+    ${GOOGLE_REVIEW_URL?`<div class="gqr"><img src="${esc(GOOGLE_REVIEW_QR)}" alt="mã qr mở trang đánh giá blk46 trên google" width="148" height="148" onerror="this.closest('.gqr').remove()"><p><b>tối nay thế nào?</b>quét mã bằng điện thoại của bạn, kể cho google nghe.</p></div>`:""}
     <p class="note" style="margin-top:40px">dành cho nhân viên: <a href="#admin">về quản lý</a></p></section>`;return;
   }
   const i=idolById(R.idolId);const rows=computeBoard();const r=rows.find(x=>x.idol.id===R.idolId)||{n:0};
