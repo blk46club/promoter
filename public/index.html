@@ -1097,9 +1097,10 @@ function promoReviewsHTML(i){
 const VENUE_PHOTO="";
 // Điểm Google Maps của quán: ghi đúng số trên Google, vd {stars:4.8,n:120}. null = không hiện nhãn tròn.
 const GOOGLE_RATING=null;
-// Link "xin đánh giá" của hồ sơ Google (dạng https://g.page/r/…/review) và ảnh QR tạo sẵn từ đúng link đó.
-// Để trống = không hiện khối QR ở màn cảm ơn trên tablet. Google không cho chỉ mời khách hài lòng: khối này hiện cho mọi bàn, không lọc theo sao.
-const GOOGLE_REVIEW_URL="",GOOGLE_REVIEW_QR="brand/google-review-qr.svg";
+// Link mã QR ở màn cảm ơn trên tablet. Tạm dùng link hồ sơ Google của quán (giống nút "xem bản đồ"): khách quét, bấm "đánh giá".
+// Có link "xin đánh giá" từ Google Business (dạng https://g.page/r/…/review, mở thẳng ô viết) thì thay vào đây rồi chạy: python3 tools/tao-qr.py
+// Để trống = không hiện khối QR. Google không cho chỉ mời khách hài lòng: khối này hiện cho mọi bàn, không lọc theo sao.
+const GOOGLE_REVIEW_URL="https://share.google/SntJEvVotOjQeHLYL",GOOGLE_REVIEW_QR="brand/google-review-qr.svg";
 /* lịch event (anh Minh 09/11): tên đêm theo poster lịch tháng 11 (events/lich-thang-11.jpg),
    phần còn lại theo file Canva "EVENT- BLK46 - Q4". poster không ghi các tối ladies night thường và phố hàng nhạc.
    chỉ ghi phần khách cần biết. KHÔNG ghi kịch bản: moment, giờ diễn, trò chơi, quà bất ngờ, decor (quán khác có vào xem).

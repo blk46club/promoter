@@ -1,7 +1,7 @@
 name: Kiểm bộ thiết kế (màu, cỡ chữ)
 on:
   pull_request:
-    paths: ["public/index.html", "tools/kiem-token.cjs"]
+    paths: ["public/index.html", "tools/kiem-token.cjs", "public/brand/google-review-qr.svg"]
 permissions:
   contents: read
 jobs:
