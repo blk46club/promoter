@@ -37,5 +37,16 @@ for (const m of html.matchAll(/var\((--[\w-]+)/g))
 const left = [...css.matchAll(/font-size:\d+px/g)].length;
 if (left > FS_LEFT_MAX) errs.push(`có ${left} chỗ gõ cỡ chữ px ngoài thang (tối đa ${FS_LEFT_MAX}). dùng var(--fs-…)`);
 
+// 5. mã QR đánh giá Google phải khớp link trong GOOGLE_REVIEW_URL (tạo lại: python3 tools/tao-qr.py)
+const gq = html.match(/const GOOGLE_REVIEW_URL="([^"]*)",GOOGLE_REVIEW_QR="([^"]*)"/);
+if (gq && gq[1]) {
+  const svgFile = path.join(__dirname, "..", "public", gq[2]);
+  const svg = fs.existsSync(svgFile) ? fs.readFileSync(svgFile, "utf8") : "";
+  const u = (svg.match(/data-url="([^"]*)"/) || [])[1];
+  const unesc = s => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+  if (!svg) errs.push(`thiếu ảnh ${gq[2]}. chạy: python3 tools/tao-qr.py`);
+  else if (!u || unesc(u) !== gq[1]) errs.push(`ảnh ${gq[2]} không khớp GOOGLE_REVIEW_URL. chạy: python3 tools/tao-qr.py`);
+}
+
 if (errs.length) { console.error("Lệch bộ thiết kế:\n- " + [...new Set(errs)].join("\n- ")); process.exit(1); }
 console.log(`ổn: không có mã màu gõ thẳng, ${defined.size} biến, ${left}/${FS_LEFT_MAX} chỗ cỡ chữ ngoài thang.`);
