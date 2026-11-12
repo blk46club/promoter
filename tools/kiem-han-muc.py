@@ -8,8 +8,9 @@ Nó không đăng nhập, nên chỉ đọc được đúng những gì trang we
 reviews, visits. Mỗi lần chạy tốn khoảng (số promoter + số ảnh to + 1 + số ngày trong tháng) lượt đọc,
 rất nhỏ so với 50.000 lượt mỗi ngày của gói miễn phí.
 
-Đây là lệnh của việc kiểm tra mỗi tối (22:47 giờ Hà Nội). Dòng cho phép trong .claude/settings.json
-chỉ khớp đúng lệnh trên, nên khi chạy thật thì đừng thêm tham số.
+Việc kiểm tra mỗi tối (22:47 giờ Hà Nội) chạy trên GitHub Actions: .github/workflows/kiem-han-muc.yml.
+Claude vẫn chạy được bằng tay: dòng cho phép trong .claude/settings.json chỉ khớp đúng lệnh trên,
+nên khi chạy thật thì đừng thêm tham số.
 Thử phần tính toán mà không gọi mạng:  python3 tools/kiem-han-muc.py --tu-thu-muc <thư mục>
 (thư mục chứa idols.json, idolPhotos.json, reviews.json, visits.json và ma.json = {tên: mã http}).
 

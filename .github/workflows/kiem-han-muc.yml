@@ -1,0 +1,38 @@
+name: Kiểm tra hạn mức Firebase mỗi tối
+# Chạy tools/kiem-han-muc.py lúc 22:47 giờ Hà Nội (15:47 UTC). Lệnh chỉ đọc, không ghi gì lên Firebase.
+# Bình thường thì không báo gì. Hết hạn mức, luật Firestore cũ, lỗi, hoặc qua một mốc dung lượng
+# thì lượt chạy báo đỏ và GitHub gửi email cho người tạo lịch này.
+# Repo công khai nên ai cũng xem được log: log chỉ in dòng KẾT QUẢ, không in số lượt mở hay dung lượng.
+# Muốn xem đủ số: chạy  python3 tools/kiem-han-muc.py  trên máy hoặc nhờ Claude.
+on:
+  schedule:
+    - cron: "47 15 * * *"
+  workflow_dispatch:
+    inputs:
+      thu_bao_loi:
+        description: "Chạy thử: cố tình báo đỏ để xem email có về không"
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  kiem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chạy thử báo đỏ
+        if: ${{ inputs.thu_bao_loi }}
+        run: |
+          echo "Đây là lượt chạy thử, cố tình báo đỏ. Có email về là đúng."
+          exit 1
+      - uses: actions/checkout@v4
+      - name: Kiểm tra hạn mức (chỉ đọc)
+        run: |
+          ma=0
+          python3 tools/kiem-han-muc.py > "$RUNNER_TEMP/kq.txt" 2>&1 || ma=$?
+          grep -m1 '^KẾT QUẢ:' "$RUNNER_TEMP/kq.txt" || echo "KẾT QUẢ: không chạy được (mã thoát $ma)"
+          if grep -q '^CẢNH BÁO:' "$RUNNER_TEMP/kq.txt"; then
+            echo "CẢNH BÁO: đã qua một mốc dung lượng, xem số bằng cách chạy lệnh trên máy"
+            [ "$ma" -eq 0 ] && ma=4
+          fi
+          exit "$ma"
