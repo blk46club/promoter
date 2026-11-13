@@ -490,6 +490,8 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 /* poster ngang (wide:true): đầu trang vẫn khung dọc 4:5 (cắt bằng css, cùng một file), bấm vào xem ảnh ngang đủ khung */
 .fly-art.pst.wide .pic{aspect-ratio:4/5}
 .fly-art.pst.wide .pic>img{height:100%}
+/* tên DJ quản lý nhập, dưới poster (anh Minh 13/11) */
+.fly-cap{margin:30px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-d-s);line-height:1.15;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance}
 /* xem poster to */
 .pdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
 .pdlg.wide{max-width:min(92vw,1040px)}
@@ -878,7 +880,7 @@ const S={flyDate:"",flyWeek:"",db:null,user:null,assets:null,canEdit:false,canWr
   idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
-  tonight:{iso:"",dj:""},dj:{text:"",name:"",for:""},
+  tonight:{iso:"",dj:""},djs:{},dj:{text:"",name:"",for:""},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false}};
 
 const app=document.getElementById("app");
@@ -1204,21 +1206,26 @@ function nightInfo(now=Date.now()){
   const dow=n.getUTCDay(),iso=n.getUTCFullYear()+"-"+pad2(n.getUTCMonth()+1)+"-"+pad2(n.getUTCDate());
   return {iso,state,dow,day:`${WD_FLY[dow]} · ${pad2(n.getUTCDate())}.${pad2(n.getUTCMonth()+1)}.${n.getUTCFullYear()}`,time:hoursOf(dow)};
 }
-/* tên DJ từng đêm: tonight/{ngày} { date, dj }, quản lý nhập ở tab đặt bàn. chưa nhập (hoặc chưa đọc được) thì hiện HOUSE PARTY */
+/* tên DJ từng đêm: tonight/{ngày} { date, dj }, quản lý nhập ở tab đặt bàn.
+   mở trang thì đọc đêm đang nói tới (1 lượt như cũ). đêm khác chỉ đọc khi khách bấm sang đêm đó, mỗi đêm 1 lần */
 const DJ_FALLBACK="HOUSE PARTY";
-function fetchTonight(){
-  const n=nightInfo();if(!S.db||S.tonight.iso===n.iso)return;
-  S.tonight={iso:n.iso,dj:""};
-  S.db.doc("tonight/"+n.iso).get().then(d=>{
-    if(S.tonight.iso!==n.iso)return;
-    S.tonight.dj=d&&d.exists?String((d.data()||{}).dj||"").trim().slice(0,60):"";
-    paintDj();
-  }).catch(()=>{});
+function djOf(iso){
+  if(!S.db||!iso)return "";
+  if(S.djs[iso]===undefined){S.djs[iso]="";
+    S.db.doc("tonight/"+iso).get().then(d=>{
+      const dj=d&&d.exists?String((d.data()||{}).dj||"").trim().slice(0,60):"";
+      if(iso===nightInfo().iso)S.tonight={iso,dj};
+      if(dj!==S.djs[iso]){S.djs[iso]=dj;paintFly()}
+    }).catch(()=>{});
+  }
+  return S.djs[iso];
 }
-/* chữ to nhất trên tờ rơi: tên DJ quản lý nhập (chỉ đêm đang nói tới) > tên event > HOUSE PARTY */
+function fetchTonight(){djOf(nightInfo().iso)}
+/* chữ to nhất trên tờ rơi: tên event > tên DJ quản lý nhập > HOUSE PARTY.
+   đêm có event thì tên DJ hiện dưới poster (máy tính) hoặc dưới dòng mô tả (điện thoại, đêm chưa có poster) (anh Minh 13/11) */
 function flyHead(n,iso=n.iso){
-  const ev=eventOn(iso),dj=(iso===n.iso&&S.tonight.iso===n.iso&&S.tonight.dj)||"";
-  return {ev,head:dj||(ev&&ev.name)||DJ_FALLBACK,pre:"BLK46 PRESENTS"+(dj&&ev?" · "+ev.name:iso===n.iso&&n.state!=="closed"?" · TỐI NAY":"")};
+  const ev=eventOn(iso),dj=djOf(iso);
+  return {ev,dj:ev?dj.replace(/^dj\s+/i,""):"",head:(ev&&ev.name)||dj||DJ_FALLBACK,pre:"BLK46 PRESENTS"+(iso===n.iso&&n.state!=="closed"?" · TỐI NAY":"")};
 }
 /* đêm đang hiện trên tờ rơi: đêm khách bấm ở dải tuần, không thì đêm đang nói tới */
 const flySel=n=>S.flyDate&&S.flyDate>n.iso&&eventOn(S.flyDate)?S.flyDate:n.iso;
@@ -1228,7 +1235,7 @@ const flyW=t=>[...t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""
 /* --f = bề rộng (tính theo cỡ chữ) của dòng dài nhất khi ngắt tên làm 2 dòng đều nhất, cộng 3% cho chắc */
 const flyFit=t=>{const w=t.trim().split(/\s+/);let b=flyW(w.join(" "));for(let i=1;i<w.length;i++)b=Math.min(b,Math.max(flyW(w.slice(0,i).join(" ")),flyW(w.slice(i).join(" "))));return Math.max(1.6,+(b*1.03).toFixed(3))};
 const flyVN=t=>/[^\x00-\x7f]/.test(t);
-function paintDj(){const el=document.getElementById("flyDj");if(!el)return;const n=nightInfo(),h=flyHead(n,flySel(n));el.textContent=h.head;el.style.setProperty("--f",flyFit(h.head));el.classList.toggle("vn",flyVN(h.head));const p=document.getElementById("flyPre");if(p)p.textContent=h.pre}
+function paintFly(){const el=document.getElementById("fly");if(el)el.innerHTML=flyHTML()}
 const SIL=`<svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="38" r="20" fill="currentColor"/><path d="M10 120c2-32 19-48 40-48s38 16 40 48z" fill="currentColor"/></svg>`;
 /* hình vẽ dùng chung: mũi tên và ống nghe, cùng nét (thay cho ký tự mũi tên, theo bản soi impeccable 10/11) */
 const ICO_DN=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
@@ -1238,13 +1245,13 @@ const WIDE=matchMedia("(min-width:1024px)"); // poster bên phải tờ rơi ch�
 const ddmm=iso=>iso.slice(8)+"."+iso.slice(5,7);
 function flyHTML(){
   const n=nightInfo(),sel=flySel(n),isNow=sel===n.iso,t=tonightInfo(),h=flyHead(n,sel),dj=h.head,ev=h.ev,dw=dowOfIso(sel);
-  const evLine=ev?`<p class="fly-ev">${esc(ev.line)}${ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${ev.poster&&!WIDE.matches?` <button type="button" class="fly-more" data-pst="${ev.date}">xem poster</button>`:""}</p>`:"";
+  const pe=WIDE.matches&&ev&&ev.poster?ev:null,djCap=h.dj&&pe?`<p class="fly-cap">DJ ${esc(h.dj)}</p>`:"";
+  const evLine=ev?`<p class="fly-ev">${esc(ev.line)}${ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${h.dj&&!pe?`<span class="x">dj: ${esc(h.dj.toLowerCase())}</span>`:""}${ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${ev.poster&&!WIDE.matches?` <button type="button" class="fly-more" data-pst="${ev.date}">xem poster</button>`:""}</p>`:"";
   let art="";
   if(WIDE.matches){
     /* chỉ poster của chính đêm đó. đêm chưa có poster thì để trống, không lấy poster đêm khác (anh Minh 13/11) */
-    const pe=EVENTS.find(e=>e.date===sel&&e.poster);
     const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
-    if(pe)art=`<div class="fly-art pst${pe.wide?" wide":""}"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}"${pe.pos?` style="object-position:${esc(pe.pos)} 50%"`:""} onerror="this.closest('.fly-art').remove()"></button>${tape}</div>`;
+    if(pe)art=`<div class="fly-art pst${pe.wide?" wide":""}"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}"${pe.pos?` style="object-position:${esc(pe.pos)} 50%"`:""} onerror="this.closest('.fly-art').remove()"></button>${tape}${djCap}</div>`;
   }
   return `<div class="fly-main">
       <p class="fly-pre" id="flyPre">${esc(h.pre)}</p>
@@ -1991,7 +1998,7 @@ function voucherListHTML(f,td){
 function djCfgHTML(){
   const D=S.dj;if(!D.text)D.text=isoToDM(nightInfo().iso);
   return `<details class="tblcfg" id="djCfg"><summary>tên DJ trên đầu trang${S.tonight.dj?` · tối nay: ${esc(S.tonight.dj)}`:""}</summary>
-    <p class="note" style="margin:6px 0">tên này hiện to nhất ở đầu trang lineup. mỗi đêm một tên. để trống rồi lưu thì hiện tên event của đêm đó (sửa trong EVENTS ở index.html), không có event thì hiện ${DJ_FALLBACK}.</p>
+    <p class="note" style="margin:6px 0">mỗi đêm một tên. đêm có event: tên DJ hiện dưới poster ở đầu trang (máy tính), hoặc dưới dòng mô tả (điện thoại, đêm chưa có poster). đêm không có event: tên DJ là chữ to nhất ở đầu trang, để trống thì hiện ${DJ_FALLBACK}.</p>
     <div class="fields">
       <label class="f">đêm<input id="djDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="vd 13/11" data-date value="${esc(D.text)}"><small class="dhint">${esc(dateHint(D.text))}</small></label>
       <label class="f">tên DJ (tối đa 60 ký tự)<input id="djName" maxlength="60" autocomplete="off" value="${esc(D.name)}"></label>
@@ -2013,7 +2020,7 @@ function armDjCfg(){
     const dj=nm.value.trim().replace(/\s+/g," ").slice(0,60);btn.disabled=true;
     try{
       if(dj)await S.db.doc("tonight/"+iso).set({date:iso,dj,updatedAt:Date.now()});else await S.db.doc("tonight/"+iso).delete();
-      D.name=dj;if(S.tonight.iso===iso)S.tonight.dj=dj;
+      D.name=dj;S.djs[iso]=dj;if(S.tonight.iso===iso)S.tonight.dj=dj;
       m.textContent=dj?`đã lưu: ${dj} (${fmtDate(iso)})`:`đã xoá, đêm ${fmtDate(iso)} hiện ${DJ_FALLBACK}`;
     }catch(_){m.textContent="chưa lưu được. nếu lần đầu dùng, cần dán luật tonight vào Firebase trước."}
     btn.disabled=false;
