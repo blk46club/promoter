@@ -60,13 +60,14 @@ const authReady = new Promise((resolve) => {
 //  - idolsPrivate/{id}: đủ mọi trường + ảnh gốc, chỉ quản lý đọc.
 //  - idols/{id}: chỉ những trường idol đã đồng ý hiển thị + 1 ảnh nhỏ (thumb), khách đọc được khi public == true.
 //    Mỗi lượt mở lineup tải hết các doc này, nên không để ảnh to ở đây (anh Minh 09/11: ảnh nhỏ trước, ảnh to sau).
-//  - idolPhotos/{id}: ảnh to cho khung lớn trên lineup (main = toàn thân, alt = nghiêng),
+//  - idolPhotos/{id}: ảnh to cho hồ sơ trên lineup (main = toàn thân, alt = nghiêng, close = cận),
 //    chỉ tải khi khách chọn promoter đó.
-export const THUMB_V = 2; // tăng số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+export const THUMB_V = 3; // tăng số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+// v3 (13/11): idolPhotos thêm close = ảnh cận cỡ to, vì hồ sơ giờ hiện từng ảnh một, khung to, ảnh nhỏ 320px bị mờ
 // v2 (09/11): thêm ang = các góc ảnh hồ sơ có (c cận, f toàn thân, s nghiêng) để tờ hồ sơ trên lineup ghi đúng tên góc
 const THUMB_SIDE = 320, THUMB_Q = 0.7;
 const coverOf = (p) => p.close || p.full || p.side || "";
-const spotOf = (p) => { const main = p.full || p.close || p.side || ""; return { main, alt: p.side && p.side !== main ? p.side : "" }; };
+const spotOf = (p) => { const main = p.full || p.close || p.side || ""; return { main, alt: p.side && p.side !== main ? p.side : "", close: p.close && p.close !== main ? p.close : "" }; };
 async function thumbOf(src) {
   if (!src || !src.startsWith("data:")) return src || ""; // ảnh trên Storage: dùng luôn link (Storage tính dung lượng riêng)
   try { return await shrinkSrc(src, THUMB_SIDE, THUMB_Q); } catch (_) { return src; }
@@ -111,7 +112,7 @@ function makeDb(staff) {
           const b = writeBatch(fs);
           b.set(doc(fs, "idolsPrivate/" + id), { ...body, thumb, thumbV: THUMB_V });
           b.set(doc(fs, "idols/" + id), pub);
-          if (sp.main) b.set(doc(fs, "idolPhotos/" + id), { public: pub.public, main: sp.main, alt: sp.alt, updatedAt: Date.now() });
+          if (sp.main) b.set(doc(fs, "idolPhotos/" + id), { public: pub.public, main: sp.main, alt: sp.alt, close: sp.close, updatedAt: Date.now() });
           else b.delete(doc(fs, "idolPhotos/" + id));
           await b.commit();
         },
