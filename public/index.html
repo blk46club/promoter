@@ -689,7 +689,7 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 @media (min-width:900px){.wk-hint span{display:inline}}
 .wk-mp{font:inherit;font-weight:700;background:none;border:0;padding:0;min-height:44px;color:var(--paper);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .wk-mp:hover{color:var(--acid)}
-/* ưu đãi hằng tuần (thứ 5, chủ nhật): ô giấy viền đen dán trên tờ rơi của đêm đó */
+/* ưu đãi hằng tuần (thứ 5, chủ nhật): ô giấy dưới dải các đêm, bóng vàng trên nền đen */
 .promo{background:var(--paper);color:var(--ink);border:2px solid var(--ink);box-shadow:var(--hard) var(--ink);padding:14px 16px 16px;margin:8px 5px 5px 0;max-width:640px}
 .promo p{margin:0}
 .promo-t{font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.25;letter-spacing:.04em}
@@ -699,6 +699,9 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 .promo-go:hover{background:var(--acid);color:var(--ink);outline:3px solid var(--ink);outline-offset:-3px}
 .promo-pst{font:inherit;font-size:var(--fs-ui);font-weight:700;background:none;border:0;padding:0;min-height:44px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:4px}
 @media (min-width:900px){.promo{display:flex;align-items:center;gap:20px;padding:12px 16px 12px 20px}.promo-m{flex:1;min-width:0}.promo-r{margin-top:0;flex:none}.promo-go{flex:none;min-height:44px}}
+.pband{padding-bottom:28px}
+.pband .promo{margin:0 5px 5px 0;max-width:none;border-color:var(--paper);box-shadow:var(--hard) var(--acid)}
+@media (min-width:900px){.pband{padding-bottom:36px}.pband .promo{padding:16px 20px 16px 24px}}
 .tk-ev{margin:0;padding:10px 14px;border-bottom:3px solid var(--ink);background:var(--acid);font-family:var(--display);font-size:var(--fs-md);letter-spacing:.03em}
 .tk-ev[hidden]{display:none}
 /* form voucher + dòng "đã ghi voucher" trên form đặt bàn */
@@ -1187,6 +1190,8 @@ function promoHTML(dow){
   return `<div class="promo"><div class="promo-m"><p class="promo-t">${esc(p.tag)} · MỖI ${esc(DAY_FULL[dow])}</p><p class="promo-l">${esc(p.line)}</p></div>
     <div class="promo-r"><a class="promo-go" href="#voucher-${dow}">${esc(p.go)}</a>${p.poster?`<button type="button" class="promo-pst" data-pst="promo-${dow}">xem poster</button>`:""}</div></div>`;
 }
+/* ưu đãi của đêm đang chọn: nằm dưới dải các đêm, không nằm trong tờ rơi vàng, để tờ rơi đêm nào cũng cao như nhau (anh Minh 13/11) */
+const promoBandHTML=()=>{const h=promoHTML(dowOfIso(flySel(nightInfo())));return h?`<section class="pband" aria-label="ưu đãi của đêm đang chọn">${h}</section>`:""};
 const WD_FLY=["CN","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const eventOn=iso=>EVENTS.find(e=>e.date===iso);
 /* event từ đêm đang nói tới trên tờ rơi trở đi (đêm đã qua thì ẩn) */
@@ -1253,7 +1258,6 @@ function flyHTML(){
       ${!isNow||n.state==="tonight"?"":`<p class="fly-state" role="status">${esc(t.text)}</p>`}
       ${evLine}
       <div class="fly-btns"><button type="button" class="btn-ink" data-go="book" data-ev="${sel}">${isNow&&n.state==="tonight"?"ĐẶT BÀN TỐI NAY":isNow?"ĐẶT BÀN":"GIỮ BÀN ĐÊM NÀY"}${ICO_ARW}</button><button type="button" class="btn-line" data-go="roster"${isNow?"":` data-ev="${sel}"`}>CHỌN PROMOTER</button><span class="fly-links"><a class="fly-call" href="${MENU_URL}" target="_blank" rel="noopener">xem menu</a><a class="fly-call tel" href="tel:${HOTLINE}">${ICO_TEL}<span>gọi ${HOTLINE_SHOW}</span></a></span></div>
-      ${promoHTML(dw)}
     </div>${art}`;
 }
 /* dải các đêm trong tuần: event gom theo tuần (thứ 2 → chủ nhật), mỗi lần hiện một tuần */
@@ -1393,6 +1397,7 @@ function renderLineup(){
   ${banner()}
   <section class="fly" id="fly" aria-label="tờ rơi của đêm đang chọn">${flyHTML()}</section>
   ${nightsHTML()}
+  ${promoBandHTML()}
   <section class="ros" id="roster" aria-label="chọn promoter">
     <div class="ros-head">
       <div><h2>Chọn người takecare <br>cuộc chơi tối nay</h2><p>bấm vào thẻ để xem hồ sơ.</p></div>
