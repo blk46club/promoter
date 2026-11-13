@@ -1350,7 +1350,7 @@ function sheetHTML(r,ghost){
       <h3 class="sheet-name">${esc(i.stageName)}</h3>
       <dl class="sheet-dl">${dl.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
       <div class="sheet-st" aria-label="chỉ số từ tag khen của khách">${stats.map(([l,v])=>`<div><div class="l"><span>${l}</span><span>${v}/10</span></div><i><b style="width:${v*10}%"></b></i></div>`).join("")}</div>
-      <p class="note">${ghost?"chỉ số tính từ tag khen của khách.":enough?"chỉ số = tỉ lệ lượt chọn tag của khách.":`cần ${MIN_FOR_STATS} lượt chấm trở lên thì chỉ số mới có ý nghĩa.`}</p>
+      ${ghost||enough?`<p class="note">${ghost?"chỉ số tính từ tag khen của khách.":"chỉ số = tỉ lệ lượt chọn tag của khách."}</p>`:""}
       ${(i.forte||[]).length?`<div class="special"><span>SỞ TRƯỜNG</span><div class="forte">${i.forte.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${(i.talents||[]).length?`<div class="special"><span>KỸ NĂNG ĐẶC BIỆT</span><div class="talents">${i.talents.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`:""}
       ${q?`<blockquote>“${esc(q.comment)}”<span>${starStr(q.stars)} · ${ago(q.createdAt||Date.now())}</span></blockquote>`:""}
