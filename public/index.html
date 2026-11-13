@@ -578,26 +578,40 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 /* nền mờ làm từ chính ảnh đó (cùng file, không tải thêm): ảnh không đúng tỉ lệ khung vẫn kín khung mà không bị cắt */
 .sheet-pics .fr img.bg{object-fit:cover;filter:blur(24px) brightness(.5);transform:scale(1.2)}
 .sheet-pics .fr img.lq{filter:blur(10px);transform:scale(1.06)}
-.sp-nm{display:none}
+.sp-nm,.sp-dots,.st-x{display:none}
+.st-x{justify-self:start;min-height:44px;padding:0;background:none;border:0;color:var(--paper);font:inherit;font-size:var(--fs-ui);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .sp-ar,.sp-dn{border:0;cursor:pointer;color:var(--paper);background:var(--ink);font:inherit}
 .sp-ar:hover:not(:disabled),.sp-dn:hover{background:var(--acid);color:var(--ink)}
 .sp-ar:disabled{opacity:.25;cursor:default}
 /* điện thoại: ảnh dọc kín khung, lướt lên/xuống từng ảnh như video dọc. ảnh là các nấc dừng của chính tờ hồ sơ,
    không phải một khung cuộn lồng bên trong, nên lướt qua ảnh cuối là xuống thẳng phần chỉ số, không bị kẹt. */
+/* điện thoại (anh Minh 13/11, lần 2): ảnh kín khung, vuốt ngang từng ảnh. nút "xem chỉ số" trên mỗi ảnh mở cửa sổ chỉ số
+   đè lên ảnh, nút "← xem ảnh" hoặc nút back đóng lại. nút đặt bàn luôn ghim ở đáy. */
 @media (max-width:899px){
-  .sdlg .sheet{container-type:size;scroll-snap-type:y mandatory}
-  .sdlg .sheet-info{scroll-snap-align:start}
-  .sdlg .sp-f{height:calc(100vh - 83px);height:calc(100dvh - 83px);height:calc(100cqh - 83px);scroll-snap-align:start;scroll-snap-stop:always;position:relative}
+  .sdlg .sheet{overflow:hidden;grid-template-rows:minmax(0,1fr) auto;align-content:stretch;position:relative}
+  .sdlg .sheet-pics,.sdlg .sheet-info{grid-area:1/1;min-height:0}
+  .sdlg .sp-trk{height:100%;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+  .sdlg .sp-trk::-webkit-scrollbar{display:none}
+  .sdlg .sp-f{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative}
   .sdlg .sp-f .fr{height:100%}
   .sdlg .sp-f figcaption{position:absolute;left:0;right:0;bottom:0;padding:48px 16px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     background:linear-gradient(transparent,rgba(0,0,0,.72));font-size:var(--fs-sm);color:var(--paper-2);pointer-events:none}
   .sdlg .sp-nm{display:block;font-family:var(--display);font-size:var(--fs-d-s);line-height:1.15;color:var(--paper);text-transform:uppercase;overflow-wrap:anywhere}
   .sdlg .sp-dn{pointer-events:auto;flex:none;min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);background:rgba(0,0,0,.55);border:1px solid var(--line)}
+  .sdlg .sp-dn svg{transform:rotate(180deg)}
   .sdlg .sp-ar{display:none}
+  /* vạch nhỏ trên đầu ảnh: có mấy ảnh, đang ở ảnh nào (thay cho số "2 / 3" đã bỏ) */
+  .sdlg .sp-dots{position:absolute;top:28px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none}
+  .sdlg .sp-dots i{width:18px;height:3px;background:var(--paper);opacity:.4}
+  .sdlg .sp-dots i.on{background:var(--acid);opacity:1}
+  .sdlg .sheet-info{z-index:1;overflow:auto;overscroll-behavior:contain;background:var(--ink);visibility:hidden;opacity:0;transform:translateY(24px);
+    transition:opacity .2s ease-out,transform .2s ease-out,visibility 0s .2s}
+  .sdlg .sheet.st-on .sheet-info{visibility:visible;opacity:1;transform:none;transition:opacity .2s ease-out,transform .2s ease-out}
+  .sdlg .sheet-back{display:none}
+  .sdlg .st-x{display:block}
   .sdlg .sheet-info .sheet-cta{display:none}
-  .sheet-bar{position:sticky;bottom:0;z-index:1;background:var(--ink);padding:10px 16px 12px}
+  .sheet-bar{position:relative;z-index:2;background:var(--ink);padding:10px 16px 12px}
   .sheet-bar .sheet-cta{position:static;box-shadow:none}
-  .sp-end{display:block;height:0;scroll-snap-align:end} /* nấc dừng ở đáy, để cuộn được hết phần chữ dưới cùng */
 }
 /* máy tính: mỗi lần một ảnh, bấm mũi tên (hoặc phím ←/→, vuốt ngang bàn di chuột) để xem ảnh khác */
 @media (min-width:900px){
@@ -610,7 +624,7 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
   .sp-ar{position:absolute;top:calc(50% - 40px);width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--line)}
   .sp-pv{left:8px}.sp-nx{right:8px}
   .sp-pv svg{transform:scaleX(-1)}
-  .sheet-bar,.sp-end{display:none}
+  .sheet-bar{display:none}
 }
 .sheet-info{padding:8px 16px 22px;display:grid;gap:16px;align-content:start;min-width:0}
 @media (min-width:900px){.sheet-info{padding:28px 64px 28px 32px;gap:18px;border-left:1px solid var(--line)}}
@@ -1327,10 +1341,11 @@ function sheetHTML(r,ghost){
   const ps=pics.length?pics:[{}],np=ps.length;
   const cta=ghost?"":full?`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT NGÀY KHÁC&nbsp;→</a>`:`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`;
   return `<div class="sheet-pics"><div class="sp-trk"${np>1?` tabindex="0" aria-label="ảnh của ${esc(i.stageName)}, ${np} ảnh"`:""}>${ps.map((x,k)=>`<figure class="sp-f"><div class="fr">${SIL}${x.src?`${x.lq?"":`<img class="bg" src="${esc(x.src)}" alt="" aria-hidden="true" onerror="this.remove()">`}<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}</div>
-      <figcaption><span class="sp-nm">${esc(i.stageName)}</span>${ghost?"":`<button type="button" class="sp-dn" data-spdn>${k<np-1?"ảnh tiếp":"xem chỉ số"} ${ICO_DN}</button>`}</figcaption></figure>`).join("")}</div>
+      <figcaption><span class="sp-nm">${esc(i.stageName)}</span>${ghost?"":`<button type="button" class="sp-dn" data-spst>xem chỉ số ${ICO_DN}</button>`}</figcaption></figure>`).join("")}</div>
+      ${np>1?`<div class="sp-dots" aria-hidden="true">${ps.map((_,k)=>`<i${k?"":' class="on"'}></i>`).join("")}</div>`:""}
       ${np>1?`<button type="button" class="sp-ar sp-pv" data-sp="-1" aria-label="ảnh trước">${ICO_ARW}</button><button type="button" class="sp-ar sp-nx" data-sp="1" aria-label="ảnh sau">${ICO_ARW}</button>`:""}</div>
     <div class="sheet-info">
-      ${ghost?"":`<button type="button" class="sheet-back" data-x>← xem người khác</button>`}
+      ${ghost?"":`<button type="button" class="sheet-back" data-x>← xem người khác</button><button type="button" class="st-x" data-stx>← xem ảnh</button>`}
       <p class="sheet-eb">${eb}</p>
       <h3 class="sheet-name">${esc(i.stageName)}</h3>
       <dl class="sheet-dl">${dl.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
@@ -1341,7 +1356,7 @@ function sheetHTML(r,ghost){
       ${q?`<blockquote>“${esc(q.comment)}”<span>${starStr(q.stars)} · ${ago(q.createdAt||Date.now())}</span></blockquote>`:""}
       ${ghost?"":full?`<p class="sheet-load">${esc(i.stageName)} fully booked tối nay.</p>${cta}`
         :`${night?`<p class="sheet-load">tối nay còn ${LOAD_MAX-ld} chỗ đặt trước</p>`:""}${cta}`}
-    </div>${ghost?"":`<div class="sheet-bar">${cta}</div><i class="sp-end" aria-hidden="true"></i>`}`;
+    </div>${ghost?"":`<div class="sheet-bar">${cta}</div>`}`;
 }
 const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const evDayText=e=>`${WD_FLY[dowOfIso(e.date)]} ${e.date.slice(8)}.${e.date.slice(5,7)}`;
@@ -1434,44 +1449,57 @@ function sheetDialog(){
   d.addEventListener("click",e=>{
     if(e.target===d||e.target.closest("[data-x]")){d.close();return}
     const sp=e.target.closest("[data-sp]");if(sp){spGo(d,+sp.dataset.sp);return}
-    const dn=e.target.closest("[data-spdn]");if(dn){spDown(dn);return}
+    if(e.target.closest("[data-spst]")){spStats(d,true);return}
+    if(e.target.closest("[data-stx]")){spStats(d,false);return}
     const a=e.target.closest("a[href^='#']");if(!a)return;
     e.preventDefault();const h=a.getAttribute("href"),own=history.state&&history.state.sdlg;
     d._nav=true;d.close();if(own)location.replace(h);else location.hash=h;
   });
   d.addEventListener("close",()=>{
     document.documentElement.classList.remove("sdlg-on");
-    const id=S.sheetId;S.sheetId=null;
+    const id=S.sheetId;S.sheetId=null;S.sheetStats=false;
     if(!d._nav){
       const c=id&&app.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(c)c.focus({preventScroll:true});
-      if(history.state&&history.state.sdlg)history.back();
+      if(history.state&&history.state.sdlg)history.go(history.state.st?-2:-1); // đang mở cửa sổ chỉ số thì lùi cả hai bước
     }
     d._nav=false;
   });
-  addEventListener("popstate",()=>{if(d.open)d.close()});
+  // back khi đang mở cửa sổ chỉ số: chỉ đóng cửa sổ đó, còn ở lại hồ sơ. back lần nữa mới đóng hồ sơ
+  addEventListener("popstate",()=>{if(!d.open)return;if(history.state&&history.state.sdlg){if(S.sheetStats)spStats(d,false,true);return}d.close()});
+  d.addEventListener("cancel",e=>{if(S.sheetStats){e.preventDefault();spStats(d,false)}}); // Esc cũng đóng cửa sổ chỉ số trước
   d.addEventListener("scroll",e=>{if(e.target.classList&&e.target.classList.contains("sp-trk"))spState(d)},true);
   // nghe ở cả trang: bấm mũi tên tới ảnh cuối thì nút đó tắt và rời focus, phím ←/→ vẫn phải chạy
   document.addEventListener("keydown",e=>{if(d.open&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&!(e.target.closest&&e.target.closest("input,textarea,select"))){if(spGo(d,e.key==="ArrowLeft"?-1:1))e.preventDefault()}});
   return d;
 }
-/* ảnh trong hồ sơ. máy tính: dải ảnh ngang, mỗi lần một ảnh. điện thoại: mỗi ảnh một nấc dừng khi lướt dọc */
+/* ảnh trong hồ sơ: dải ảnh ngang, mỗi lần một ảnh. máy tính bấm mũi tên, điện thoại vuốt ngang */
 function spGo(d,dir){
   const t=d.querySelector(".sp-trk");if(!t||t.scrollWidth<=t.clientWidth+4)return false;
   t.scrollBy({left:dir*t.clientWidth,behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});return true;
 }
 function spState(d){
-  const t=d.querySelector(".sp-trk"),pv=d.querySelector(".sp-pv"),nx=d.querySelector(".sp-nx");if(!t||!pv)return;
+  const t=d.querySelector(".sp-trk"),pv=d.querySelector(".sp-pv"),nx=d.querySelector(".sp-nx");if(!t)return;
+  const k=Math.round(t.scrollLeft/(t.clientWidth||1));d.querySelectorAll(".sp-dots i").forEach((x,j)=>x.classList.toggle("on",j===k));
+  if(!pv)return;
   const f=document.activeElement;pv.disabled=t.scrollLeft<4;nx.disabled=t.scrollLeft>t.scrollWidth-t.clientWidth-4;
   if(f===nx&&nx.disabled)pv.focus({preventScroll:true});else if(f===pv&&pv.disabled)nx.focus({preventScroll:true}); // giữ focus trên nút còn bấm được
 }
-function spDown(b){
-  const f=b.closest(".sp-f"),sh=b.closest(".sheet");if(!f||!sh)return;
-  const nx=f.nextElementSibling||sh.querySelector(".sheet-info");if(!nx)return;
-  sh.scrollBy({top:nx.getBoundingClientRect().top-sh.getBoundingClientRect().top,behavior:"smooth"});
+/* cửa sổ chỉ số trên điện thoại: thêm một bước vào lịch sử trình duyệt để nút back đóng cửa sổ, không đóng cả hồ sơ */
+function spStats(d,on,fromPop){
+  const sh=d.querySelector(".sheet");if(!sh)return;
+  S.sheetStats=on;sh.classList.toggle("st-on",on);
+  if(on){
+    const inf=sh.querySelector(".sheet-info");if(inf)inf.scrollTop=0;
+    if(!(history.state&&history.state.st))history.pushState({sdlg:S.sheetId,st:1},"");
+    const b=sh.querySelector("[data-stx]");if(b)b.focus({preventScroll:true});
+  }else{
+    if(!fromPop&&history.state&&history.state.st)history.back();
+    const t=sh.querySelector(".sp-trk"),k=t?Math.round(t.scrollLeft/(t.clientWidth||1)):0,b=sh.querySelectorAll("[data-spst]")[k];if(b)b.focus({preventScroll:true});
+  }
 }
 function openSheet(id,rows){
   const r=(rows||computeBoard()).find(x=>x.idol.id===id);if(!r)return;
-  const d=sheetDialog();S.sheetId=id;
+  const d=sheetDialog();S.sheetId=id;S.sheetStats=false;
   d.setAttribute("aria-label",`hồ sơ ${r.idol.stageName}`);
   d.innerHTML=`<button type="button" class="sdlg-x" data-x aria-label="đóng hồ sơ">×</button><article class="sheet anim">${sheetHTML(r,false)}</article>`;
   if(d.open){spState(d);return}
@@ -1483,8 +1511,11 @@ function reshowSheet(rows){
   const d=document.getElementById("sdlg");if(!d||!d.open||!S.sheetId)return;
   const r=(rows||computeBoard()).find(x=>x.idol.id===S.sheetId),a=d.querySelector(".sheet");
   if(!r||!a){d.close();return}
-  const t=a.querySelector(".sp-trk"),x=t?t.scrollLeft:0,y=a.scrollTop;a.classList.remove("anim");a.innerHTML=sheetHTML(r,false);a.scrollTop=y;
-  const t2=a.querySelector(".sp-trk");if(t2)t2.scrollLeft=x;spState(d);
+  const t=a.querySelector(".sp-trk"),x=t?t.scrollLeft:0,y=a.scrollTop,inf=a.querySelector(".sheet-info"),iy=inf?inf.scrollTop:0;
+  a.classList.remove("anim");a.innerHTML=sheetHTML(r,false);a.scrollTop=y;
+  const t2=a.querySelector(".sp-trk");if(t2)t2.scrollLeft=x;
+  const inf2=a.querySelector(".sheet-info");if(inf2)inf2.scrollTop=iy; // đang mở cửa sổ chỉ số thì giữ nguyên
+  spState(d);
 }
 S.reshowSpot=id=>{if(id===S.sheetId)reshowSheet()};
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
