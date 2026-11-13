@@ -491,10 +491,13 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 /* poster event: giữ đúng tỉ lệ poster, bấm vào xem to */
 .fly-art.pst .pic{display:block;width:100%;padding:0;border:0;aspect-ratio:auto;background:var(--ink);cursor:zoom-in;color:inherit}
 .fly-art.pst .pic>img{height:auto}
+/* poster ngang (wide:true): đặt ngang tầm tên đêm */
+@media (min-width:1024px){.fly-art.wide{align-self:start;margin-top:56px}}
 .fly-cap{margin:26px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.06em}
 .fly-cap b{font-weight:400}
 /* xem poster to */
 .pdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
+.pdlg.wide{max-width:min(92vw,1040px)}
 .pdlg::backdrop{background:rgba(0,0,0,.86)}
 .pdlg img{display:block;width:auto;max-width:100%;height:auto;max-height:calc(94vh - 84px);margin:0 auto}
 .pdlg-x{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;background:var(--ink);color:var(--paper);font-size:var(--fs-2xl);line-height:1;cursor:pointer;z-index:1}
@@ -1158,7 +1161,8 @@ const GOOGLE_REVIEW_URL="https://share.google/SntJEvVotOjQeHLYL",GOOGLE_REVIEW_Q
    phần còn lại theo file Canva "EVENT- BLK46 - Q4". poster không ghi các tối ladies night thường và phố hàng nhạc.
    chỉ ghi phần khách cần biết. KHÔNG ghi kịch bản: moment, giờ diễn, trò chơi, quà bất ngờ, decor (quán khác có vào xem).
    KHÔNG ghi khuyến mại rượu: luật 44/2019/QH14 điều 5 cấm quảng cáo và khuyến mại rượu từ 15 độ.
-   poster: chép ảnh dọc (khoảng 800px ngang, jpg) vào public/events/ rồi ghi đường dẫn, vd "events/walk-of-fame-13-11.jpg".
+   poster: chép ảnh vào public/events/ rồi ghi đường dẫn, vd "events/walk-of-fame-13-11.jpg". giữ chiều ảnh gốc, webp ~99 KB (anh Minh 13/11).
+   ảnh ngang thêm wide:true.
    đầu trang hiện poster của đêm gần nhất có poster. thẻ đêm có poster thì có nút "xem poster".
    dj: guest dj của đêm đó (hiện thành dòng "guest dj" trên tờ rơi và thẻ). dress: dress code. */
 const EVENTS=[
@@ -1166,7 +1170,7 @@ const EVENTS=[
   {date:"2026-11-13",name:"WALK OF FAME",line:"thứ 6 ngày 13. hôm nay xui cỡ nào thì bước vào blk cũng bỏ lại ngoài cửa.",poster:"events/walk-of-fame-13-11.jpg"},
   {date:"2026-11-14",name:"SPECIAL PERFORMANCE",line:"saxophone chơi cùng dj trên nền nhạc của blk.",poster:"events/special-performance-14-11.webp"},
   {date:"2026-11-15",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
-  {date:"2026-11-19",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng.",dj:"BÔNG"},
+  {date:"2026-11-19",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng.",dj:"BÔNG",poster:"events/ladies-night-19-11.webp",wide:true},
   {date:"2026-11-20",name:"BỎNG OUT #2: THE SLEEPOVER",line:"tell ur fam, u got a sleepover.",dress:"đồ ngủ, slip dress, đồ thể thao, bịt mắt, lô cuốn tóc"},
   {date:"2026-11-21",name:"CAVIAR PEOPLE",line:"thứ 7 có caviar. phần còn lại tới mới biết."},
   {date:"2026-11-22",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
@@ -1248,7 +1252,7 @@ function flyHTML(){
     const pe=up.find(e=>e.poster),mp=!pe&&up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];
     const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
     art=pe
-      ?`<div class="fly-art pst"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${pe.date!==sel?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
+      ?`<div class="fly-art pst${pe.wide?" wide":""}"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${pe.date!==sel?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
       :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button>${tape}</div>`
       :VENUE_PHOTO
       ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div>${tape}</div>`
@@ -1368,7 +1372,7 @@ function openPoster(key){
   if(!d){d=document.createElement("dialog");d.id="pdlg";d.className="pdlg";document.body.append(d);
     d.addEventListener("click",x=>{if(x.target===d)d.close()})}
   const alt=e?`poster ${e.name}, ${evDayText(e)}`:`poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46`;
-  d.setAttribute("aria-label",alt);
+  d.setAttribute("aria-label",alt);d.classList.toggle("wide",!!(e&&e.wide));
   d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(src)}" alt="${esc(alt)}">
     ${e?`<div class="pdlg-bar"><p>${esc(evDayText(e))} · ${esc(e.name)}</p><button type="button" class="btn-acid" data-go="book" data-ev="${e.date}">GIỮ BÀN ĐÊM NÀY</button></div>`
       :`<div class="pdlg-bar"><p>LỊCH THÁNG ${+up[0].date.slice(5,7)}</p><button type="button" class="btn-acid" data-go="events">CHỌN ĐÊM</button></div>`}`;
@@ -1383,7 +1387,7 @@ function posterDialog(){
 function openPromoPoster(dow){
   const p=WEEKLY_PROMOS[dow];if(!p||!p.poster)return;
   const d=posterDialog(),alt=`poster ưu đãi ${p.tag.toLowerCase()} mỗi ${DAY_FULL[dow].toLowerCase()} ở blk46`;
-  d.setAttribute("aria-label",alt);
+  d.setAttribute("aria-label",alt);d.classList.remove("wide");
   d.innerHTML=`<button type="button" class="pdlg-x" aria-label="đóng" onclick="this.closest('dialog').close()">×</button><img src="${esc(p.poster)}" alt="${esc(alt)}">
     <div class="pdlg-bar"><p>MỖI ${esc(DAY_FULL[dow])} · ${esc(p.tag)}</p><a class="btn-acid" href="#voucher-${dow}" onclick="this.closest('dialog').close()">${esc(p.go)}</a></div>`;
   d.showModal();
