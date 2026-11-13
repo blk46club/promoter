@@ -2208,7 +2208,15 @@ function renderAdmin(){
 /* ---------- nguồn khách: khách đến từ đâu, dừng ở bước nào (anh Minh 13/11) ---------- */
 const SRC_NAMES={"fb":"facebook (không gắn mã)","ig":"instagram (không gắn mã)","tiktok":"tiktok (không gắn mã)","zalo":"zalo","google":"google","threads":"threads (không gắn mã)","khong-ro":"không rõ (gõ địa chỉ, qr cũ…)","chua-gan":"đặt trước khi có mã nguồn"};
 const srcName=v=>SRC_NAMES[v]||(/^nv-?\d+$/.test(v)?"nhân viên "+v.replace(/^nv-?/,""):v);
+/* chỉ tải số liệu khi quản lý mở tab này (không tải lúc mở trang quản lý), và chỉ từ đầu tháng hoặc 7 ngày trước:
+   mỗi ngày mỗi nguồn là 1 bản ghi, nên tải ít ngày = ít lượt đọc trong 50.000 lượt đọc miễn phí mỗi ngày */
+function watchFunnelOnce(){
+  if(S.fxOn||!S.db||!S.db.watchFunnel)return;S.fxOn=true;
+  const td=isoOfVN(Date.now()),wk=isoOfVN(Date.now()-6*864e5),m0=td.slice(0,8)+"01";
+  S.db.watchFunnel(wk<m0?wk:m0,list=>{S.funnel=list;S.funnelErr=false;if(route().view==="admin"&&S.adminTab==="funnel")render()},()=>{S.funnelErr=true;if(route().view==="admin")render()});
+}
 function adminFunnel(p){
+  watchFunnelOnce();
   const per=S.fxPer||"7d",td=isoOfVN(Date.now());
   const from=per==="today"?td:per==="month"?td.slice(0,8)+"01":isoOfVN(Date.now()-6*864e5);
   const rows={};const add=(src,k,n)=>{const r=rows[src]=rows[src]||{src};r[k]=(r[k]||0)+n};
@@ -2391,7 +2399,6 @@ render();
   db.collection("moderation").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.mod=m;soon()},()=>{});
   countVisitOnce();fx("mo");
   fetchTonight();
-  if(S.canEdit&&db.watchFunnel)db.watchFunnel(isoOfVN(Date.now()-40*864e5),list=>{S.funnel=list;soon()},()=>{S.funnelErr=true;soon()});
   if(S.canEdit&&db.watchVisits)db.watchVisits(isoOfVN(Date.now()).slice(0,8)+"01",list=>{S.visits=list;soon()},()=>{});
   if(db.watchLoads)db.watchLoads(todayStr(),list=>{const m={};list.forEach(x=>{m[x.date]=x.counts||{}});S.loads=m;S.loaded.loads=true;syncLoads();soon()},()=>{S.loaded.loads=false});
   if(S.canEdit){
