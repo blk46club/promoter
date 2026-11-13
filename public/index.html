@@ -593,7 +593,7 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
     background:linear-gradient(transparent,rgba(0,0,0,.72));font-size:var(--fs-sm);color:var(--paper-2);pointer-events:none}
   .sdlg .sp-nm{display:block;font-family:var(--display);font-size:var(--fs-d-s);line-height:1.15;color:var(--paper);text-transform:uppercase;overflow-wrap:anywhere}
   .sdlg .sp-dn{pointer-events:auto;flex:none;min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);background:rgba(0,0,0,.55);border:1px solid var(--line)}
-  .sdlg .sp-ar,.sdlg .sp-nr{display:none}
+  .sdlg .sp-ar{display:none}
   .sdlg .sheet-info .sheet-cta{display:none}
   .sheet-bar{position:sticky;bottom:0;z-index:1;background:var(--ink);padding:10px 16px 12px}
   .sheet-bar .sheet-cta{position:static;box-shadow:none}
@@ -606,8 +606,7 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
   .sp-trk::-webkit-scrollbar{display:none}
   .sp-f{flex:0 0 100%;scroll-snap-align:center;display:grid;justify-items:center;--pw:min(100%,calc((100dvh - 168px) * .75))}
   .sp-f .fr{width:var(--pw);aspect-ratio:3/4}
-  .sp-f figcaption{width:var(--pw);margin-top:8px;display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--concrete)}
-  .sp-dn,.sp-ni{display:none}
+  .sp-f figcaption{display:none} /* máy tính không ghi chú thích dưới ảnh (anh Minh 13/11) */
   .sp-ar{position:absolute;top:calc(50% - 40px);width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--line)}
   .sp-pv{left:8px}.sp-nx{right:8px}
   .sp-pv svg{transform:scaleX(-1)}
@@ -644,9 +643,8 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 .sheet.anim .sheet-pics img{animation:fadein .3s ease-out}
 .sheet.anim .sheet-name{animation:stamp .26s ease-out}
 @keyframes fadein{from{opacity:0}}
-.grade-note{padding-block:16px 0;margin:0;font-size:var(--fs-sm)}
 /* không để dòng cuối chỉ còn một hai chữ (bộ dò impeccable 10/11): câu ngắn thì chia đều các dòng. trình duyệt cũ bỏ qua, không hại gì */
-.grade-note,.promo-l,.tk-meta{text-wrap:balance}
+.promo-l,.tk-meta{text-wrap:balance}
 .ros-head p,.fly-ev{text-wrap:pretty}
 
 /* dòng giới thiệu đêm trên tờ rơi */
@@ -1329,7 +1327,7 @@ function sheetHTML(r,ghost){
   const ps=pics.length?pics:[{}],np=ps.length;
   const cta=ghost?"":full?`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT NGÀY KHÁC&nbsp;→</a>`:`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`;
   return `<div class="sheet-pics"><div class="sp-trk"${np>1?` tabindex="0" aria-label="ảnh của ${esc(i.stageName)}, ${np} ảnh"`:""}>${ps.map((x,k)=>`<figure class="sp-f"><div class="fr">${SIL}${x.src?`${x.lq?"":`<img class="bg" src="${esc(x.src)}" alt="" aria-hidden="true" onerror="this.remove()">`}<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}</div>
-      <figcaption><span><span class="sp-nm">${esc(i.stageName)}</span>${x.l||""}${np>1?`<span class="sp-ni">${x.l?" · ":""}${k+1}/${np}</span>`:""}</span>${np>1?`<span class="sp-nr" aria-hidden="true">${k+1} / ${np}</span>`:""}${ghost?"":`<button type="button" class="sp-dn" data-spdn>${k<np-1?"ảnh tiếp":"xem chỉ số"} ${ICO_DN}</button>`}</figcaption></figure>`).join("")}</div>
+      <figcaption><span class="sp-nm">${esc(i.stageName)}</span>${ghost?"":`<button type="button" class="sp-dn" data-spdn>${k<np-1?"ảnh tiếp":"xem chỉ số"} ${ICO_DN}</button>`}</figcaption></figure>`).join("")}</div>
       ${np>1?`<button type="button" class="sp-ar sp-pv" data-sp="-1" aria-label="ảnh trước">${ICO_ARW}</button><button type="button" class="sp-ar sp-nx" data-sp="1" aria-label="ảnh sau">${ICO_ARW}</button>`:""}</div>
     <div class="sheet-info">
       ${ghost?"":`<button type="button" class="sheet-back" data-x>← xem người khác</button>`}
@@ -1390,7 +1388,7 @@ function renderLineup(){
   ${nightsHTML()}
   <section class="ros" id="roster" aria-label="chọn promoter">
     <div class="ros-head">
-      <div><h2>Chọn người takecare <br>cuộc chơi tối nay</h2><p>bấm vào thẻ để xem hồ sơ. xếp theo sao khách chấm. mỗi promoter nhận tối đa ${LOAD_MAX} bàn đặt trước mỗi tối, đủ rồi thì đóng dấu.</p></div>
+      <div><h2>Chọn người takecare <br>cuộc chơi tối nay</h2><p>bấm vào thẻ để xem hồ sơ.</p></div>
       <div class="ros-tools"><div class="ros-per" role="group" aria-label="khoảng thời gian">
         <button type="button" class="sq" id="pMonth" aria-pressed="${S.period==="month"}">tháng này</button>
         <button type="button" class="sq" id="pAll" aria-pressed="${S.period==="all"}">từ đầu</button>
@@ -1400,7 +1398,6 @@ function renderLineup(){
     ${empty&&!S.canEdit?`<div class="empty"><b>lineup đang cập nhật.</b><span>gọi <a href="tel:${HOTLINE}">${HOTLINE_SHOW}</a> để đặt bàn.</span></div>`:""}
     ${rows.length?`<div class="cards" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>`
       :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-txt"><span class="pc-name">&nbsp;</span></span></div>`).join("")}</div>`:""}
-    ${rows.length?`<p class="note grade-note">hạng S/A/B/C/D theo điểm sao đã cân số lượt chấm: ít lượt thì bị kéo về mức trung bình của quán.</p>`:""}
   </section>`;
   /* dải tuần: bấm một đêm thì tờ rơi đổi sang đêm đó (tên đêm khuất thì cuộn lên cho khách thấy), bấm tuần thì đổi 4 đêm đang hiện */
   app.querySelectorAll("[data-night]").forEach(b=>b.onclick=()=>{
