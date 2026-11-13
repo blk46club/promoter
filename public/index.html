@@ -1009,7 +1009,20 @@ function render(){
   if(r.view==="admin")return renderAdmin();
   return renderLineup();
 }
-window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
+/* từ trang đặt bàn cùng một promoter về lineup ("← đổi promoter", "về lineup" hay nút back): về thẳng phần chọn promoter,
+   thẻ người vừa xem nằm trong khung, thay vì nhảy lên đầu trang (anh Minh 13/11). các đường khác vẫn lên đầu trang. */
+window.addEventListener("hashchange",e=>{
+  const from=String(e.oldURL||"").split("#")[1]||"",id=/^(book|idol)-/.test(from)?from.slice(5):"";
+  if(!id||route().view!=="lineup"){window.scrollTo(0,0);render();return}
+  render();backToRoster(id);
+});
+function backToRoster(id){
+  const ros=document.getElementById("roster");if(!ros){window.scrollTo(0,0);return}
+  ros.scrollIntoView({block:"start"}); // nhảy luôn, không cuộn mượt: khách không cần thấy cả trang trôi qua
+  const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`),l=c&&c.closest(".cards");if(!c)return;
+  if(l&&l.scrollWidth>l.clientWidth)l.scrollLeft+=c.getBoundingClientRect().left-l.getBoundingClientRect().left-24; // điện thoại: dải thẻ vuốt ngang, đưa thẻ đó vào khung
+  c.focus({preventScroll:true});
+}
 
 /* ---------- shared bits ---------- */
 function banner(){
