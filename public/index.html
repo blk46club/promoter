@@ -1440,7 +1440,8 @@ function sheetDialog(){
   });
   addEventListener("popstate",()=>{if(d.open)d.close()});
   d.addEventListener("scroll",e=>{if(e.target.classList&&e.target.classList.contains("sp-trk"))spState(d)},true);
-  d.addEventListener("keydown",e=>{if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&!e.target.closest("input,textarea,select")){if(spGo(d,e.key==="ArrowLeft"?-1:1))e.preventDefault()}});
+  // nghe ở cả trang: bấm mũi tên tới ảnh cuối thì nút đó tắt và rời focus, phím ←/→ vẫn phải chạy
+  document.addEventListener("keydown",e=>{if(d.open&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&!(e.target.closest&&e.target.closest("input,textarea,select"))){if(spGo(d,e.key==="ArrowLeft"?-1:1))e.preventDefault()}});
   return d;
 }
 /* ảnh trong hồ sơ. máy tính: dải ảnh ngang, mỗi lần một ảnh. điện thoại: mỗi ảnh một nấc dừng khi lướt dọc */
@@ -1450,7 +1451,8 @@ function spGo(d,dir){
 }
 function spState(d){
   const t=d.querySelector(".sp-trk"),pv=d.querySelector(".sp-pv"),nx=d.querySelector(".sp-nx");if(!t||!pv)return;
-  pv.disabled=t.scrollLeft<4;nx.disabled=t.scrollLeft>t.scrollWidth-t.clientWidth-4;
+  const f=document.activeElement;pv.disabled=t.scrollLeft<4;nx.disabled=t.scrollLeft>t.scrollWidth-t.clientWidth-4;
+  if(f===nx&&nx.disabled)pv.focus({preventScroll:true});else if(f===pv&&pv.disabled)nx.focus({preventScroll:true}); // giữ focus trên nút còn bấm được
 }
 function spDown(b){
   const f=b.closest(".sp-f"),sh=b.closest(".sheet");if(!f||!sh)return;
