@@ -893,8 +893,8 @@ const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||i.thumb||"
 /* ảnh to cho khung lớn trên lineup: chỉ tải khi khách chọn promoter (anh Minh 09/11) */
 function loadSpot(id){
   if(S.big[id]||S.bigReq[id]||!S.db||!S.db.getSpot)return;
-  S.bigReq[id]=S.db.getSpot(id).then(d=>{S.big[id]={main:(d&&d.main)||"",alt:(d&&d.alt)||""};if(S.reshowSpot)S.reshowSpot(id)})
-    .catch(()=>{S.big[id]={main:"",alt:""};if(S.reshowSpot)S.reshowSpot(id)});
+  S.bigReq[id]=S.db.getSpot(id).then(d=>{S.big[id]={main:(d&&d.main)||"",alt:(d&&d.alt)||"",close:(d&&d.close)||""};if(S.reshowSpot)S.reshowSpot(id)})
+    .catch(()=>{S.big[id]={main:"",alt:"",close:""};if(S.reshowSpot)S.reshowSpot(id)});
 }
 const photoSrc=i=>coverId(i)?(""+coverId(i)):"";
 const initials=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
@@ -1276,7 +1276,7 @@ function cardHTML(r,td){
 }
 /* ảnh 3 góc cho tờ hồ sơ.
    quản lý / bản chạy thử có đủ i.photos. khách chỉ có i.thumb (ảnh nhỏ của góc bìa) + ảnh to tải khi chọn người:
-   main = toàn thân (không có thì cận, nghiêng), alt = nghiêng. i.ang cho biết hồ sơ có những góc nào (c, f, s). */
+   main = toàn thân (không có thì cận, nghiêng), alt = nghiêng, close = cận cỡ to. i.ang cho biết hồ sơ có những góc nào (c, f, s). */
 function sheetPics(i){
   const p=photosOf(i),out=[];
   if(p.close||p.full||p.side){ANGLES.forEach(([k,l])=>{if(p[k])out.push({src:p[k],l})});return out}
@@ -1288,7 +1288,7 @@ function sheetPics(i){
   const cover=a.includes("c")?"c":a.includes("f")?"f":"s",mainK=a.includes("f")?"f":a.includes("c")?"c":"s";
   const pick=k=>{
     if(k===mainK)return main?{src:main}:k===cover?{src:i.thumb,lq:!ready}:ready?null:{};
-    if(k===cover)return {src:i.thumb};
+    if(k===cover)return {src:(k==="c"&&bg&&bg.close)||i.thumb}; // ảnh cận cỡ to (từ 13/11); hồ sơ lưu trước đó chỉ có ảnh nhỏ
     return alt?{src:alt}:ready?null:{};
   };
   [["c","cận"],["f","toàn thân"],["s","nghiêng"]].forEach(([k,l])=>{if(a.includes(k)){const x=pick(k);if(x)out.push({...x,l})}});
