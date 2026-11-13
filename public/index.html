@@ -578,18 +578,19 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 /* nền mờ làm từ chính ảnh đó (cùng file, không tải thêm): ảnh không đúng tỉ lệ khung vẫn kín khung mà không bị cắt */
 .sheet-pics .fr img.bg{object-fit:cover;filter:blur(24px) brightness(.5);transform:scale(1.2)}
 .sheet-pics .fr img.lq{filter:blur(10px);transform:scale(1.06)}
-.sp-nm,.sp-dots,.st-x{display:none}
+.sp-sc{display:contents}
+.sp-nm,.sp-dots,.st-x,.sp-end{display:none}
 .st-x{justify-self:start;min-height:44px;padding:0;background:none;border:0;color:var(--paper);font:inherit;font-size:var(--fs-ui);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .sp-ar,.sp-dn{border:0;cursor:pointer;color:var(--paper);background:var(--ink);font:inherit}
 .sp-ar:hover:not(:disabled),.sp-dn:hover{background:var(--acid);color:var(--ink)}
 .sp-ar:disabled{opacity:.25;cursor:default}
-/* điện thoại: ảnh dọc kín khung, lướt lên/xuống từng ảnh như video dọc. ảnh là các nấc dừng của chính tờ hồ sơ,
-   không phải một khung cuộn lồng bên trong, nên lướt qua ảnh cuối là xuống thẳng phần chỉ số, không bị kẹt. */
-/* điện thoại (anh Minh 13/11, lần 2): ảnh kín khung, vuốt ngang từng ảnh. nút "xem chỉ số" trên mỗi ảnh mở cửa sổ chỉ số
-   đè lên ảnh, nút "← xem ảnh" hoặc nút back đóng lại. nút đặt bàn luôn ghim ở đáy. */
+/* điện thoại (anh Minh 13/11, lần 3): ảnh kín khung, vuốt ngang để xem ảnh khác, cuộn xuống là tới phần chỉ số ngay dưới ảnh.
+   hai nấc dừng: ảnh và chỉ số, kéo một đoạn ngắn là sang hẳn nấc kia. nút "xem chỉ số" trên ảnh và "↑ xem ảnh" cũng cuộn tới đó.
+   nút đặt bàn luôn ghim ở đáy, nằm ngoài khung cuộn nên không che ảnh hay chữ. */
 @media (max-width:899px){
-  .sdlg .sheet{overflow:hidden;grid-template-rows:minmax(0,1fr) auto;align-content:stretch;position:relative}
-  .sdlg .sheet-pics,.sdlg .sheet-info{grid-area:1/1;min-height:0}
+  .sdlg .sheet{overflow:hidden;grid-template-rows:minmax(0,1fr) auto;align-content:stretch}
+  .sdlg .sp-sc{display:block;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory}
+  .sdlg .sheet-pics{height:100%;scroll-snap-align:start;scroll-snap-stop:always}
   .sdlg .sp-trk{height:100%;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
   .sdlg .sp-trk::-webkit-scrollbar{display:none}
   .sdlg .sp-f{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative}
@@ -598,15 +599,13 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
     background:linear-gradient(transparent,rgba(0,0,0,.72));font-size:var(--fs-sm);color:var(--paper-2);pointer-events:none}
   .sdlg .sp-nm{display:block;font-family:var(--display);font-size:var(--fs-d-s);line-height:1.15;color:var(--paper);text-transform:uppercase;overflow-wrap:anywhere}
   .sdlg .sp-dn{pointer-events:auto;flex:none;min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);background:rgba(0,0,0,.55);border:1px solid var(--line)}
-  .sdlg .sp-dn svg{transform:rotate(180deg)}
   .sdlg .sp-ar{display:none}
   /* vạch nhỏ trên đầu ảnh: có mấy ảnh, đang ở ảnh nào (thay cho số "2 / 3" đã bỏ) */
   .sdlg .sp-dots{position:absolute;top:28px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none}
   .sdlg .sp-dots i{width:18px;height:3px;background:var(--paper);opacity:.4}
   .sdlg .sp-dots i.on{background:var(--acid);opacity:1}
-  .sdlg .sheet-info{z-index:1;overflow:auto;overscroll-behavior:contain;background:var(--ink);visibility:hidden;opacity:0;transform:translateY(24px);
-    transition:opacity .2s ease-out,transform .2s ease-out,visibility 0s .2s}
-  .sdlg .sheet.st-on .sheet-info{visibility:visible;opacity:1;transform:none;transition:opacity .2s ease-out,transform .2s ease-out}
+  .sdlg .sheet-info{min-height:100%;scroll-snap-align:start}
+  .sdlg .sp-end{display:block;height:0;scroll-snap-align:end} /* nấc dừng ở đáy, để cuộn được hết dòng chữ cuối */
   .sdlg .sheet-back{display:none}
   .sdlg .st-x{display:block}
   .sdlg .sheet-info .sheet-cta{display:none}
@@ -1340,12 +1339,12 @@ function sheetHTML(r,ghost){
   const eb=ghost?"ví dụ bố cục":`${r.rank?"#"+pad2(r.rank):"chưa có hạng"}${g!=="?"?" · hạng "+g:""}${i.team?" · team "+esc(i.team):""}`;
   const ps=pics.length?pics:[{}],np=ps.length;
   const cta=ghost?"":full?`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT NGÀY KHÁC&nbsp;→</a>`:`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`;
-  return `<div class="sheet-pics"><div class="sp-trk"${np>1?` tabindex="0" aria-label="ảnh của ${esc(i.stageName)}, ${np} ảnh"`:""}>${ps.map((x,k)=>`<figure class="sp-f"><div class="fr">${SIL}${x.src?`${x.lq?"":`<img class="bg" src="${esc(x.src)}" alt="" aria-hidden="true" onerror="this.remove()">`}<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}</div>
+  return `<div class="sp-sc"><div class="sheet-pics"><div class="sp-trk"${np>1?` tabindex="0" aria-label="ảnh của ${esc(i.stageName)}, ${np} ảnh"`:""}>${ps.map((x,k)=>`<figure class="sp-f"><div class="fr">${SIL}${x.src?`${x.lq?"":`<img class="bg" src="${esc(x.src)}" alt="" aria-hidden="true" onerror="this.remove()">`}<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}</div>
       <figcaption><span class="sp-nm">${esc(i.stageName)}</span>${ghost?"":`<button type="button" class="sp-dn" data-spst>xem chỉ số ${ICO_DN}</button>`}</figcaption></figure>`).join("")}</div>
       ${np>1?`<div class="sp-dots" aria-hidden="true">${ps.map((_,k)=>`<i${k?"":' class="on"'}></i>`).join("")}</div>`:""}
       ${np>1?`<button type="button" class="sp-ar sp-pv" data-sp="-1" aria-label="ảnh trước">${ICO_ARW}</button><button type="button" class="sp-ar sp-nx" data-sp="1" aria-label="ảnh sau">${ICO_ARW}</button>`:""}</div>
     <div class="sheet-info">
-      ${ghost?"":`<button type="button" class="sheet-back" data-x>← xem người khác</button><button type="button" class="st-x" data-stx>← xem ảnh</button>`}
+      ${ghost?"":`<button type="button" class="sheet-back" data-x>← xem người khác</button><button type="button" class="st-x" data-stx>↑ xem ảnh</button>`}
       <p class="sheet-eb">${eb}</p>
       <h3 class="sheet-name">${esc(i.stageName)}</h3>
       <dl class="sheet-dl">${dl.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
@@ -1356,7 +1355,7 @@ function sheetHTML(r,ghost){
       ${q?`<blockquote>“${esc(q.comment)}”<span>${starStr(q.stars)} · ${ago(q.createdAt||Date.now())}</span></blockquote>`:""}
       ${ghost?"":full?`<p class="sheet-load">${esc(i.stageName)} fully booked tối nay.</p>${cta}`
         :`${night?`<p class="sheet-load">tối nay còn ${LOAD_MAX-ld} chỗ đặt trước</p>`:""}${cta}`}
-    </div>${ghost?"":`<div class="sheet-bar">${cta}</div>`}`;
+    </div><i class="sp-end" aria-hidden="true"></i></div>${ghost?"":`<div class="sheet-bar">${cta}</div>`}`;
 }
 const DAY_FULL=["CHỦ NHẬT","THỨ 2","THỨ 3","THỨ 4","THỨ 5","THỨ 6","THỨ 7"];
 const evDayText=e=>`${WD_FLY[dowOfIso(e.date)]} ${e.date.slice(8)}.${e.date.slice(5,7)}`;
@@ -1457,16 +1456,14 @@ function sheetDialog(){
   });
   d.addEventListener("close",()=>{
     document.documentElement.classList.remove("sdlg-on");
-    const id=S.sheetId;S.sheetId=null;S.sheetStats=false;
+    const id=S.sheetId;S.sheetId=null;
     if(!d._nav){
       const c=id&&app.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(c)c.focus({preventScroll:true});
-      if(history.state&&history.state.sdlg)history.go(history.state.st?-2:-1); // đang mở cửa sổ chỉ số thì lùi cả hai bước
+      if(history.state&&history.state.sdlg)history.back();
     }
     d._nav=false;
   });
-  // back khi đang mở cửa sổ chỉ số: chỉ đóng cửa sổ đó, còn ở lại hồ sơ. back lần nữa mới đóng hồ sơ
-  addEventListener("popstate",()=>{if(!d.open)return;if(history.state&&history.state.sdlg){if(S.sheetStats)spStats(d,false,true);return}d.close()});
-  d.addEventListener("cancel",e=>{if(S.sheetStats){e.preventDefault();spStats(d,false)}}); // Esc cũng đóng cửa sổ chỉ số trước
+  addEventListener("popstate",()=>{if(d.open&&!(history.state&&history.state.sdlg))d.close()});
   d.addEventListener("scroll",e=>{if(e.target.classList&&e.target.classList.contains("sp-trk"))spState(d)},true);
   // nghe ở cả trang: bấm mũi tên tới ảnh cuối thì nút đó tắt và rời focus, phím ←/→ vẫn phải chạy
   document.addEventListener("keydown",e=>{if(d.open&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&!(e.target.closest&&e.target.closest("input,textarea,select"))){if(spGo(d,e.key==="ArrowLeft"?-1:1))e.preventDefault()}});
@@ -1484,22 +1481,16 @@ function spState(d){
   const f=document.activeElement;pv.disabled=t.scrollLeft<4;nx.disabled=t.scrollLeft>t.scrollWidth-t.clientWidth-4;
   if(f===nx&&nx.disabled)pv.focus({preventScroll:true});else if(f===pv&&pv.disabled)nx.focus({preventScroll:true}); // giữ focus trên nút còn bấm được
 }
-/* cửa sổ chỉ số trên điện thoại: thêm một bước vào lịch sử trình duyệt để nút back đóng cửa sổ, không đóng cả hồ sơ */
-function spStats(d,on,fromPop){
-  const sh=d.querySelector(".sheet");if(!sh)return;
-  S.sheetStats=on;sh.classList.toggle("st-on",on);
-  if(on){
-    const inf=sh.querySelector(".sheet-info");if(inf)inf.scrollTop=0;
-    if(!(history.state&&history.state.st))history.pushState({sdlg:S.sheetId,st:1},"");
-    const b=sh.querySelector("[data-stx]");if(b)b.focus({preventScroll:true});
-  }else{
-    if(!fromPop&&history.state&&history.state.st)history.back();
-    const t=sh.querySelector(".sp-trk"),k=t?Math.round(t.scrollLeft/(t.clientWidth||1)):0,b=sh.querySelectorAll("[data-spst]")[k];if(b)b.focus({preventScroll:true});
-  }
+/* điện thoại: nút "xem chỉ số" cuộn xuống phần chỉ số, "↑ xem ảnh" cuộn lên lại ảnh đang xem */
+function spStats(d,on){
+  const sc=d.querySelector(".sp-sc"),inf=d.querySelector(".sheet-info");if(!sc||!inf)return;
+  sc.scrollTo({top:on?inf.offsetTop:0,behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
+  const t=d.querySelector(".sp-trk"),k=t?Math.round(t.scrollLeft/(t.clientWidth||1)):0;
+  const b=on?d.querySelector("[data-stx]"):d.querySelectorAll("[data-spst]")[k];if(b)b.focus({preventScroll:true});
 }
 function openSheet(id,rows){
   const r=(rows||computeBoard()).find(x=>x.idol.id===id);if(!r)return;
-  const d=sheetDialog();S.sheetId=id;S.sheetStats=false;
+  const d=sheetDialog();S.sheetId=id;
   d.setAttribute("aria-label",`hồ sơ ${r.idol.stageName}`);
   d.innerHTML=`<button type="button" class="sdlg-x" data-x aria-label="đóng hồ sơ">×</button><article class="sheet anim">${sheetHTML(r,false)}</article>`;
   if(d.open){spState(d);return}
@@ -1511,10 +1502,10 @@ function reshowSheet(rows){
   const d=document.getElementById("sdlg");if(!d||!d.open||!S.sheetId)return;
   const r=(rows||computeBoard()).find(x=>x.idol.id===S.sheetId),a=d.querySelector(".sheet");
   if(!r||!a){d.close();return}
-  const t=a.querySelector(".sp-trk"),x=t?t.scrollLeft:0,y=a.scrollTop,inf=a.querySelector(".sheet-info"),iy=inf?inf.scrollTop:0;
+  const t=a.querySelector(".sp-trk"),x=t?t.scrollLeft:0,y=a.scrollTop,sc=a.querySelector(".sp-sc"),sy=sc?sc.scrollTop:0;
   a.classList.remove("anim");a.innerHTML=sheetHTML(r,false);a.scrollTop=y;
   const t2=a.querySelector(".sp-trk");if(t2)t2.scrollLeft=x;
-  const inf2=a.querySelector(".sheet-info");if(inf2)inf2.scrollTop=iy; // đang mở cửa sổ chỉ số thì giữ nguyên
+  const sc2=a.querySelector(".sp-sc");if(sc2)sc2.scrollTop=sy; // điện thoại: đang xem chỉ số thì giữ nguyên chỗ
   spState(d);
 }
 S.reshowSpot=id=>{if(id===S.sheetId)reshowSheet()};
