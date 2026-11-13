@@ -484,17 +484,12 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .fly-art .tape{position:absolute;height:28px;background:rgba(0,0,0,.88)}
 .fly-art .tape.l{left:-12px;top:10px;width:120px;transform:rotate(-15deg)}
 .fly-art .tape.r{right:-8px;top:38px;width:100px;transform:rotate(18deg)}
-/* chưa có poster lẫn ảnh quán: tấm thể loại nhạc */
-.fly-art.poster .pic{background:var(--paper);color:var(--ink);display:grid;align-content:center;justify-items:center;gap:26px;padding:36px 28px}
-.fly-art.poster .pic img{width:78%;height:auto;filter:invert(1)}
-.fly-art.poster .pic p{margin:0;font-family:var(--display);font-size:clamp(28px,2.6vw,36px);line-height:1.12;text-align:center;letter-spacing:.02em}
 /* poster event: giữ đúng tỉ lệ poster, bấm vào xem to */
 .fly-art.pst .pic{display:block;width:100%;padding:0;border:0;aspect-ratio:auto;background:var(--ink);cursor:zoom-in;color:inherit}
 .fly-art.pst .pic>img{height:auto}
-/* poster ngang (wide:true): đặt ngang tầm tên đêm */
-@media (min-width:1024px){.fly-art.wide{align-self:start;margin-top:56px}}
-.fly-cap{margin:26px 0 0;text-align:center;font-family:var(--display);font-size:var(--fs-lg);letter-spacing:.06em}
-.fly-cap b{font-weight:400}
+/* poster ngang (wide:true): đầu trang vẫn khung dọc 4:5 (cắt bằng css, cùng một file), bấm vào xem ảnh ngang đủ khung */
+.fly-art.pst.wide .pic{aspect-ratio:4/5}
+.fly-art.pst.wide .pic>img{height:100%}
 /* xem poster to */
 .pdlg{border:0;padding:0;background:var(--ink);color:var(--paper);width:fit-content;max-width:min(92vw,560px);max-height:94vh;overflow:auto}
 .pdlg.wide{max-width:min(92vw,1040px)}
@@ -1150,9 +1145,7 @@ function promoReviewsHTML(i){
     ${lim<PRV_MAX&&list.length>lim?`<div style="margin-top:14px"><button class="ghostbtn" id="prvMore">xem thêm (${Math.min(PRV_STEP,list.length-lim,PRV_MAX-lim)})</button></div>`:""}`;
 }
 /* ---------- hướng 2: tờ rơi đầu trang (anh Minh 09/11) ---------- */
-// Ảnh dọc trong quán cho khung bên phải tờ rơi: chép ảnh vào public/brand/ rồi ghi đường dẫn ở đây, vd "brand/trong-quan.jpg".
-// Thứ tự khung bên phải: poster đêm gần nhất có poster > poster lịch tháng > ảnh quán > tấm thể loại nhạc (chỉ máy tính).
-const VENUE_PHOTO="";
+// Khung bên phải tờ rơi (chỉ máy tính): poster của chính đêm đang hiện. đêm chưa có poster thì để trống.
 // Link mã QR ở màn cảm ơn trên tablet. Tạm dùng link hồ sơ Google của quán (giống nút "xem bản đồ"): khách quét, bấm "đánh giá".
 // Có link "xin đánh giá" từ Google Business (dạng https://g.page/r/…/review, mở thẳng ô viết) thì thay vào đây rồi chạy: python3 tools/tao-qr.py
 // Để trống = không hiện khối QR. Google không cho chỉ mời khách hài lòng: khối này hiện cho mọi bàn, không lọc theo sao.
@@ -1162,13 +1155,13 @@ const GOOGLE_REVIEW_URL="https://share.google/SntJEvVotOjQeHLYL",GOOGLE_REVIEW_Q
    chỉ ghi phần khách cần biết. KHÔNG ghi kịch bản: moment, giờ diễn, trò chơi, quà bất ngờ, decor (quán khác có vào xem).
    KHÔNG ghi khuyến mại rượu: luật 44/2019/QH14 điều 5 cấm quảng cáo và khuyến mại rượu từ 15 độ.
    poster: chép ảnh vào public/events/ rồi ghi đường dẫn, vd "events/walk-of-fame-13-11.jpg". giữ chiều ảnh gốc, webp ~99 KB (anh Minh 13/11).
-   ảnh ngang thêm wide:true.
+   ảnh ngang thêm wide:true: đầu trang cắt khung dọc 4:5, bấm vào ra ảnh ngang. pos = điểm giữa khung dọc theo chiều ngang, vd "55%" (mặc định giữa ảnh).
    đầu trang hiện poster của đêm gần nhất có poster. thẻ đêm có poster thì có nút "xem poster".
    dj: guest dj của đêm đó (hiện thành dòng "guest dj" trên tờ rơi và thẻ). dress: dress code. */
 const EVENTS=[
   {date:"2026-11-12",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng."},
   {date:"2026-11-13",name:"WALK OF FAME",line:"thứ 6 ngày 13. hôm nay xui cỡ nào thì bước vào blk cũng bỏ lại ngoài cửa.",poster:"events/walk-of-fame-13-11.jpg"},
-  {date:"2026-11-14",name:"SPECIAL PERFORMANCE",line:"saxophone chơi cùng dj trên nền nhạc của blk.",poster:"events/special-performance-14-11.webp"},
+  {date:"2026-11-14",name:"SPECIAL PERFORMANCE",line:"saxophone chơi cùng dj trên nền nhạc của blk.",poster:"events/special-performance-14-11.webp",wide:true,pos:"55%"},
   {date:"2026-11-15",name:"PHỐ HÀNG NHẠC",line:"chủ nhật nghe nhạc việt: vietmix, mashup, mấy bài tiktok đang chạy. có mồi nhậu kiểu hà nội."},
   {date:"2026-11-19",name:"LADIES NIGHT",line:"thứ 5 dành cho các chị em. rủ cả hội đi cùng.",dj:"BÔNG",poster:"events/ladies-night-19-11.webp",wide:true},
   {date:"2026-11-20",name:"BỎNG OUT #2: THE SLEEPOVER",line:"tell ur fam, u got a sleepover.",dress:"đồ ngủ, slip dress, đồ thể thao, bịt mắt, lô cuốn tóc"},
@@ -1245,18 +1238,13 @@ const WIDE=matchMedia("(min-width:1024px)"); // poster bên phải tờ rơi ch�
 const ddmm=iso=>iso.slice(8)+"."+iso.slice(5,7);
 function flyHTML(){
   const n=nightInfo(),sel=flySel(n),isNow=sel===n.iso,t=tonightInfo(),h=flyHead(n,sel),dj=h.head,ev=h.ev,dw=dowOfIso(sel);
-  const up=EVENTS.filter(e=>e.date>=sel).sort((a,b)=>a.date<b.date?-1:1);
   const evLine=ev?`<p class="fly-ev">${esc(ev.line)}${ev.dj?`<span class="x">guest dj: ${esc(ev.dj.toLowerCase())}</span>`:""}${ev.dress?`<span class="x">dress code: ${esc(ev.dress)}</span>`:""}${ev.poster&&!WIDE.matches?` <button type="button" class="fly-more" data-pst="${ev.date}">xem poster</button>`:""}</p>`:"";
   let art="";
   if(WIDE.matches){
-    const pe=up.find(e=>e.poster),mp=!pe&&up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];
+    /* chỉ poster của chính đêm đó. đêm chưa có poster thì để trống, không lấy poster đêm khác (anh Minh 13/11) */
+    const pe=EVENTS.find(e=>e.date===sel&&e.poster);
     const tape=`<span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>`;
-    art=pe
-      ?`<div class="fly-art pst${pe.wide?" wide":""}"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}" onerror="this.closest('.fly-art').remove()"></button>${tape}${pe.date!==sel?`<p class="fly-cap"><b>SẮP TỚI</b> · ${evDayText(pe)}</p>`:""}</div>`
-      :mp?`<div class="fly-art pst"><button type="button" class="pic" data-pst="month" aria-label="xem to poster lịch tháng"><img src="${esc(mp)}" alt="poster lịch event tháng ${+up[0].date.slice(5,7)} ở blk46" onerror="this.closest('.fly-art').remove()"></button>${tape}</div>`
-      :VENUE_PHOTO
-      ?`<div class="fly-art"><div class="pic"><img src="${esc(VENUE_PHOTO)}" alt="bên trong blk46, tầng 1, 46 mã mây" loading="lazy"></div>${tape}</div>`
-      :`<div class="fly-art poster"><div class="pic" aria-hidden="true"><img src="brand/blk-ring.svg" alt=""><p>HIP-HOP NEWSCHOOL<br>UPPER HOUSE<br>AFRO HOUSE</p></div>${tape}</div>`;
+    if(pe)art=`<div class="fly-art pst${pe.wide?" wide":""}"><button type="button" class="pic" data-pst="${pe.date}" aria-label="xem to poster ${esc(pe.name)}"><img src="${esc(pe.poster)}" alt="poster ${esc(pe.name)}, ${evDayText(pe)}"${pe.pos?` style="object-position:${esc(pe.pos)} 50%"`:""} onerror="this.closest('.fly-art').remove()"></button>${tape}</div>`;
   }
   return `<div class="fly-main">
       <p class="fly-pre" id="flyPre">${esc(h.pre)}</p>
@@ -1367,6 +1355,7 @@ const evDayText=e=>`${WD_FLY[dowOfIso(e.date)]} ${e.date.slice(8)}.${e.date.slic
 function openPoster(key){
   if(/^promo-\d$/.test(key))return openPromoPoster(+key.slice(6));
   const up=upcomingEvents(),e=key==="month"?null:EVENTS.find(x=>x.date===key&&x.poster);
+  if(key!=="month"&&!e)return;
   const src=e?e.poster:up.length&&MONTH_POSTERS[up[0].date.slice(0,7)];if(!src)return;
   let d=document.getElementById("pdlg");
   if(!d){d=document.createElement("dialog");d.id="pdlg";d.className="pdlg";document.body.append(d);
