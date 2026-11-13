@@ -798,6 +798,15 @@ body.paper .done{background:var(--ink);color:var(--paper);padding:28px 20px 32px
 body.paper .done .lede{color:var(--paper)}
 body.paper .done .eyebrow{color:var(--concrete)}
 @media (min-width:700px){body.paper .done{padding:40px 40px 44px;max-width:760px}}
+/* ảnh WELCOME TO BLK ở nền trống cạnh vé "GIỮ CHỖ." (anh Minh 14/11): chỉ máy tính và máy tính bảng, điện thoại không vẽ, không tải */
+.done-pic{display:none}
+@media (min-width:768px) and (min-height:500px){
+  body.paper .done-wrap{display:grid;grid-template-columns:minmax(0,760px) minmax(260px,1fr);grid-template-rows:minmax(350px,auto);margin-top:24px} /* cao tối thiểu 350px để ảnh lọt cả chữ BLK lẫn biển */
+  body.paper .done-wrap>.done{margin-top:0;max-width:none}
+  .done-pic{display:block;position:relative;margin:0;background:var(--ink);overflow:hidden}
+  .done-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:74% 26%}
+  .done-pic::before{content:"";position:absolute;inset:0 auto 0 0;width:30%;background:linear-gradient(90deg,var(--ink),transparent);z-index:1}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body{margin:0}
 img{max-width:100%}
@@ -1242,6 +1251,7 @@ const ICO_DN=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 const ICO_ARW=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>`;
 const ICO_TEL=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1C10.7 20 4 13.3 4 5a1 1 0 0 1 1-1z"/></svg>`;
 const WIDE=matchMedia("(min-width:1024px)"); // poster bên phải tờ rơi chỉ vẽ (và tải) từ 1024px
+const DONE_PIC=matchMedia("(min-width:768px) and (min-height:500px)"); // ảnh cạnh vé "GIỮ CHỖ.": máy tính, máy tính bảng
 const ddmm=iso=>iso.slice(8)+"."+iso.slice(5,7);
 function flyHTML(){
   const n=nightInfo(),sel=flySel(n),isNow=sel===n.iso,t=tonightInfo(),h=flyHead(n,sel),dj=h.head,ev=h.ev,dw=dowOfIso(sel);
@@ -1438,6 +1448,7 @@ function renderLineup(){
   reshowSheet(rows);
 }
 WIDE.addEventListener("change",()=>{if(route().view==="lineup")render()});
+DONE_PIC.addEventListener("change",()=>{if(route().view==="book"&&S.book.done)render()});
 /* ---------- khung hồ sơ promoter (anh Minh 10/11) ----------
    khung nổi đè lên lineup, lineup đứng yên ở chỗ đang cuộn. đóng bằng ×, "← xem người khác", bấm ra ngoài, Esc,
    hoặc nút back / vuốt lùi trên điện thoại (khung thêm một bước vào lịch sử trình duyệt nên back chỉ đóng khung, không rời trang).
@@ -1752,7 +1763,7 @@ function renderBook(idolId){
   if(S.wantDate&&B.wantFor!==S.wantDate){B.wantFor=S.wantDate;if(S.wantDate>=todayStr())B.dateText=isoToDM(S.wantDate)}
   const i=anyone?{id:"",stageName:"BLK46"}:idolById(idolId);
   if(!anyone&&(!i||!isPublic(i))){app.innerHTML=`${banner()}<a class="back" href="#lineup">← về lineup</a><div class="empty" style="margin-top:20px"><b>${S.loaded.idols?"không tìm thấy promoter này.":"đang tải…"}</b></div>`;return}
-  if(B.done){app.innerHTML=`<section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. quản lý xem yêu cầu từ 17h mỗi ngày. hẹn gặp quý khách ở quán sớm nhất.</p>${B.fromVoucher?`<p class="lede">voucher ${esc(B.fromVoucher.tag.toLowerCase())} đã ghi theo số ${esc(B.phone.replace(/\D/g,""))}. tới trước ${esc(B.fromVoucher.before.replace(":","h"))}, báo tên ở cửa.</p>`:""}${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>`;return}
+  if(B.done){app.innerHTML=`<div class="done-wrap"><section class="done"><div class="eyebrow">đã gửi yêu cầu</div><h1 class="display done-hold">GIỮ CHỖ<span class="y">.</span></h1><p class="lede">quán sẽ gọi ${esc(B.salutation)} ${esc(capName(B.guestName))} để xác nhận thông tin bàn đặt${B.doneTable?` (bàn ${esc(B.doneTable)})`:""}. quản lý xem yêu cầu từ 17h mỗi ngày. hẹn gặp quý khách ở quán sớm nhất.</p>${B.fromVoucher?`<p class="lede">voucher ${esc(B.fromVoucher.tag.toLowerCase())} đã ghi theo số ${esc(B.phone.replace(/\D/g,""))}. tới trước ${esc(B.fromVoucher.before.replace(":","h"))}, báo tên ở cửa.</p>`:""}${B.doneUntil?`<p class="hold-note">${esc(holdNote(B.doneUntil))}</p>`:""}<div class="rowbtns"><a class="cta" href="#lineup">về lineup</a></div></section>${DONE_PIC.matches?`<figure class="done-pic" aria-hidden="true"><img src="brand/welcome-to-blk.webp" alt="" decoding="async"></figure>`:""}</div>`;return}
   const can=!!S.db;
   const br=anyone?null:computeBoard().find(x=>x.idol.id===idolId);
   const tkMeta=br&&br.n?`★ ${fmt1(br.avg)} · ${br.n} lượt · hạng ${grade(br)}`:"chưa có lượt chấm";
