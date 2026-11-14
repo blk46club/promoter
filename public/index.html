@@ -1559,7 +1559,8 @@ function reshowSheet(rows){
   const sc2=a.querySelector(".sp-sc");if(sc2)sc2.scrollTop=sy; // điện thoại: đang xem chỉ số thì giữ nguyên chỗ
   spState(d);
 }
-S.reshowSpot=id=>{if(id===S.sheetId)reshowSheet()};
+S.reshowSpot=id=>{if(id===S.sheetId)reshowSheet();
+  const f=document.querySelector(`.tk-face[data-face="${CSS.escape(id)}"]`),i=f&&idolById(id);if(i)f.innerHTML=SIL+faceImg(bookFace(i))};
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
 /* nút "giữ bàn đêm này" ở lịch event: nhớ ngày đó, form đặt bàn điền sẵn ngày */
 document.addEventListener("click",e=>{const p=e.target.closest&&e.target.closest("[data-pst]");if(p){e.preventDefault();openPoster(p.dataset.pst);return}
@@ -1798,6 +1799,23 @@ function renderVoucher(dow){
   };
 }
 
+/* ảnh nhỏ trang đặt bàn cùng một promoter (anh Minh 14/11): một ảnh khác ảnh trên thẻ lineup (thẻ dùng ảnh bìa, thường là ảnh cận).
+   ưu tiên toàn thân, rồi nghiêng; promoter chỉ có 1 ảnh thì dùng ảnh đó. khách dùng ảnh to đã tải khi mở hồ sơ (S.big),
+   vào thẳng link đặt bàn thì tải 1 lần; trong lúc tải để hình bóng người, không hiện ảnh bìa rồi mới đổi.
+   trả về null khi đang tải. */
+function bookFace(i){
+  const p=photosOf(i);
+  if(p.close||p.full||p.side){const c=coverId(i);return [p.full,p.side,p.close].find(x=>x&&x!==c)||c}
+  const a=String(i.ang||"");
+  if(!i.hasSpot||a.length===1)return i.thumb||"";
+  const bg=S.big[i.id];if(!bg){loadSpot(i.id);return null}
+  const cover=a.includes("c")?"c":a.includes("f")?"f":"s",mainK=a.includes("f")?"f":a.includes("c")?"c":"s";
+  if(a&&bg.main&&mainK!==cover)return bg.main;
+  if(bg.alt&&(!a||cover!=="s"))return bg.alt; // hồ sơ cũ chưa có i.ang: ảnh nghiêng chắc chắn khác ảnh bìa
+  return i.thumb||"";
+}
+const faceImg=src=>src?`<img src="${esc(src)}" alt="" onerror="this.remove()">`:"";
+
 /* ---------- khách đặt bàn từ lineup ---------- */
 function renderBook(idolId){
   const B=S.book;idolId=idolId||"";const anyone=!idolId; // anyone = khách không chọn promoter, quán xếp người
@@ -1812,7 +1830,7 @@ function renderBook(idolId){
   app.innerHTML=`${banner()}<a class="back back-swap" href="#lineup">${anyone?"← về trang chính":"← đổi promoter"}</a>
   <div class="book-wrap${anyone?" solo":""}"><section class="tk" aria-label="${anyone?"đặt bàn ở blk46":`đặt bàn cùng ${esc(i.stageName)}`}">
     ${anyone?`<div class="tk-head"><div class="tk-who"><p class="tk-pre">ĐẶT BÀN Ở</p><h1 class="tk-name">BLK46</h1><p class="tk-meta">quán xếp promoter takecare bàn của bạn.</p></div></div>`
-    :`<div class="tk-head"><div class="tk-face">${SIL}${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}</div>
+    :`<div class="tk-head"><div class="tk-face" data-face="${esc(i.id)}">${SIL}${faceImg(bookFace(i))}</div>
       <div class="tk-who"><p class="tk-pre">ĐẶT BÀN CÙNG</p><h1 class="tk-name">${esc(i.stageName)}</h1><p class="tk-meta">${tkMeta}</p></div></div>`}
     <div class="tk-row"><p id="tkDay"></p><p id="tkTime"></p><p>TẦNG 1, 46 MÃ MÂY</p></div>
     <p class="tk-ev" id="tkEv" hidden></p>
