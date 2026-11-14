@@ -150,11 +150,8 @@ function makeDb(staff) {
     watchVisits: (fromDate, next, err) => onSnapshot(
       query(collection(fs, "visits"), where("date", ">=", fromDate)),
       (s) => next(s.docs.map((d) => { const x = d.data(); return { date: x.date, n: x.n || 0 }; })), err),
-    // Phễu đặt bàn theo nguồn (funnel/{ngày}_{nguồn} { date, src, <bước>: số }): khách chỉ được cộng 1 vào một bước, chỉ quản lý đọc.
+    // Phễu đặt bàn theo nguồn (funnel/{ngày}_{nguồn} { date, src, <bước>: số }): khách chỉ được cộng 1 vào một bước; script Google đọc để làm báo cáo tuần.
     countStep: (date, src, step) => setDoc(doc(fs, "funnel/" + date + "_" + src), { date, src, [step]: increment(1) }, { merge: true }),
-    watchFunnel: (fromDate, next, err) => onSnapshot(
-      query(collection(fs, "funnel"), where("date", ">=", fromDate)),
-      (s) => next(s.docs.map((d) => d.data())), err),
     // Số khách đặt trước đã xác nhận theo ngày (idolLoad/{ngày}): công khai, chỉ có con số theo promoter.
     watchLoads: (fromDate, next, err) => onSnapshot(
       query(collection(fs, "idolLoad"), where("date", ">=", fromDate)),

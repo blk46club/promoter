@@ -355,17 +355,6 @@ table.rvtable{table-layout:fixed;min-width:1080px}
   .rvtable td.empty-m{display:none}
   .rvtable td .rowbtns{flex-direction:row;flex-wrap:wrap}
 }
-/* nguồn khách (chỉ quản lý): bảng phễu theo nguồn; điện thoại thành thẻ, không phải vuốt ngang */
-.fx table{min-width:900px}.fx th.num,.fx td.num{text-align:right}.fx-tot td{border-top:2px solid var(--line);background:var(--card)}
-.fx-h{font-size:var(--fs-md);margin:8px 0 0;font-weight:600}.fx-err{margin:0;padding-left:18px;line-height:1.7}
-.fx-out{display:grid;gap:8px;margin-top:8px}.fx-link{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}.fx-link code{word-break:break-all;font-size:var(--fs-sm)}
-@media (max-width:700px){
-  .fx table{min-width:0;display:block}.fx thead{display:none}.fx tbody{display:block}
-  .fx tr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 12px;padding:14px 12px;border-bottom:1px solid var(--line)}
-  .fx td{display:block;border:0;padding:0;min-width:0;text-align:left!important}
-  .fx td[data-l]::before{content:attr(data-l);display:block;font-size:var(--fs-2xs);letter-spacing:.08em;text-transform:uppercase;color:var(--concrete);margin-bottom:3px}
-  .fx td:first-child{grid-column:1/-1}.fx td:first-child::before{display:none}
-}
 form.idol{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);padding:16px}
 .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 label.f,div.f{display:grid;gap:4px;align-content:start;font-size:var(--fs-xs);color:var(--concrete);min-width:0}
@@ -897,7 +886,7 @@ const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
 const S={flyDate:"",flyWeek:"",db:null,user:null,assets:null,canEdit:false,canWrite:null,sheetId:null,
-  idols:[],reviews:[],vouchers:[],funnel:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
+  idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   tonight:{iso:"",dj:""},djs:{},dj:{text:"",name:"",for:""},
@@ -1121,9 +1110,10 @@ function countVisitOnce(){
 /* ---------- phễu đặt bàn theo nguồn (anh Minh 13/11) ----------
    khách đến từ đâu (?src=… trên link, hoặc đoán từ app đang mở) và dừng ở bước nào. mỗi máy cộng 1 cho mỗi bước,
    1 lần / phiên (tab trình duyệt), nên con số ≈ số người, không phải số lần bấm. máy quản lý + tablet chấm điểm không đếm.
-   chỉ ghi con số vào funnel/{ngày}_{nguồn}, không có tên hay số điện thoại khách. chỉ quản lý đọc. */
-const FX_STEPS=[["mo","mở web"],["form","mở form đặt bàn"],["dien","bắt đầu điền"],["gui","bấm gửi"],["xong","gửi xong"],["goi","bấm gọi"],["vform","mở form voucher"],["vc","nhận voucher"]];
-const FX_ERRS=[["e_dx","quên chọn Mr/Miss"],["e_ngay","ngày sai hoặc đã qua"],["e_gio","giờ sai hoặc đã qua"],["e_sdt","số điện thoại sai"],["e_ban","bàn vừa có người"],["e_full","promoter đã kín"],["e_mang","lỗi mạng, chưa gửi được"]];
+   chỉ ghi con số vào funnel/{ngày}_{nguồn}, không có tên hay số điện thoại khách. web không hiện số này:
+   script Google (tools/apps-script/Code.gs) đọc và lưu báo cáo tuần ra Google Sheet (anh Minh 14/11).
+   các bước: mo, form, dien, gui, xong, goi, vform, vc; lỗi khi gửi: e_dx, e_ngay, e_gio, e_sdt, e_ban, e_full, e_mang
+   (đổi tên bước thì sửa cả luật firebase và Code.gs). */
 const SRC_KEY="blk46:src",SRC_DAYS=7; // link có ?src= thì nhớ 7 ngày: khách quay lại gõ thẳng địa chỉ vẫn tính về nguồn cũ
 const cleanSrc=v=>String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,24).replace(/-+$/,"");
 function readSrc(){
@@ -2196,62 +2186,14 @@ function renderAdmin(){
     <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display admin-title">QUẢN LÝ</h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
     ${usageBox()}
     <div class="subtabs" role="tablist">
-      ${[["bookings","đặt bàn"],["funnel","nguồn khách"],["idols","hồ sơ promoter"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
+      ${[["bookings","đặt bàn"],["idols","hồ sơ promoter"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
     </div>
     <div class="panel" id="panel"></div>
   </section>`;
   app.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{S.adminTab=b.dataset.at;S.editing=null;render()});
   document.getElementById("adminOut").onclick=async()=>{await __backend.logout();location.reload()};
   const p=document.getElementById("panel");
-  if(t==="bookings")adminBookings(p);else if(t==="funnel")adminFunnel(p);else if(t==="idols")adminIdols(p);else adminReviews(p);
-}
-/* ---------- nguồn khách: khách đến từ đâu, dừng ở bước nào (anh Minh 13/11) ---------- */
-const SRC_NAMES={"fb":"facebook (không gắn mã)","ig":"instagram (không gắn mã)","tiktok":"tiktok (không gắn mã)","zalo":"zalo","google":"google","threads":"threads (không gắn mã)","khong-ro":"không rõ (gõ địa chỉ, qr cũ…)","chua-gan":"đặt trước khi có mã nguồn"};
-const srcName=v=>SRC_NAMES[v]||(/^nv-?\d+$/.test(v)?"nhân viên "+v.replace(/^nv-?/,""):v);
-/* chỉ tải số liệu khi quản lý mở tab này (không tải lúc mở trang quản lý), và chỉ từ đầu tháng hoặc 7 ngày trước:
-   mỗi ngày mỗi nguồn là 1 bản ghi, nên tải ít ngày = ít lượt đọc trong 50.000 lượt đọc miễn phí mỗi ngày */
-function watchFunnelOnce(){
-  if(S.fxOn||!S.db||!S.db.watchFunnel)return;S.fxOn=true;
-  const td=isoOfVN(Date.now()),wk=isoOfVN(Date.now()-6*864e5),m0=td.slice(0,8)+"01";
-  S.db.watchFunnel(wk<m0?wk:m0,list=>{S.funnel=list;S.funnelErr=false;if(route().view==="admin"&&S.adminTab==="funnel")render()},()=>{S.funnelErr=true;if(route().view==="admin")render()});
-}
-function adminFunnel(p){
-  watchFunnelOnce();
-  const per=S.fxPer||"7d",td=isoOfVN(Date.now());
-  const from=per==="today"?td:per==="month"?td.slice(0,8)+"01":isoOfVN(Date.now()-6*864e5);
-  const rows={};const add=(src,k,n)=>{const r=rows[src]=rows[src]||{src};r[k]=(r[k]||0)+n};
-  S.funnel.filter(x=>x.date>=from&&x.date<=td).forEach(x=>[...FX_STEPS,...FX_ERRS].forEach(([k])=>{if(x[k])add(x.src||"khong-ro",k,x[k])}));
-  /* kết quả thật từ danh sách đặt bàn: đặt qua web trong kỳ (theo lúc gửi), quản lý đã xác nhận / khách đã tới */
-  S.bookings.filter(b=>b.source==="web"&&b.createdAt&&isoOfVN(b.createdAt)>=from&&isoOfVN(b.createdAt)<=td).forEach(b=>{const v=b.src||"chua-gan";
-    add(v,"b_all",1);if(b.status==="confirmed"||b.status==="seated")add(v,"b_ok",1);if(b.status==="seated")add(v,"b_came",1)});
-  const list=Object.values(rows).sort((a,b)=>(b.mo||0)-(a.mo||0)||(b.b_all||0)-(a.b_all||0));
-  const tot={src:"tổng"};list.forEach(r=>Object.keys(r).forEach(k=>{if(k!=="src")tot[k]=(tot[k]||0)+r[k]}));
-  const pct=(a,b)=>b?Math.round(a/b*100)+"%":"—",n=v=>v?v.toLocaleString("vi-VN"):"—";
-  const cols=[...FX_STEPS.slice(0,6)];
-  const row=(r,b)=>`<tr${b?' class="fx-tot"':""}><td data-l="nguồn"><b>${esc(b?"tổng":srcName(r.src))}</b>${b||srcName(r.src)===r.src?"":`<br><span class="muted">${esc(r.src)}</span>`}</td>
-    ${cols.map(([k,l])=>`<td class="num" data-l="${l}">${n(r[k])}</td>`).join("")}
-    <td class="num" data-l="gửi xong / mở web"><b>${pct(r.xong||0,r.mo||0)}</b></td>
-    <td class="num" data-l="đặt bàn web">${n(r.b_all)}</td><td class="num" data-l="quản lý xác nhận">${n(r.b_ok)}</td><td class="num" data-l="khách đã tới">${n(r.b_came)}</td>
-    <td class="num" data-l="voucher">${n(r.vc)}</td></tr>`;
-  const errs=FX_ERRS.map(([k,l])=>[l,tot[k]||0]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
-  const base=location.origin+location.pathname;
-  p.innerHTML=`
-  <div class="rowbtns">${[["today","hôm nay"],["7d","7 ngày"],["month","tháng này"]].map(([k,l])=>`<button class="chip" data-fp="${k}" aria-pressed="${per===k}">${l}</button>`).join("")}</div>
-  ${S.funnelErr?`<div class="banner" data-kind="warn">chưa đọc được số liệu nguồn khách: cần dán luật firebase mới (13/11).</div>`:""}
-  ${list.length?`<div class="table fx"><table><thead><tr><th>nguồn</th>${cols.map(([,l])=>`<th class="num">${l}</th>`).join("")}<th class="num">gửi xong / mở web</th><th class="num">đặt bàn web</th><th class="num">quản lý xác nhận</th><th class="num">khách đã tới</th><th class="num">voucher</th></tr></thead>
-    <tbody>${list.map(r=>row(r)).join("")}${list.length>1?row(tot,true):""}</tbody></table></div>`
-    :`<div class="empty"><b>chưa có số liệu trong kỳ này.</b><span>từ khi gắn luật mới, mỗi máy khách mở web sẽ cộng vào đây theo nguồn.</span></div>`}
-  <p class="note">mỗi máy khách đếm 1 lần cho mỗi bước trong một phiên, nên con số ≈ số người. máy quản lý và tablet không đếm. "quản lý xác nhận" và "khách đã tới" lấy từ danh sách đặt bàn web.</p>
-  ${errs.length?`<h3 class="fx-h">khách bị chặn khi bấm gửi</h3><ul class="fx-err">${errs.map(([l,v])=>`<li><b>${n(v)}</b> ${esc(l)}</li>`).join("")}</ul>`:""}
-  <details class="tblcfg fx-mk"><summary>tạo link có mã nguồn</summary>
-    <p class="note" style="margin:6px 0">mỗi kênh, mỗi nhân viên một mã: chữ thường không dấu, số, gạch ngang. ví dụ fb-ads, ig-ads, mess (link trong tin trả lời tự động), ig-bio, tiktok-bio, qr-ban, nv-07.</p>
-    <label class="f" style="max-width:280px">mã nguồn<input id="fxCode" maxlength="24" autocomplete="off" placeholder="vd nv-07"></label>
-    <div id="fxOut" class="fx-out"></div></details>`;
-  p.querySelectorAll("[data-fp]").forEach(b=>b.onclick=()=>{S.fxPer=b.dataset.fp;render()});
-  const ci=document.getElementById("fxCode"),out=document.getElementById("fxOut");
-  const paint=()=>{const c=cleanSrc(ci.value);out.innerHTML=c?[["trang chính",base+"?src="+c],["mở thẳng form đặt bàn",base+"?src="+c+"#book"]].map(([l,u])=>`<div class="fx-link"><span class="muted">${l}</span><code>${esc(u)}</code><button type="button" class="ghostbtn" data-cp="${esc(u)}">copy</button></div>`).join(""):"";
-    out.querySelectorAll("[data-cp]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.cp);b.textContent="đã copy"}catch(_){b.textContent="giữ để copy"}})};
-  ci.addEventListener("input",paint);
+  if(t==="bookings")adminBookings(p);else if(t==="idols")adminIdols(p);else adminReviews(p);
 }
 function adminIdols(p){
   const board=computeBoard();const byId={};board.forEach(r=>byId[r.idol.id]=r);

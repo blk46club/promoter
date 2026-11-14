@@ -116,12 +116,12 @@ function caiDatHangTuan() {
   console.log("đã đặt lịch báo cáo tuần: thứ 2, khoảng " + CFG.weekHour + "h sáng");
 }
 
-// các bước khách đi qua trên web (giống tab "nguồn khách" trong trang quản lý)
+// các bước khách đi qua trên web (web chỉ đếm, không hiện số; số chỉ xem trong báo cáo tuần này)
 const FX_STEPS = [["mo", "mở web"], ["form", "mở form đặt bàn"], ["dien", "bắt đầu điền"], ["gui", "bấm gửi"], ["xong", "gửi xong"], ["goi", "bấm gọi hotline"], ["vform", "mở form voucher"], ["vc", "nhận voucher"]];
 const FX_ERRS = [["e_dx", "quên chọn Mr/Miss"], ["e_ngay", "ngày sai hoặc đã qua"], ["e_gio", "giờ sai hoặc đã qua"], ["e_sdt", "số điện thoại sai"], ["e_ban", "bàn vừa có người"], ["e_full", "promoter đã kín"], ["e_mang", "lỗi mạng, chưa gửi được"]];
 const SRC_NAMES = { "fb": "facebook (không gắn mã)", "ig": "instagram (không gắn mã)", "tiktok": "tiktok (không gắn mã)", "zalo": "zalo", "google": "google",
   "threads": "threads (không gắn mã)",
-  "fb-ads": "quảng cáo facebook vào web", "ig-ads": "quảng cáo instagram vào web", "mess-fb": "quảng cáo tin nhắn facebook", "mess-ig": "quảng cáo tin nhắn instagram",
+  "fb-ads": "quảng cáo facebook vào web", "ig-ads": "quảng cáo instagram vào web", "mess-fb": "link gửi trong tin nhắn facebook", "mess-ig": "link gửi trong tin nhắn instagram",
   "fb-bio": "trang facebook của quán", "ig-bio": "trang instagram của quán", "threads-bio": "trang threads của quán", "tiktok-bio": "trang tiktok của quán", "qr-ban": "qr tại bàn", "khong-ro": "không rõ (gõ địa chỉ, qr cũ…)", "chua-gan": "đặt khi chưa có mã nguồn", "quan-ly": "quản lý tạo (gọi điện, chat, tại quán)" };
 const srcName_ = (v) => SRC_NAMES[v] || (/^nv-?\d+$/.test(v) ? "nhân viên " + v.replace(/^nv-?/, "") : v);
 const WD_VI = ["chủ nhật", "thứ 2", "thứ 3", "thứ 4", "thứ 5", "thứ 6", "thứ 7"];
