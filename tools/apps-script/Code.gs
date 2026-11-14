@@ -16,6 +16,13 @@
  *   BLK46 - Báo cáo tuần / 2026 / Báo cáo tuần 16-11-2026 đến 22-11-2026 (Google Sheet)
  * Chỉ có con số, không có tên hay số điện thoại khách. Chạy caiDatHangTuan() một lần để đặt lịch.
  * Muốn xem ngay tuần đang chạy: chạy baoCaoTuanNay().
+ *
+ * Chia sẻ quyền xem file "Đặt bàn …" (thêm 14/11/2026): mỗi lần lưu, file được chia sẻ quyền
+ * Người xem cho các email trong Script Properties XEM_CUNG (nhiều email thì cách nhau dấu phẩy),
+ * không gửi email thông báo. Email không nằm trong code vì repo này công khai.
+ *   Cần bật 1 lần: trình soạn code → Dịch vụ (+) → Drive API → Thêm.
+ *   File đã có từ trước: chạy chiaSeFileCu() một lần.
+ * Script chỉ THÊM quyền xem cho đúng email đó, không đổi quyền nào khác, không bật chia sẻ bằng link.
  */
 
 const CFG = {
@@ -72,6 +79,7 @@ function luuNgay(iso) {
   const label = dd + "-" + m + "-" + y;
   const folder = thuMuc_(thuMuc_(thuMuc_(thuMuc_(DriveApp.getRootFolder(), CFG.rootFolder), y), "Tháng " + Number(m)), label);
   const ss = fileSheet_(folder, "Đặt bàn " + label);
+  const loiChiaSe = chiaSeXem_(ss.getId(), "Đặt bàn " + label);   // chia sẻ ngay sau khi tạo / mở file
   const sh = ss.getSheets()[0];
   sh.clear();
   sh.setName("đặt bàn");
@@ -91,6 +99,28 @@ function luuNgay(iso) {
   if (rows.length) sh.getRange(2, 10, rows.length, 1).setNumberFormat("#,##0");
   sh.setFrozenRows(1);
   console.log("đã lưu " + tong + " đơn vào " + ss.getUrl());
+  // file đã lưu xong; chia sẻ lỗi thì báo lỗi để Apps Script ghi vào mục lỗi (lần chạy sau sẽ thử lại)
+  if (loiChiaSe.length) throw new Error("đã lưu file nhưng chưa chia sẻ được: " + loiChiaSe.join("; "));
+}
+
+/** Chạy 1 lần: chia sẻ quyền xem (không gửi email) mọi file "Đặt bàn dd-mm-yyyy" đã có trong thư mục BLK46 - Đặt bàn. */
+function chiaSeFileCu() {
+  const it = DriveApp.getRootFolder().getFoldersByName(CFG.rootFolder);
+  if (!it.hasNext()) { console.log("chưa có thư mục " + CFG.rootFolder); return; }
+  let n = 0;
+  const loi = [];
+  const walk = (f) => {
+    const fi = f.getFiles();
+    while (fi.hasNext()) {
+      const x = fi.next();
+      if (x.getMimeType() === MimeType.GOOGLE_SHEETS && /^Đặt bàn \d{2}-\d{2}-\d{4}$/.test(x.getName())) { n++; loi.push(...chiaSeXem_(x.getId(), x.getName())); }
+    }
+    const sf = f.getFolders();
+    while (sf.hasNext()) walk(sf.next());
+  };
+  walk(it.next());
+  console.log("đã kiểm " + n + " file đặt bàn");
+  if (loi.length) throw new Error("chưa chia sẻ được: " + loi.join("; "));
 }
 
 /** Đặt lịch chạy mỗi sáng. Chạy hàm này 1 lần. */
@@ -344,6 +374,31 @@ function tenPromoter_(token) {
     page = j.nextPageToken || "";
   } while (page);
   return out;
+}
+
+/* thêm quyền Người xem cho các email trong XEM_CUNG, không gửi email thông báo. trả về danh sách lỗi (rỗng = ổn).
+   ai đã có quyền (xem, sửa hay chủ file) thì bỏ qua, nên không bao giờ hạ hay nâng quyền của ai. */
+function chiaSeXem_(fileId, name) {
+  const emails = String(PropertiesService.getScriptProperties().getProperty("XEM_CUNG") || "")
+    .split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+  if (!emails.length) return [];
+  if (typeof Drive === "undefined" || !Drive.Permissions) return [name + ": chưa bật dịch vụ Drive API (trình soạn code → Dịch vụ + → Drive API → Thêm)"];
+  const v3 = typeof Drive.Permissions.create === "function";   // dịch vụ Drive bản v3 (mặc định) hoặc v2
+  let have;
+  try {
+    const r = v3 ? Drive.Permissions.list(fileId, { fields: "permissions(emailAddress,role)" }) : Drive.Permissions.list(fileId);
+    have = ((v3 ? r.permissions : r.items) || []).map((p) => String(p.emailAddress || "").toLowerCase());
+  } catch (e) { return [name + ": không đọc được danh sách chia sẻ (" + e.message + ")"]; }
+  const loi = [];
+  emails.forEach((e) => {
+    if (have.includes(e)) { console.log(name + ": " + e + " đã có quyền, giữ nguyên"); return; }
+    try {
+      if (v3) Drive.Permissions.create({ role: "reader", type: "user", emailAddress: e }, fileId, { sendNotificationEmail: false });
+      else Drive.Permissions.insert({ role: "reader", type: "user", value: e }, fileId, { sendNotificationEmails: false });
+      console.log(name + ": đã chia sẻ quyền xem cho " + e + " (không gửi email)");
+    } catch (err) { loi.push(name + " → " + e + ": " + err.message); }
+  });
+  return loi;
 }
 
 function thuMuc_(parent, name) {
