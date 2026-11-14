@@ -106,6 +106,8 @@ function makeDb(staff) {
       setTimeout(fire, 0);
       return () => { subs.visits = (subs.visits || []).filter((f) => f !== fire); };
     },
+    // Phễu đặt bàn theo nguồn (funnel/{ngày}_{nguồn} { date, src, <bước>: số }).
+    countStep: async (date, src, step) => { const f = col("funnel"), id = date + "_" + src; f[id] = { date, src, ...(f[id] || {}) }; f[id][step] = (f[id][step] || 0) + 1; save(); notify("funnel"); },
     // Số khách đặt trước đã xác nhận theo ngày (idolLoad/{ngày}), ai cũng xem được, chỉ có con số.
     watchLoads: (fromDate, next) => {
       const fire = () => next(Object.values(col("idolLoad")).filter((x) => x.date >= fromDate).map((x) => ({ date: x.date, counts: x.counts || {} })));

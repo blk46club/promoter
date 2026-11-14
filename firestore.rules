@@ -105,6 +105,29 @@ service cloud.firestore {
         request.resource.data.n == resource.data.n + 1;
     }
 
+    // Phễu đặt bàn theo nguồn: funnel/{ngày}_{nguồn} { date, src, <bước>: số } (anh Minh 13/11).
+    // Chỉ là con số theo bước, không có thông tin khách. Khách chỉ được tạo một bước = 1, hoặc cộng đúng 1 vào một bước.
+    // Chỉ quản lý đọc và xoá: đối thủ không xem được quán đông khách từ nguồn nào.
+    // nguồn khách gắn vào đặt bàn / voucher (không bắt buộc): chữ thường, số, gạch ngang, tối đa 24 ký tự.
+    function srcOk() { return !('src' in request.resource.data) || (request.resource.data.src is string && request.resource.data.src.matches('^[a-z0-9-]{1,24}$')); }
+    function fxSteps() { return ['mo','form','dien','gui','xong','vform','vc','goi','e_dx','e_ngay','e_gio','e_sdt','e_ban','e_full','e_mang']; }
+    function fxOk(k) {
+      return !(k in request.resource.data) ||
+        (k in resource.data && (request.resource.data[k] == resource.data[k] || request.resource.data[k] == resource.data[k] + 1)) ||
+        (!(k in resource.data) && request.resource.data[k] == 1);
+    }
+    match /funnel/{id} {
+      allow read, delete: if isStaff();
+      allow create: if id.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}_[a-z0-9-]{1,24}$') &&
+        request.resource.data.date == id.split('_')[0] && request.resource.data.src == id.split('_')[1] &&
+        request.resource.data.keys().hasOnly(['date','src'].concat(fxSteps())) &&
+        request.resource.data.keys().size() == 3 && 1 in request.resource.data.values();
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(fxSteps()) &&
+        request.resource.data.diff(resource.data).affectedKeys().size() == 1 &&
+        fxOk('mo') && fxOk('form') && fxOk('dien') && fxOk('gui') && fxOk('xong') && fxOk('vform') && fxOk('vc') && fxOk('goi') &&
+        fxOk('e_dx') && fxOk('e_ngay') && fxOk('e_gio') && fxOk('e_sdt') && fxOk('e_ban') && fxOk('e_full') && fxOk('e_mang');
+    }
+
     // Số khách đặt trước đã xác nhận theo ngày: idolLoad/{ngày} { date, counts: { idolId: số }, updatedAt }.
     // Chỉ có con số theo promoter, không tên hay số điện thoại khách, nên ai cũng đọc được. Chỉ quản lý ghi.
     match /idolLoad/{d} {
@@ -134,7 +157,8 @@ service cloud.firestore {
       allow read, update, delete: if isStaff();
       allow create: if isStaff() || (
         id.matches('^[a-z0-9]{8,40}$') &&
-        request.resource.data.keys().hasOnly(['salutation','guestName','phone','date','time','guests','table','idolIds','note','status','source','code','createdAt','holdUntil']) &&
+        request.resource.data.keys().hasOnly(['salutation','guestName','phone','date','time','guests','table','idolIds','note','status','source','src','code','createdAt','holdUntil']) &&
+        srcOk() &&
         request.resource.data.status == 'requested' &&
         request.resource.data.source == 'web' &&
         request.resource.data.code == '' &&
@@ -159,7 +183,8 @@ service cloud.firestore {
       allow read, update, delete: if isStaff();
       allow create: if isStaff() || (
         id.matches('^[a-z0-9]{8,40}$') &&
-        request.resource.data.keys().hasOnly(['promo','dow','name','phone','date','time','mode','guests','source','createdAt']) &&
+        request.resource.data.keys().hasOnly(['promo','dow','name','phone','date','time','mode','guests','source','src','createdAt']) &&
+        srcOk() &&
         request.resource.data.source == 'web' &&
         request.resource.data.promo is string && request.resource.data.promo.size() > 0 && request.resource.data.promo.size() <= 40 &&
         request.resource.data.dow is int && request.resource.data.dow >= 0 && request.resource.data.dow <= 6 &&
