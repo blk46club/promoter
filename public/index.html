@@ -526,7 +526,13 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .cards{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:24px;margin-inline:-16px;padding:28px 24px 12px;scrollbar-width:none}
 .cards::-webkit-scrollbar{display:none}
 .cards>.pc{flex:0 0 min(196px,56vw);scroll-snap-align:start}
-@media (min-width:700px){.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:32px 24px;overflow:visible;margin-inline:0;padding:44px 8px 0}}
+@media (min-width:700px){.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px 24px;overflow:visible;margin-inline:0;padding:44px 8px 0}}
+/* máy tính, tablet (từ 700px): chỉ hiện 6 người đầu, bấm "xem thêm" mới hiện hết (anh Minh 15/11). điện thoại vẫn vuốt ngang đủ người.
+   số cột chia hết cho 6 (3 hoặc 6) để hàng nào cũng kín, không có thẻ lẻ một mình */
+@media (min-width:1000px){.cards{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (min-width:700px){.cards.cut>.pc:nth-child(n+7){display:none}}
+.ros-more{display:none}
+@media (min-width:700px){.ros-more{display:flex;justify-content:center;margin-top:40px}.ros-more .sq{min-width:260px}}
 .pc{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--paper);border:0;padding:8px 8px 14px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;transform:rotate(-1.2deg)}
 .pc:nth-child(4n+2){transform:rotate(.8deg)}
 .pc:nth-child(4n+3){transform:rotate(-.6deg)}
@@ -1039,7 +1045,9 @@ window.addEventListener("hashchange",e=>{
 function backToRoster(id){
   const ros=document.getElementById("roster");if(!ros){window.scrollTo(0,0);return}
   ros.scrollIntoView({block:"start"}); // nhảy luôn, không cuộn mượt: khách không cần thấy cả trang trôi qua
-  const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`),l=c&&c.closest(".cards");if(!c)return;
+  const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(!c)return;
+  if(!c.offsetParent){const m=document.getElementById("rosMore");if(m)m.click()} // người vừa xem nằm sau "xem thêm": mở hết danh sách
+  const l=c.closest(".cards");
   if(l&&l.scrollWidth>l.clientWidth)l.scrollLeft+=c.getBoundingClientRect().left-l.getBoundingClientRect().left-24; // điện thoại: dải thẻ vuốt ngang, đưa thẻ đó vào khung
   c.focus({preventScroll:true});
 }
@@ -1440,11 +1448,13 @@ function openPromoPoster(dow){
 }
 const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
 const goRoster=()=>goTo("roster");
+const ROS_CUT=6; // máy tính: số thẻ hiện trước khi bấm "xem thêm"
 function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
   const empty=!loading&&!rows.length;
   const tdy=todayStr();
+  const cut=!S.rosAll&&rows.length>ROS_CUT;
   fetchTonight();
   app.innerHTML=`
   ${banner()}
@@ -1460,7 +1470,8 @@ function renderLineup(){
     </div>
     ${empty&&S.canEdit?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện.</span></div>`:""}
     ${empty&&!S.canEdit?`<div class="empty"><b>lineup đang cập nhật.</b><span>gọi <a href="tel:${HOTLINE}">${HOTLINE_SHOW}</a> để đặt bàn.</span></div>`:""}
-    ${rows.length?`<div class="cards" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>`
+    ${rows.length?`<div class="cards${cut?" cut":""}" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>
+      ${cut?`<div class="ros-more"><button type="button" class="sq" id="rosMore">xem thêm ${rows.length-ROS_CUT} promoter</button></div>`:""}`
       :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-txt"><span class="pc-name">&nbsp;</span></span></div>`).join("")}</div>`:""}
   </section>`;
   /* dải tuần: bấm một đêm thì tờ rơi đổi sang đêm đó (tên đêm khuất thì cuộn lên cho khách thấy), bấm tuần thì đổi 4 đêm đang hiện */
@@ -1475,6 +1486,9 @@ function renderLineup(){
   });
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
+  const more=document.getElementById("rosMore");
+  if(more)more.onclick=()=>{S.rosAll=true;const l=app.querySelector(".cards");l.classList.remove("cut");more.parentElement.remove();
+    const c=l.children[ROS_CUT];if(c)c.focus({preventScroll:true})};
   /* bấm thẻ (hoặc Enter, Space): mở khung hồ sơ. phím mũi tên chỉ dời ô đang chọn */
   const cards=[...app.querySelectorAll(".pc[data-id]:not([disabled])")];
   cards.forEach((b,k)=>{
@@ -1482,7 +1496,8 @@ function renderLineup(){
     b.onkeydown=e=>{
       const cols=Math.max(1,Math.round(b.parentElement.clientWidth/b.offsetWidth));
       const d={ArrowRight:1,ArrowLeft:-1,ArrowDown:cols,ArrowUp:-cols}[e.key];
-      if(d){e.preventDefault();cards[Math.min(cards.length-1,Math.max(0,k+d))].focus()}
+      const vis=cards.filter(x=>x.offsetParent),j=vis.indexOf(b); // thẻ đang ẩn sau "xem thêm" thì bỏ qua
+      if(d&&j>=0){e.preventDefault();vis[Math.min(vis.length-1,Math.max(0,j+d))].focus()}
     };
   });
   reshowSheet(rows);
