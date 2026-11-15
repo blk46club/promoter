@@ -527,10 +527,10 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .cards::-webkit-scrollbar{display:none}
 .cards>.pc{flex:0 0 min(196px,56vw);scroll-snap-align:start}
 @media (min-width:700px){.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px 24px;overflow:visible;margin-inline:0;padding:44px 8px 0}}
-/* máy tính, tablet (từ 700px): chỉ hiện 6 người đầu, bấm "xem thêm" mới hiện hết (anh Minh 15/11). điện thoại vẫn vuốt ngang đủ người.
+/* máy tính, tablet (từ 700px): hiện 6 người đầu, mỗi lần bấm "xem thêm" mở thêm 6 (anh Minh 15/11). điện thoại vẫn vuốt ngang đủ người.
    số cột chia hết cho 6 (3 hoặc 6) để hàng nào cũng kín, không có thẻ lẻ một mình */
 @media (min-width:1000px){.cards{grid-template-columns:repeat(6,minmax(0,1fr))}}
-@media (min-width:700px){.cards.cut>.pc:nth-child(n+7){display:none}}
+@media (min-width:700px){.cards>.pc.later{display:none}} /* máy tính, tablet: thẻ chưa tới lượt "xem thêm" */
 .ros-more{display:none}
 @media (min-width:700px){.ros-more{display:flex;justify-content:center;margin-top:40px}.ros-more .sq{min-width:260px}}
 .pc{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--paper);border:0;padding:8px 8px 14px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;transform:rotate(-1.2deg)}
@@ -1087,7 +1087,7 @@ function backToRoster(id){
   const ros=document.getElementById("roster");if(!ros){window.scrollTo(0,0);return}
   ros.scrollIntoView({block:"start"}); // nhảy luôn, không cuộn mượt: khách không cần thấy cả trang trôi qua
   const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(!c)return;
-  if(!c.offsetParent){const m=document.getElementById("rosMore");if(m)m.click()} // người vừa xem nằm sau "xem thêm": mở hết danh sách
+  for(let m;!c.offsetParent&&(m=document.getElementById("rosMore"));)m.click(); // người vừa xem nằm sau "xem thêm": mở từng hàng tới khi thấy thẻ đó
   const l=c.closest(".cards");
   if(l&&l.scrollWidth>l.clientWidth)l.scrollLeft+=c.getBoundingClientRect().left-l.getBoundingClientRect().left-24; // điện thoại: dải thẻ vuốt ngang, đưa thẻ đó vào khung
   c.focus({preventScroll:true});
@@ -1389,10 +1389,10 @@ function nightsHTML(){
   </section>`;
 }
 /* thẻ promoter: tấm ảnh dán băng keo, số hạng, tên, sao. bấm thì mở khung hồ sơ. đủ khách tối nay thì đóng dấu, không bấm được */
-function cardHTML(r,td){
+function cardHTML(r,td,later){ // later: thẻ chờ "xem thêm" (máy tính, tablet ẩn; điện thoại vẫn hiện)
   const i=r.idol,cid=coverId(i),ld=loadOf(td,i.id),fl=ld>=LOAD_MAX;
   const meta=(r.n?`★ ${fmt1(r.avg)} · hạng ${grade(r)}`:"chưa có hạng")+(ld&&!fl?` · <span class="nw">${loadTile(ld)}</span>`:"");
-  return `<button type="button" class="pc${fl?" full":""}${r.rank===1?" top":""}" data-id="${esc(i.id)}" ${fl?"disabled":""} aria-haspopup="dialog" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
+  return `<button type="button" class="pc${fl?" full":""}${r.rank===1?" top":""}${later?" later":""}" data-id="${esc(i.id)}" ${fl?"disabled":""} aria-haspopup="dialog" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
     <span class="pc-tape" aria-hidden="true"></span>
     <span class="pc-ph">${SIL}${i.blur&&!cid?`<img class="bl" src="${esc(i.blur)}" alt="" onerror="this.remove()">`:""}${cid?`<img class="th in" src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:""}${fl?`<span class="pc-stamp"><b>fully booked</b></span>`:""}</span>
     <span class="pc-no">${r.rank?pad2(r.rank):"—"}</span>
@@ -1493,13 +1493,14 @@ function openPromoPoster(dow){
 }
 const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
 const goRoster=()=>goTo("roster");
-const ROS_CUT=6; // máy tính: số thẻ hiện trước khi bấm "xem thêm"
+const ROS_CUT=6; // máy tính, tablet: số thẻ hiện lúc đầu, và số thẻ mở thêm mỗi lần bấm "xem thêm" (anh Minh 15/11)
 function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
   const empty=!loading&&!rows.length;
   const tdy=todayStr();
-  const cut=!S.rosAll&&rows.length>ROS_CUT;
+  const shown=S.rosShown=Math.max(ROS_CUT,S.rosShown||0); // số thẻ đang mở, giữ nguyên khi vẽ lại (đổi tháng, xem hồ sơ rồi quay lại)
+  const moreTxt=n=>`xem thêm ${Math.min(ROS_CUT,n)} promoter`;
   fetchTonight();
   app.innerHTML=`
   ${banner()}
@@ -1515,8 +1516,8 @@ function renderLineup(){
     </div>
     ${empty&&S.canEdit?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện.</span></div>`:""}
     ${empty&&!S.canEdit?`<div class="empty"><b>lineup đang cập nhật.</b><span>gọi <a href="tel:${HOTLINE}">${HOTLINE_SHOW}</a> để đặt bàn.</span></div>`:""}
-    ${rows.length?`<div class="cards${cut?" cut":""}" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>
-      ${cut?`<div class="ros-more"><button type="button" class="sq" id="rosMore">xem thêm ${rows.length-ROS_CUT} promoter</button></div>`:""}`
+    ${rows.length?`<div class="cards" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map((r,k)=>cardHTML(r,tdy,k>=shown)).join("")}</div>
+      ${rows.length>shown?`<div class="ros-more"><button type="button" class="sq" id="rosMore">${moreTxt(rows.length-shown)}</button></div>`:""}`
       :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-txt"><span class="pc-name">&nbsp;</span></span></div>`).join("")}</div>`:""}
   </section>`;
   /* dải tuần: bấm một đêm thì tờ rơi đổi sang đêm đó (tên đêm khuất thì cuộn lên cho khách thấy), bấm tuần thì đổi 4 đêm đang hiện */
@@ -1532,17 +1533,25 @@ function renderLineup(){
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
   /* ảnh nhỏ trên thẻ: thẻ nào sắp hiện mới tải. điện thoại: thẻ trong khung + khoảng 3 thẻ kế bên phải (vuốt tới là có);
-     máy tính: 6 thẻ đang hiện; 9 thẻ sau "xem thêm" tải khi nút đó sắp lọt vào màn hình, bấm là ảnh đã sẵn */
+     máy tính: các thẻ đang hiện; 6 thẻ của lần "xem thêm" kế tiếp tải khi nút đó sắp lọt vào màn hình, bấm là ảnh đã sẵn */
   const strip=app.querySelector(".cards[role]");
   if(S.thIO){S.thIO.forEach(o=>o.disconnect());S.thIO=null}
   if(strip&&"IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)loadThumb(e.target.dataset.id)}),{root:strip,rootMargin:"0px 660px 0px 0px"});
     strip.querySelectorAll(".pc[data-id]").forEach(c=>io.observe(c));S.thIO=[io];
   }else rows.forEach(r=>loadThumb(r.idol.id));
-  const more=document.getElementById("rosMore");
-  if(more&&S.thIO){const io2=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){rows.slice(ROS_CUT).forEach(r=>loadThumb(r.idol.id));io2.disconnect()}},{rootMargin:"600px 0px"});io2.observe(more);S.thIO.push(io2)}
-  if(more)more.onclick=()=>{S.rosAll=true;const l=app.querySelector(".cards");l.classList.remove("cut");more.parentElement.remove();
-    const c=l.children[ROS_CUT];if(c)c.focus({preventScroll:true})};
+  const more=document.getElementById("rosMore");let io2=null;
+  const armMore=()=>{ // tải trước ảnh 6 thẻ sẽ mở ở lần bấm tới; mỗi lần bấm thì canh lại cho 6 thẻ sau đó
+    if(!S.thIO)return;if(io2)io2.disconnect();const from=S.rosShown;
+    io2=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){rows.slice(from,from+ROS_CUT).forEach(r=>loadThumb(r.idol.id));io2.disconnect()}},{rootMargin:"600px 0px"});
+    io2.observe(more);S.thIO.push(io2);
+  };
+  if(more){armMore();more.onclick=()=>{
+    const l=app.querySelector(".cards[role]"),from=S.rosShown;S.rosShown=Math.min(rows.length,from+ROS_CUT);
+    [...l.children].slice(from,S.rosShown).forEach(c=>c.classList.remove("later"));
+    if(rows.length>S.rosShown){more.textContent=moreTxt(rows.length-S.rosShown);armMore()}else more.parentElement.remove();
+    const c=l.children[from];if(c)c.focus({preventScroll:true});
+  }}
   /* bấm thẻ (hoặc Enter, Space): mở khung hồ sơ. phím mũi tên chỉ dời ô đang chọn */
   const cards=[...app.querySelectorAll(".pc[data-id]:not([disabled])")];
   cards.forEach((b,k)=>{
