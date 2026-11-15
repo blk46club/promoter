@@ -1077,9 +1077,11 @@ function render(){
   return renderLineup();
 }
 /* từ trang đặt bàn cùng một promoter về lineup ("← đổi promoter", "về lineup" hay nút back): về thẳng phần chọn promoter,
-   thẻ người vừa xem nằm trong khung, thay vì nhảy lên đầu trang (anh Minh 13/11). các đường khác vẫn lên đầu trang. */
+   thẻ người vừa xem nằm trong khung, thay vì nhảy lên đầu trang (anh Minh 13/11). các đường khác vẫn lên đầu trang.
+   về từ trang nào thì lineup máy tính cũng rút gọn lại 6 người (anh Minh 16/11); người vừa xem nằm sau "xem thêm" thì thẻ đó không mở ra */
 window.addEventListener("hashchange",e=>{
   const from=String(e.oldURL||"").split("#")[1]||"",id=/^(book|idol)-/.test(from)?from.slice(5):"";
+  if(route().view==="lineup")S.rosShown=ROS_CUT; // về trang chủ từ trang khác: lineup máy tính rút gọn lại 6 người (anh Minh 16/11)
   if(!id||route().view!=="lineup"){window.scrollTo(0,0);render();return}
   render();backToRoster(id);
 });
@@ -1087,7 +1089,7 @@ function backToRoster(id){
   const ros=document.getElementById("roster");if(!ros){window.scrollTo(0,0);return}
   ros.scrollIntoView({block:"start"}); // nhảy luôn, không cuộn mượt: khách không cần thấy cả trang trôi qua
   const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(!c)return;
-  for(let m;!c.offsetParent&&(m=document.getElementById("rosMore"));)m.click(); // người vừa xem nằm sau "xem thêm": mở từng hàng tới khi thấy thẻ đó
+  if(!c.offsetParent){const m=document.getElementById("rosMore");if(m)m.focus({preventScroll:true});return} // người vừa xem nằm sau "xem thêm": giữ rút gọn, chọn sẵn nút xem thêm
   const l=c.closest(".cards");
   if(l&&l.scrollWidth>l.clientWidth)l.scrollLeft+=c.getBoundingClientRect().left-l.getBoundingClientRect().left-24; // điện thoại: dải thẻ vuốt ngang, đưa thẻ đó vào khung
   c.focus({preventScroll:true});
@@ -1499,7 +1501,7 @@ function renderLineup(){
   const loading=!S.loaded.idols&&!S.dbMissing;
   const empty=!loading&&!rows.length;
   const tdy=todayStr();
-  const shown=S.rosShown=Math.max(ROS_CUT,S.rosShown||0); // số thẻ đang mở, giữ nguyên khi vẽ lại (đổi tháng, xem hồ sơ rồi quay lại)
+  const shown=S.rosShown=Math.max(ROS_CUT,S.rosShown||0); // số thẻ đang mở, giữ nguyên khi vẽ lại (đổi tháng, mở rồi đóng khung hồ sơ); rời trang chủ rồi quay lại thì về 6
   const moreTxt=n=>`xem thêm ${Math.min(ROS_CUT,n)} promoter`;
   fetchTonight();
   app.innerHTML=`
