@@ -58,26 +58,35 @@ const authReady = new Promise((resolve) => {
 
 // Hồ sơ idol tách 3 nơi:
 //  - idolsPrivate/{id}: đủ mọi trường + ảnh gốc, chỉ quản lý đọc.
-//  - idols/{id}: chỉ những trường idol đã đồng ý hiển thị + 1 ảnh nhỏ (thumb), khách đọc được khi public == true.
-//    Mỗi lượt mở lineup tải hết các doc này, nên không để ảnh to ở đây (anh Minh 09/11: ảnh nhỏ trước, ảnh to sau).
-//  - idolPhotos/{id}: ảnh to cho hồ sơ trên lineup (main = toàn thân, alt = nghiêng, close = cận),
-//    chỉ tải khi khách chọn promoter đó.
-export const THUMB_V = 3; // tăng số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+//  - idols/{id}: chỉ những trường idol đã đồng ý hiển thị + 1 ảnh mờ rất nhỏ (blur, ~1 KB), khách đọc được khi public == true.
+//    Mỗi lượt mở lineup tải hết các doc này, nên không để ảnh thật ở đây.
+//  - idolPhotos/{id}__t: ảnh nhỏ 320px trên thẻ lineup; idolPhotos/{id}__c, __f, __s: ảnh to cận, toàn thân, nghiêng.
+//    Mỗi ảnh một doc, khách chỉ tải ảnh của thẻ đang (sắp) hiện và hồ sơ đang mở. Cùng luật idolPhotos/{id} đã chạy
+//    (khách đọc được khi public == true, quản lý ghi), không phải dán luật mới.
+//  - idolPhotos/{id} (không có hậu tố): kiểu cũ, 3 ảnh to chung một doc. Lưu lại hồ sơ theo kiểu mới thì doc này bị xoá.
+export const THUMB_V = 4; // tăng (hoặc đổi) số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+// v4 (15/11): tách ảnh khỏi danh sách promoter, mỗi ảnh một doc (anh Minh 15/11: web nhẹ hơn mà vẫn mượt).
+//   Quay lại kiểu cũ: revert về THUMB_V 3, máy quản lý thấy số khác nên tự lưu lại theo kiểu cũ.
 // v3 (13/11): idolPhotos thêm close = ảnh cận cỡ to, vì hồ sơ giờ hiện từng ảnh một, khung to, ảnh nhỏ 320px bị mờ
 // v2 (09/11): thêm ang = các góc ảnh hồ sơ có (c cận, f toàn thân, s nghiêng) để tờ hồ sơ trên lineup ghi đúng tên góc
 const THUMB_SIDE = 320, THUMB_Q = 0.7;
+const BLUR_SIDE = 16, BLUR_Q = 0.5; // ảnh mờ giữ chỗ trên thẻ trong lúc ảnh nhỏ đang tải
 const coverOf = (p) => p.close || p.full || p.side || "";
-const spotOf = (p) => { const main = p.full || p.close || p.side || ""; return { main, alt: p.side && p.side !== main ? p.side : "", close: p.close && p.close !== main ? p.close : "" }; };
+const ANG = [["c", "close"], ["f", "full"], ["s", "side"]];
 async function thumbOf(src) {
   if (!src || !src.startsWith("data:")) return src || ""; // ảnh trên Storage: dùng luôn link (Storage tính dung lượng riêng)
   try { return await shrinkSrc(src, THUMB_SIDE, THUMB_Q); } catch (_) { return src; }
 }
+async function blurOf(src) {
+  if (!src || !src.startsWith("data:")) return "";
+  try { return await shrinkSrc(src, BLUR_SIDE, BLUR_Q); } catch (_) { return ""; }
+}
 const angOf = (p) => ["close", "full", "side"].filter((k) => p[k]).map((k) => k[0]).join("");
-function publicIdol(body, thumb, hasSpot) {
+function publicIdol(body, blur, hasThumb, hasSpot) {
   const sh = body.show || {};
   const isPublic = !!(body.consent && body.consent.signed && body.consent.adult && body.active !== false);
   const out = {
-    stageName: body.stageName || "", team: body.team || "", thumb: thumb || "", hasSpot: !!hasSpot, ang: angOf(body.photos || {}),
+    stageName: body.stageName || "", team: body.team || "", blur: blur || "", tb: !!hasThumb, hasSpot: !!hasSpot, ang: angOf(body.photos || {}),
     talents: body.talents || [], forte: body.forte || [], show: sh,
     active: body.active !== false, public: isPublic, updatedAt: Date.now(),
   };
@@ -106,21 +115,23 @@ function makeDb(staff) {
         get: async () => { const s = await getDoc(doc(fs, (staff ? "idolsPrivate/" : "idols/") + id)); return { exists: s.exists(), data: () => s.data() }; },
         set: async (body) => {
           const p = body.photos || {};
-          const thumb = await thumbOf(coverOf(p));
-          const sp = spotOf(p);
-          const pub = publicIdol(body, thumb, !!sp.main);
-          const b = writeBatch(fs);
+          const cover = coverOf(p);
+          const thumb = await thumbOf(cover);
+          const pub = publicIdol(body, await blurOf(cover), !!thumb, !!cover);
+          const b = writeBatch(fs), at = Date.now();
           b.set(doc(fs, "idolsPrivate/" + id), { ...body, thumb, thumbV: THUMB_V });
           b.set(doc(fs, "idols/" + id), pub);
-          if (sp.main) b.set(doc(fs, "idolPhotos/" + id), { public: pub.public, main: sp.main, alt: sp.alt, close: sp.close, updatedAt: Date.now() });
-          else b.delete(doc(fs, "idolPhotos/" + id));
+          const put = (k, src) => src ? b.set(doc(fs, "idolPhotos/" + id + "__" + k), { public: pub.public, src, updatedAt: at }) : b.delete(doc(fs, "idolPhotos/" + id + "__" + k));
+          put("t", thumb);
+          ANG.forEach(([k, f]) => put(k, p[f] || ""));
+          b.delete(doc(fs, "idolPhotos/" + id)); // doc kiểu cũ
           await b.commit();
         },
         delete: async () => {
           const b = writeBatch(fs);
           b.delete(doc(fs, "idolsPrivate/" + id));
           b.delete(doc(fs, "idols/" + id));
-          b.delete(doc(fs, "idolPhotos/" + id));
+          ["", "__t", "__c", "__f", "__s"].forEach((x) => b.delete(doc(fs, "idolPhotos/" + id + x)));
           await b.commit();
         },
       };
@@ -139,7 +150,9 @@ function makeDb(staff) {
     }),
     doc: docApi,
     // Ảnh to của một promoter cho khung lớn trên lineup: chỉ gọi khi khách chọn người đó.
-    getSpot: async (id) => { const s = await getDoc(doc(fs, "idolPhotos/" + id)); return s.exists() ? s.data() : null; },
+    getSpot: async (id) => { const s = await getDoc(doc(fs, "idolPhotos/" + id)); return s.exists() ? s.data() : null; }, // kiểu cũ
+    // một ảnh: k = t (ảnh nhỏ trên thẻ), c, f, s (ảnh to cận, toàn thân, nghiêng). không có thì luật chặn đọc, trả về "".
+    getPhoto: async (id, k) => { try { const s = await getDoc(doc(fs, "idolPhotos/" + id + "__" + k)); return s.exists() ? (s.data().src || "") : ""; } catch (_) { return ""; } },
     thumbV: THUMB_V,
     // Bàn đã có người đặt trong một ngày (tableHolds/{ngày}_{bàn}): công khai, chỉ có ngày + số bàn.
     watchHolds: (date, next, err) => onSnapshot(

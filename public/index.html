@@ -526,7 +526,13 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .cards{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:24px;margin-inline:-16px;padding:28px 24px 12px;scrollbar-width:none}
 .cards::-webkit-scrollbar{display:none}
 .cards>.pc{flex:0 0 min(196px,56vw);scroll-snap-align:start}
-@media (min-width:700px){.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:32px 24px;overflow:visible;margin-inline:0;padding:44px 8px 0}}
+@media (min-width:700px){.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px 24px;overflow:visible;margin-inline:0;padding:44px 8px 0}}
+/* máy tính, tablet (từ 700px): chỉ hiện 6 người đầu, bấm "xem thêm" mới hiện hết (anh Minh 15/11). điện thoại vẫn vuốt ngang đủ người.
+   số cột chia hết cho 6 (3 hoặc 6) để hàng nào cũng kín, không có thẻ lẻ một mình */
+@media (min-width:1000px){.cards{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (min-width:700px){.cards.cut>.pc:nth-child(n+7){display:none}}
+.ros-more{display:none}
+@media (min-width:700px){.ros-more{display:flex;justify-content:center;margin-top:40px}.ros-more .sq{min-width:260px}}
 .pc{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--paper);border:0;padding:8px 8px 14px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;transform:rotate(-1.2deg)}
 .pc:nth-child(4n+2){transform:rotate(.8deg)}
 .pc:nth-child(4n+3){transform:rotate(-.6deg)}
@@ -535,8 +541,14 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .pc-ph{display:block;position:relative;aspect-ratio:3/4;background:var(--sheet-ph);color:var(--sheet-ph-mark);overflow:hidden}
 .pc-ph svg{position:absolute;left:12%;bottom:0;width:76%;display:block}
 .pc-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+/* ảnh mờ ~1 KB hiện ngay, ảnh nhỏ tải xong thì hiện dần đè lên (anh Minh 15/11) */
+.pc-ph img.bl{filter:blur(8px);transform:scale(1.12)}
+.pc-ph img.th{opacity:0;transition:opacity .3s ease-out}
+.pc-ph img.th.in{opacity:1}
+@media (prefers-reduced-motion:reduce){.pc-ph img.th{transition:none}}
 @media (hover:hover){.pc:not([disabled]):hover{outline:4px solid var(--acid)}}
 .pc:hover .pc-ph img{filter:contrast(1.08)}
+.pc:hover .pc-ph img.bl{filter:blur(8px) contrast(1.08)}
 .pc-no{position:absolute;left:-8px;top:18px;z-index:1;min-width:44px;height:44px;padding:0 8px;background:var(--acid);color:var(--ink);border:2px solid var(--ink);font-family:var(--display);font-size:var(--fs-d-s);line-height:40px;text-align:center}
 .pc-txt{display:block;padding:0 4px}
 .pc-name{display:block;font-family:var(--display);font-size:var(--fs-d-xs);line-height:1.3;text-transform:uppercase;overflow-wrap:anywhere}
@@ -552,6 +564,7 @@ button.btn-line{background:none;font-family:var(--display);font-size:var(--fs-md
 .pc.full .pc-no{background:var(--frame);color:var(--concrete)}
 .pc.full .pc-meta{color:var(--paper-3)}
 .pc.full img{filter:grayscale(1) brightness(.55)!important}
+.pc.full img.bl{filter:blur(8px) grayscale(1) brightness(.55)!important}
 .pc-stamp{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center}
 .pc-stamp b{border:2px solid var(--acid);color:var(--acid);background:rgba(0,0,0,.6);font-family:var(--display);font-weight:400;font-size:var(--fs-md);letter-spacing:.08em;padding:4px 10px;transform:rotate(-12deg);text-transform:uppercase;white-space:nowrap}
 .pc.ghost{cursor:default;opacity:.4}
@@ -886,7 +899,7 @@ const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /* ---------- state ---------- */
 const S={flyDate:"",flyWeek:"",db:null,user:null,assets:null,canEdit:false,canWrite:null,sheetId:null,
-  idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},bigReq:{},
+  idols:[],reviews:[],vouchers:[],vc:null,mod:{},notes:{},bills:[],redeemed:{},loads:{},visits:[],big:{},th:{},thReq:{},
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   tonight:{iso:"",dj:""},djs:{},dj:{text:"",name:"",for:""},
@@ -908,13 +921,47 @@ const periodStart=k=>{const v=new Date(Date.now()+7*3600e3),y=v.getUTCFullYear()
   if(k==="week")return Date.UTC(y,m,v.getUTCDate()-((v.getUTCDay()+6)%7))-7*3600e3;return 0};
 const ANGLES=[["close","cận"],["full","toàn thân"],["side","nghiêng"]];
 const photosOf=i=>{const p=Object.assign({},i.photos||{});if(!p.close&&i.photoId)p.close=i.photoId;return p};
-// khách chỉ có i.thumb (ảnh nhỏ); quản lý và bản chạy thử có đủ i.photos
-const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||i.thumb||""};
-/* ảnh to cho khung lớn trên lineup: chỉ tải khi khách chọn promoter (anh Minh 09/11) */
+/* quản lý và bản chạy thử có đủ i.photos. khách (từ 15/11, anh Minh: nhẹ hơn mà vẫn mượt):
+   - danh sách promoter chỉ kèm i.blur, ảnh mờ ~1 KB, để thẻ hiện ngay;
+   - ảnh nhỏ trên thẻ tải riêng (S.th) khi thẻ sắp hiện: điện thoại thêm 3 thẻ kế tiếp, máy tính 6 thẻ đầu, 9 thẻ sau khi thấy nút "xem thêm";
+   - ảnh to (S.big: c cận, f toàn thân, s nghiêng) tải khi mở hồ sơ: ảnh đầu trước, 2 ảnh còn lại ngay sau.
+   hồ sơ lưu trước 15/11 (chưa có i.tb) vẫn có i.thumb và 3 ảnh to chung một doc. */
+const thumbSrc=i=>i.thumb||S.th[i.id]||"";
+const coverId=i=>{const p=photosOf(i);return p.close||p.full||p.side||thumbSrc(i)};
+function loadThumb(id){
+  const i=idolById(id);if(!i||i.thumb||!i.tb||id in S.th||S.thReq[id]||!S.db||!S.db.getPhoto)return;
+  S.thReq[id]=S.db.getPhoto(id,"t").then(src=>{S.th[id]=src||"";delete S.thReq[id];showThumb(id)});
+}
+/* ảnh nhỏ vừa về: gắn vào thẻ đang hiện (hiện dần trên ảnh mờ), không vẽ lại cả trang */
+function showThumb(id){
+  const src=S.th[id];if(!src)return;
+  app.querySelectorAll(`.pc[data-id="${CSS.escape(id)}"] .pc-ph`).forEach(ph=>{
+    if(ph.querySelector("img.th"))return;
+    const im=new Image();im.className="th";im.alt="";im.onload=()=>im.classList.add("in");im.onerror=()=>im.remove();im.src=src;
+    ph.insertBefore(im,ph.querySelector(".pc-stamp"));
+  });
+  if(S.reshowSpot)S.reshowSpot(id);
+}
+const bigOf=id=>S.big[id]||(S.big[id]={got:{},req:{},c:"",f:"",s:""});
+/* một ảnh to: k = c, f, s */
+function loadBig(id,k){
+  const i=idolById(id),B=bigOf(id);
+  if(B.got[k])return Promise.resolve();
+  if(B.req[k])return B.req[k];
+  if(!i||!S.db)return Promise.resolve();
+  const done=()=>{if(S.reshowSpot)S.reshowSpot(id)};
+  if(i.tb&&S.db.getPhoto)return B.req[k]=S.db.getPhoto(id,k).then(src=>{B[k]=src||"";B.got[k]=1;done()});
+  if(!i.hasSpot||!S.db.getSpot){B.got.c=B.got.f=B.got.s=1;return Promise.resolve()}
+  // hồ sơ kiểu cũ: main = toàn thân (không có thì cận, nghiêng), alt = nghiêng, close = cận
+  const a=String(i.ang||""),mk=a.includes("f")||!a?"f":a.includes("c")?"c":"s";
+  return B.req.c=B.req.f=B.req.s=S.db.getSpot(id).catch(()=>null).then(d=>{d=d||{};
+    B[mk]=d.main||"";if(d.alt)B.s=d.alt;if(d.close)B.c=d.close;B.got.c=B.got.f=B.got.s=1;done()});
+}
+/* hồ sơ: ảnh đầu (theo thứ tự cận, toàn thân, nghiêng) trước, 2 ảnh còn lại ngay sau để khách vuốt sang là có */
 function loadSpot(id){
-  if(S.big[id]||S.bigReq[id]||!S.db||!S.db.getSpot)return;
-  S.bigReq[id]=S.db.getSpot(id).then(d=>{S.big[id]={main:(d&&d.main)||"",alt:(d&&d.alt)||"",close:(d&&d.close)||""};if(S.reshowSpot)S.reshowSpot(id)})
-    .catch(()=>{S.big[id]={main:"",alt:"",close:""};if(S.reshowSpot)S.reshowSpot(id)});
+  const i=idolById(id);if(!i||!i.hasSpot)return;
+  const ks=["c","f","s"].filter(k=>String(i.ang||"cfs").includes(k));if(!ks.length)return;
+  loadBig(id,ks[0]).then(()=>ks.slice(1).forEach(k=>loadBig(id,k)));
 }
 const photoSrc=i=>coverId(i)?(""+coverId(i)):"";
 const initials=n=>String(n||"?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
@@ -1039,7 +1086,9 @@ window.addEventListener("hashchange",e=>{
 function backToRoster(id){
   const ros=document.getElementById("roster");if(!ros){window.scrollTo(0,0);return}
   ros.scrollIntoView({block:"start"}); // nhảy luôn, không cuộn mượt: khách không cần thấy cả trang trôi qua
-  const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`),l=c&&c.closest(".cards");if(!c)return;
+  const c=ros.querySelector(`.pc[data-id="${CSS.escape(id)}"]`);if(!c)return;
+  if(!c.offsetParent){const m=document.getElementById("rosMore");if(m)m.click()} // người vừa xem nằm sau "xem thêm": mở hết danh sách
+  const l=c.closest(".cards");
   if(l&&l.scrollWidth>l.clientWidth)l.scrollLeft+=c.getBoundingClientRect().left-l.getBoundingClientRect().left-24; // điện thoại: dải thẻ vuốt ngang, đưa thẻ đó vào khung
   c.focus({preventScroll:true});
 }
@@ -1149,13 +1198,15 @@ async function withSrc(send,doc){
 document.addEventListener("click",e=>{const a=e.target&&e.target.closest&&e.target.closest('a[href^="tel:"]');if(a)fx("goi")});
 function bytesPerVisit(){
   const pub=S.idols.filter(isPublic);
-  // mỗi lượt: hồ sơ công khai (kèm 1 ảnh nhỏ) của mọi promoter + ảnh to của 1 người hiện ở khung lớn.
-  // khách rê/chọn thêm người nào thì tải thêm ảnh to người đó, nên con số thật có thể cao hơn.
-  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,thumb:i.thumb||"",talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight,bust:i.bust,waist:i.waist,hip:i.hip}).length+120,0);
-  const spotB=pub.length?Math.round(pub.reduce((t,i)=>{const p=photosOf(i);const m=p.full||p.close||p.side||"";return t+m.length+(p.side&&p.side!==m?p.side.length:0)},0)/pub.length)+200:0;
+  // mỗi lượt (từ 15/11): hồ sơ công khai (kèm ảnh mờ ~1 KB) của mọi promoter + ảnh nhỏ của 6 thẻ + 3 ảnh to của 1 hồ sơ.
+  // khách vuốt, bấm xem thêm hay mở thêm hồ sơ thì tải thêm, nên con số thật có thể cao hơn.
+  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,blur:"x".repeat(1100),talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight,bust:i.bust,waist:i.waist,hip:i.hip}).length+120,0);
+  const avg=f=>pub.length?pub.reduce((t,i)=>t+f(i),0)/pub.length:0;
+  const thB=Math.min(6,pub.length)*(avg(i=>(i.thumb||"").length)+200);
+  const spotB=pub.length?Math.round(avg(i=>{const p=photosOf(i);return (p.close||"").length+(p.full||"").length+(p.side||"").length}))+600:0;
   const revB=S.reviews.reduce((t,r)=>t+JSON.stringify(r).length+120,0);
   const modB=Object.keys(S.mod||{}).length*150;
-  return Math.round((idolB+spotB+revB+modB+600)*1.1); // +10% phần đầu gói tin của Firestore (ước tính)
+  return Math.round((idolB+thB+spotB+revB+modB+600)*1.1); // +10% phần đầu gói tin của Firestore (ước tính)
 }
 const fmtBytes=b=>b>=1e9?(b/1e9).toFixed(2).replace(".",",")+" GB":b>=1e6?(b/1e6).toFixed(1).replace(".",",")+" MB":Math.max(1,Math.round(b/1e3))+" KB";
 function usageBox(){
@@ -1343,30 +1394,32 @@ function cardHTML(r,td){
   const meta=(r.n?`★ ${fmt1(r.avg)} · hạng ${grade(r)}`:"chưa có hạng")+(ld&&!fl?` · <span class="nw">${loadTile(ld)}</span>`:"");
   return `<button type="button" class="pc${fl?" full":""}${r.rank===1?" top":""}" data-id="${esc(i.id)}" ${fl?"disabled":""} aria-haspopup="dialog" aria-label="${esc(i.stageName)}, ${r.rank?"hạng "+r.rank:"chưa có hạng"}${ld?", "+loadLabel(ld):""}">
     <span class="pc-tape" aria-hidden="true"></span>
-    <span class="pc-ph">${SIL}${cid?`<img src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:""}${fl?`<span class="pc-stamp"><b>fully booked</b></span>`:""}</span>
+    <span class="pc-ph">${SIL}${i.blur&&!cid?`<img class="bl" src="${esc(i.blur)}" alt="" onerror="this.remove()">`:""}${cid?`<img class="th in" src="${esc(cid)}" alt="" loading="lazy" onerror="this.remove()">`:""}${fl?`<span class="pc-stamp"><b>fully booked</b></span>`:""}</span>
     <span class="pc-no">${r.rank?pad2(r.rank):"—"}</span>
     <span class="pc-txt"><span class="pc-name">${esc(i.stageName)}</span><span class="pc-meta">${meta}</span></span></button>`;
 }
 /* ảnh 3 góc cho tờ hồ sơ.
-   quản lý / bản chạy thử có đủ i.photos. khách chỉ có i.thumb (ảnh nhỏ của góc bìa) + ảnh to tải khi chọn người:
-   main = toàn thân (không có thì cận, nghiêng), alt = nghiêng, close = cận cỡ to. i.ang cho biết hồ sơ có những góc nào (c, f, s). */
+   quản lý / bản chạy thử có đủ i.photos. khách: ảnh to tải khi mở hồ sơ (loadSpot); trong lúc tải, góc bìa hiện ảnh nhỏ làm mờ,
+   các góc khác hiện khung chờ. i.ang cho biết hồ sơ có những góc nào (c, f, s). */
 function sheetPics(i){
   const p=photosOf(i),out=[];
   if(p.close||p.full||p.side){ANGLES.forEach(([k,l])=>{if(p[k])out.push({src:p[k],l})});return out}
-  if(!i.thumb)return out;
-  const bg=S.big[i.id];if(i.hasSpot&&!bg)loadSpot(i.id);
-  const ready=!!bg||!i.hasSpot,main=(bg&&bg.main)||"",alt=(bg&&bg.alt)||"";
-  const a=String(i.ang||"");
-  if(!a){out.push(main?{src:main}:{src:i.thumb,lq:!ready});if(alt)out.push({src:alt});return out} // hồ sơ cũ chưa có i.ang
-  const cover=a.includes("c")?"c":a.includes("f")?"f":"s",mainK=a.includes("f")?"f":a.includes("c")?"c":"s";
-  const pick=k=>{
-    if(k===mainK)return main?{src:main}:k===cover?{src:i.thumb,lq:!ready}:ready?null:{};
-    if(k===cover)return {src:(k==="c"&&bg&&bg.close)||i.thumb}; // ảnh cận cỡ to (từ 13/11); hồ sơ lưu trước đó chỉ có ảnh nhỏ
-    return alt?{src:alt}:ready?null:{};
-  };
-  [["c","cận"],["f","toàn thân"],["s","nghiêng"]].forEach(([k,l])=>{if(a.includes(k)){const x=pick(k);if(x)out.push({...x,l})}});
+  const tn=thumbSrc(i);if(!tn)loadThumb(i.id);
+  if(!tn&&!i.hasSpot)return out;
+  if(i.hasSpot)loadSpot(i.id); // gọi lại không sao: ảnh nào đang tải hay đã có thì bỏ qua
+  const bg=S.big[i.id]||{got:{}},a=String(i.ang||"");
+  if(!a){const m=bg.f||bg.c||bg.s;out.push(m?{src:m}:{src:tn||i.blur,lq:!bg.got.f});if(bg.s&&bg.s!==m)out.push({src:bg.s});return out} // hồ sơ cũ chưa có i.ang
+  const cover=a.includes("c")?"c":a.includes("f")?"f":"s";
+  [["c","cận"],["f","toàn thân"],["s","nghiêng"]].forEach(([k,l])=>{
+    if(!a.includes(k))return;
+    if(bg[k])out.push({src:bg[k],l});
+    else if(k===cover&&(tn||i.blur))out.push({src:tn||i.blur,lq:!bg.got[k]||!tn,l}); // ảnh to chưa về (hoặc không có): ảnh nhỏ thay chỗ
+    else if(i.hasSpot&&!bg.got[k])out.push({l}); // đang tải: khung chờ, giữ đủ số ảnh để vuốt không bị nhảy
+  });
   return out;
 }
+const picSig=x=>(x.src?x.src.length:0)+(x.lq?"q":"");
+const frHTML=(x,i)=>`${SIL}${x.src?`${x.lq?"":`<img class="bg" src="${esc(x.src)}" alt="" aria-hidden="true" onerror="this.remove()">`}<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}`;
 /* lời khen mới nhất có chữ (4★ trở lên, chưa bị ẩn) */
 const quoteOf=id=>promoReviews(id).find(x=>x.comment);
 function sheetHTML(r,ghost){
@@ -1388,7 +1441,7 @@ function sheetHTML(r,ghost){
   const eb=ghost?"ví dụ bố cục":`${r.rank?"#"+pad2(r.rank):"chưa có hạng"}${g!=="?"?" · hạng "+g:""}${i.team?" · team "+esc(i.team):""}`;
   const ps=pics.length?pics:[{}],np=ps.length;
   const cta=ghost?"":full?`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT NGÀY KHÁC&nbsp;→</a>`:`<a class="sheet-cta" href="#book-${esc(i.id)}">ĐẶT BÀN CÙNG ${esc(i.stageName)}&nbsp;→</a>`;
-  return `<div class="sp-sc"><div class="sheet-pics"><div class="sp-trk"${np>1?` tabindex="0" aria-label="ảnh của ${esc(i.stageName)}, ${np} ảnh"`:""}>${ps.map((x,k)=>`<figure class="sp-f"><div class="fr">${SIL}${x.src?`${x.lq?"":`<img class="bg" src="${esc(x.src)}" alt="" aria-hidden="true" onerror="this.remove()">`}<img${x.lq?' class="lq"':""} src="${esc(x.src)}" alt="${esc(i.stageName)}${x.l?", góc "+x.l:""}" onerror="this.remove()">`:""}</div>
+  return `<div class="sp-sc"><div class="sheet-pics"><div class="sp-trk"${np>1?` tabindex="0" aria-label="ảnh của ${esc(i.stageName)}, ${np} ảnh"`:""}>${ps.map((x,k)=>`<figure class="sp-f" data-s="${picSig(x)}"><div class="fr">${frHTML(x,i)}</div>
       <figcaption><span class="sp-nm">${esc(i.stageName)}</span>${ghost?"":`<button type="button" class="sp-dn" data-spst>xem chỉ số ${ICO_DN}</button>`}</figcaption></figure>`).join("")}</div>
       ${np>1?`<div class="sp-dots" aria-hidden="true">${ps.map((_,k)=>`<i${k?"":' class="on"'}></i>`).join("")}</div>`:""}
       ${np>1?`<button type="button" class="sp-ar sp-pv" data-sp="-1" aria-label="ảnh trước">${ICO_ARW}</button><button type="button" class="sp-ar sp-nx" data-sp="1" aria-label="ảnh sau">${ICO_ARW}</button>`:""}</div>
@@ -1440,11 +1493,13 @@ function openPromoPoster(dow){
 }
 const goTo=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})};
 const goRoster=()=>goTo("roster");
+const ROS_CUT=6; // máy tính: số thẻ hiện trước khi bấm "xem thêm"
 function renderLineup(){
   const rows=computeBoard();
   const loading=!S.loaded.idols&&!S.dbMissing;
   const empty=!loading&&!rows.length;
   const tdy=todayStr();
+  const cut=!S.rosAll&&rows.length>ROS_CUT;
   fetchTonight();
   app.innerHTML=`
   ${banner()}
@@ -1460,7 +1515,8 @@ function renderLineup(){
     </div>
     ${empty&&S.canEdit?`<div class="empty"><b>chưa có promoter nào lên bảng.</b><span>quản lý thêm hồ sơ ở tab quản lý. mỗi người phải tick đã ký đồng ý và đủ 18 tuổi thì mới hiện.</span></div>`:""}
     ${empty&&!S.canEdit?`<div class="empty"><b>lineup đang cập nhật.</b><span>gọi <a href="tel:${HOTLINE}">${HOTLINE_SHOW}</a> để đặt bàn.</span></div>`:""}
-    ${rows.length?`<div class="cards" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>`
+    ${rows.length?`<div class="cards${cut?" cut":""}" role="group" aria-label="danh sách promoter, dùng phím mũi tên để đổi">${rows.map(r=>cardHTML(r,tdy)).join("")}</div>
+      ${cut?`<div class="ros-more"><button type="button" class="sq" id="rosMore">xem thêm ${rows.length-ROS_CUT} promoter</button></div>`:""}`
       :loading?`<div class="cards" aria-hidden="true">${Array.from({length:6},()=>`<div class="pc ghost"><span class="pc-ph">${SIL}</span><span class="pc-txt"><span class="pc-name">&nbsp;</span></span></div>`).join("")}</div>`:""}
   </section>`;
   /* dải tuần: bấm một đêm thì tờ rơi đổi sang đêm đó (tên đêm khuất thì cuộn lên cho khách thấy), bấm tuần thì đổi 4 đêm đang hiện */
@@ -1475,6 +1531,18 @@ function renderLineup(){
   });
   document.getElementById("pMonth").onclick=()=>{S.period="month";render()};
   document.getElementById("pAll").onclick=()=>{S.period="all";render()};
+  /* ảnh nhỏ trên thẻ: thẻ nào sắp hiện mới tải. điện thoại: thẻ trong khung + khoảng 3 thẻ kế bên phải (vuốt tới là có);
+     máy tính: 6 thẻ đang hiện; 9 thẻ sau "xem thêm" tải khi nút đó sắp lọt vào màn hình, bấm là ảnh đã sẵn */
+  const strip=app.querySelector(".cards[role]");
+  if(S.thIO){S.thIO.forEach(o=>o.disconnect());S.thIO=null}
+  if(strip&&"IntersectionObserver" in window){
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)loadThumb(e.target.dataset.id)}),{root:strip,rootMargin:"0px 660px 0px 0px"});
+    strip.querySelectorAll(".pc[data-id]").forEach(c=>io.observe(c));S.thIO=[io];
+  }else rows.forEach(r=>loadThumb(r.idol.id));
+  const more=document.getElementById("rosMore");
+  if(more&&S.thIO){const io2=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){rows.slice(ROS_CUT).forEach(r=>loadThumb(r.idol.id));io2.disconnect()}},{rootMargin:"600px 0px"});io2.observe(more);S.thIO.push(io2)}
+  if(more)more.onclick=()=>{S.rosAll=true;const l=app.querySelector(".cards");l.classList.remove("cut");more.parentElement.remove();
+    const c=l.children[ROS_CUT];if(c)c.focus({preventScroll:true})};
   /* bấm thẻ (hoặc Enter, Space): mở khung hồ sơ. phím mũi tên chỉ dời ô đang chọn */
   const cards=[...app.querySelectorAll(".pc[data-id]:not([disabled])")];
   cards.forEach((b,k)=>{
@@ -1482,7 +1550,8 @@ function renderLineup(){
     b.onkeydown=e=>{
       const cols=Math.max(1,Math.round(b.parentElement.clientWidth/b.offsetWidth));
       const d={ArrowRight:1,ArrowLeft:-1,ArrowDown:cols,ArrowUp:-cols}[e.key];
-      if(d){e.preventDefault();cards[Math.min(cards.length-1,Math.max(0,k+d))].focus()}
+      const vis=cards.filter(x=>x.offsetParent),j=vis.indexOf(b); // thẻ đang ẩn sau "xem thêm" thì bỏ qua
+      if(d&&j>=0){e.preventDefault();vis[Math.min(vis.length-1,Math.max(0,j+d))].focus()}
     };
   });
   reshowSheet(rows);
@@ -1559,7 +1628,15 @@ function reshowSheet(rows){
   const sc2=a.querySelector(".sp-sc");if(sc2)sc2.scrollTop=sy; // điện thoại: đang xem chỉ số thì giữ nguyên chỗ
   spState(d);
 }
-S.reshowSpot=id=>{if(id===S.sheetId)reshowSheet();
+/* một ảnh của hồ sơ đang mở vừa về: chỉ thay đúng khung ảnh đó, ảnh đang xem không bị vẽ lại (không chớp).
+   số ảnh đổi (một ảnh không tải được) thì vẽ lại cả tờ như cũ. */
+function patchSheetPics(id){
+  const d=document.getElementById("sdlg"),i=idolById(id);if(!d||!d.open||!i)return;
+  const figs=[...d.querySelectorAll(".sp-f")],ps=sheetPics(i);
+  if(!ps.length||figs.length!==ps.length){reshowSheet();return}
+  figs.forEach((f,k)=>{const sg=picSig(ps[k]);if(f.dataset.s===sg)return;f.dataset.s=sg;const fr=f.querySelector(".fr");if(fr)fr.innerHTML=frHTML(ps[k],i)});
+}
+S.reshowSpot=id=>{if(id===S.sheetId)patchSheetPics(id);
   const f=document.querySelector(`.tk-face[data-face="${CSS.escape(id)}"]`),i=f&&idolById(id);if(i)f.innerHTML=SIL+faceImg(bookFace(i))};
 /* nút "chọn promoter", "↑ xem người khác", nút ĐẶT BÀN trên đầu trang: cuộn tới phần chọn người (không đổi #, để khỏi vẽ lại trang) */
 /* nút "giữ bàn đêm này" ở lịch event: nhớ ngày đó, form đặt bàn điền sẵn ngày */
@@ -1801,18 +1878,19 @@ function renderVoucher(dow){
 
 /* ảnh nhỏ trang đặt bàn cùng một promoter (anh Minh 14/11): một ảnh khác ảnh trên thẻ lineup (thẻ dùng ảnh bìa, thường là ảnh cận).
    ưu tiên toàn thân, rồi nghiêng; promoter chỉ có 1 ảnh thì dùng ảnh đó. khách dùng ảnh to đã tải khi mở hồ sơ (S.big),
-   vào thẳng link đặt bàn thì tải 1 lần; trong lúc tải để hình bóng người, không hiện ảnh bìa rồi mới đổi.
+   vào thẳng link đặt bàn thì chỉ tải đúng ảnh đó; trong lúc tải để hình bóng người, không hiện ảnh bìa rồi mới đổi.
    trả về null khi đang tải. */
 function bookFace(i){
   const p=photosOf(i);
   if(p.close||p.full||p.side){const c=coverId(i);return [p.full,p.side,p.close].find(x=>x&&x!==c)||c}
-  const a=String(i.ang||"");
-  if(!i.hasSpot||a.length===1)return i.thumb||"";
-  const bg=S.big[i.id];if(!bg){loadSpot(i.id);return null}
-  const cover=a.includes("c")?"c":a.includes("f")?"f":"s",mainK=a.includes("f")?"f":a.includes("c")?"c":"s";
-  if(a&&bg.main&&mainK!==cover)return bg.main;
-  if(bg.alt&&(!a||cover!=="s"))return bg.alt; // hồ sơ cũ chưa có i.ang: ảnh nghiêng chắc chắn khác ảnh bìa
-  return i.thumb||"";
+  const a=String(i.ang||""),tn=thumbSrc(i);
+  const small=()=>{if(tn)return tn;if(i.tb&&!(i.id in S.th)){loadThumb(i.id);return null}return ""};
+  if(!i.hasSpot||a.length===1)return small();
+  const cover=a.includes("c")?"c":a.includes("f")?"f":"s";
+  const ks=a?["f","s"].filter(k=>a.includes(k)&&k!==cover):["s"]; // hồ sơ cũ chưa có i.ang: ảnh nghiêng chắc chắn khác ảnh bìa
+  const B=bigOf(i.id);
+  for(const k of ks){if(B[k])return B[k];if(!B.got[k]){loadBig(i.id,k);return null}} // chỉ tải đúng 1 ảnh cần cho ô nhỏ
+  return small();
 }
 const faceImg=src=>src?`<img src="${esc(src)}" alt="" onerror="this.remove()">`:"";
 

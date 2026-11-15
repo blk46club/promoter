@@ -85,6 +85,10 @@ def so(v):
     return 0.0
 
 
+def ten_doc(d):
+    return str(d.get("name", "")).rsplit("/", 1)[-1]
+
+
 def cac_doc(noi_dung):
     try:
         data = json.loads(noi_dung)
@@ -124,7 +128,16 @@ def phan_tich(thu_muc, hom_nay, dau_thang):
 
     idols = cac_doc(txt["idols"])
     anh = cac_doc(txt["idolPhotos"])
-    tb_anh = len(raw["idolPhotos"]) / len(anh) if anh else 0
+    # từ 15/11 mỗi ảnh một doc: <id>__t ảnh nhỏ trên thẻ, <id>__c/__f/__s ảnh to; <id> không hậu tố là kiểu cũ (3 ảnh chung).
+    # mỗi lượt mở ước tính: ảnh nhỏ của 6 thẻ + đủ ảnh to của 1 hồ sơ.
+    co_do = [(ten_doc(d), len(json.dumps(d, ensure_ascii=False).encode("utf-8"))) for d in anh]
+    nho = [b for t, b in co_do if t.endswith("__t")]
+    to = {}
+    for t, b in co_do:
+        if not t.endswith("__t"):
+            goc = t.split("__")[0]
+            to[goc] = to.get(goc, 0) + b
+    tb_anh = (6 * sum(nho) / len(nho) if nho else 0) + (sum(to.values()) / len(to) if to else 0)
     ngay = {}
     for d in cac_doc(txt["visits"]):
         f = d.get("fields", {})
@@ -149,7 +162,8 @@ def phan_tich(thu_muc, hom_nay, dau_thang):
     if loi:
         print("lỗi khác ở: " + ", ".join(f"{t} (mã {ma[t]})" for t in loi))
     print(f"idols: mã {ma['idols']}, {len(idols)} hồ sơ, {ngan(len(raw['idols']))} byte")
-    print(f"idolPhotos: mã {ma['idolPhotos']}, {len(anh)} doc ảnh to, trung bình {ngan(tb_anh)} byte mỗi doc")
+    print(f"idolPhotos: mã {ma['idolPhotos']}, {len(anh)} doc ảnh ({len(nho)} ảnh nhỏ), "
+          f"ước tính {ngan(tb_anh)} byte ảnh mỗi lượt mở (6 ảnh nhỏ + 1 hồ sơ)")
     print(f"reviews: mã {ma['reviews']}")
     print(f"visits: mã {ma['visits']}, từ {dau_thang}: {ngan(tong)} lượt mở, "
           f"hôm nay {hom_nay}: {ngan(ngay.get(hom_nay, 0))}")
