@@ -126,6 +126,24 @@ function makeDb(staff) {
       if (holdId) col("tableHolds")[holdId] = JSON.parse(JSON.stringify(hold));
       save(); notify("bookings"); notify("tableHolds");
     },
+    // Tích điểm: giống bản Firebase (members/{sđt} chỉ tạo mới, points/ sổ điểm).
+    joinLoyalty: async (phone, m) => { const c = col("members"); if (c[phone]) return "had"; c[phone] = JSON.parse(JSON.stringify(m)); save(); notify("members"); return "new"; },
+    memberOf: async (phone) => col("members")[phone] || null,
+    pointsOf: async (phone) => Object.entries(col("points")).filter(([, x]) => x.phone === phone).map(([id, x]) => ({ ...x, id })),
+    earnPoints: async (bookingId, entry) => {
+      const c = col("points"), id = "earn_" + bookingId;
+      if (c[id]) { const e = new Error("used"); e.code = "used"; throw e; }
+      c[id] = JSON.parse(JSON.stringify(entry));
+      const b = col("bookings")[bookingId];
+      if (b) { b.pts = { phone: entry.phone, amount: entry.amount, points: entry.points, at: entry.at }; b.updatedAt = entry.at; }
+      save(); notify("points"); notify("bookings");
+    },
+    addPointsEntry: async (id, entry) => { col("points")[id] = JSON.parse(JSON.stringify(entry)); save(); notify("points"); },
+    leaveLoyalty: async (phone) => {
+      const c = col("points");
+      Object.keys(c).forEach((id) => { if (c[id].phone === phone) delete c[id]; });
+      delete col("members")[phone]; save(); notify("points"); notify("members");
+    },
     submitReview: async (redeemedId, reviewId, note, review) => {
       const r = col("redeemed")[redeemedId];
       if (r && r.reviewId) { const e = new Error("used"); e.code = "used"; throw e; }

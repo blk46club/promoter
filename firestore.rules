@@ -152,6 +152,32 @@ service cloud.firestore {
         request.resource.data.updatedAt is number;
     }
 
+    // Tích điểm (anh Minh 16–17/11).
+    // members/{sđt} { phone, joinedAt, consent, src? }: khách tự bấm "tham gia" trên web, chỉ được tạo mới, đúng khuôn,
+    // số 10 chữ số bắt đầu bằng 0, consent = bản câu đồng ý khách đã thấy, giờ bấm lệch giờ máy chủ tối đa 10 phút.
+    // Khách không đọc được (kể cả số của mình), không sửa, không ghi đè: người ngoài không dò được số nào là thành viên.
+    // Chỉ quản lý đọc, sửa, xoá (xoá khi khách xin rời chương trình).
+    match /members/{id} {
+      allow read, update, delete: if isStaff();
+      allow create: if isStaff() || (
+        id.matches('^0[0-9]{9}$') &&
+        request.resource.data.keys().hasOnly(['phone', 'joinedAt', 'consent', 'src']) &&
+        srcOk() &&
+        request.resource.data.phone == id &&
+        request.resource.data.consent == 'v1' &&
+        request.resource.data.joinedAt is number &&
+        request.resource.data.joinedAt > request.time.toMillis() - 600000 &&
+        request.resource.data.joinedAt < request.time.toMillis() + 600000
+      );
+    }
+    // Sổ điểm: points/{id} { kind: earn|use|fix, phone, points, at, by, ... }. Chỉ quản lý.
+    // Không sửa dòng cũ: sai thì ghi thêm một dòng sửa kèm lý do. Xoá chỉ dùng khi khách rời chương trình.
+    // earn_{mã đặt bàn}: mỗi bàn cộng điểm đúng một lần.
+    match /points/{id} {
+      allow read, create, delete: if isStaff();
+      allow update: if false;
+    }
+
     // Đặt bàn: khách gửi yêu cầu (chỉ tạo mới, đúng khuôn), quản lý đọc và xử lý.
     match /bookings/{id} {
       allow read, update, delete: if isStaff();

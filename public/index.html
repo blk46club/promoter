@@ -365,6 +365,41 @@ label.f,div.f{display:grid;gap:4px;align-content:start;font-size:var(--fs-xs);co
 .gqr p{margin:0;font-size:var(--fs-lead);line-height:1.4}
 .gqr b{display:block;font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);line-height:1.1;text-transform:uppercase;margin-bottom:6px}
 @media (min-width:700px){.gqr img{width:184px;height:184px}}
+/* tích điểm (17/11): mã tham gia cạnh mã google ở màn cảm ơn, mã nhỏ trong trang quản lý */
+.qrs{display:flex;flex-wrap:wrap;gap:0 20px}
+.gqr.sm{max-width:440px;margin-top:4px;padding:12px;gap:14px;box-shadow:none;border:2px solid var(--acid)}
+.gqr.sm img{width:120px;height:120px}
+.gqr.sm{flex-wrap:wrap}
+.gqr.sm p{font-size:var(--fs-ui);flex:1 1 170px}
+.join-ok{margin:0;font-size:var(--fs-ui);line-height:1.45;max-width:52ch}
+.ptsrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px 12px;align-items:end;border-top:1px dashed var(--line);padding-top:10px}
+.ptsrow .note,.ptsrow .err,.ptsrow .gqr{grid-column:1/-1;margin:0}
+.ptsrow .note{max-width:none}
+.ptsrow{align-items:start}
+.ptsrow input{min-height:44px}
+.ptsrow .ghostbtn{min-height:44px;color:var(--paper);border-color:var(--acid)}
+.ptsrow .ghostbtn:disabled{opacity:.5}
+@media (max-width:520px){.ptsrow .f>span[aria-hidden]{display:none}}
+.tk.join .tk-name{padding-top:.16em} /* dấu hỏi trên chữ Ể không chạm dòng THAM GIA */
+.ptsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.ptsum>div{background:var(--card);padding:12px 14px;display:grid;gap:2px;align-content:start;min-width:0}
+.ptsum b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);color:var(--acid);line-height:1.1}
+.ptsum span{font-size:var(--fs-xs)}
+.ptsforms{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.ptsforms form{align-content:start}
+.ptsforms .rowbtns{gap:8px}
+.ok-msg{color:var(--acid);font-size:var(--fs-sm);margin:0}
+table.ptstable{min-width:0}
+@media (max-width:700px){
+  .ptsum>div{padding:10px}
+  table.ptstable,.ptstable tbody,.ptstable tr{display:block}
+  .ptstable thead{display:none}
+  .ptstable tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto;gap:8px 12px;padding:12px;border-bottom:1px solid var(--line)}
+  .ptstable td{display:block;border:0;padding:0;min-width:0}
+  .ptstable td[data-l]::before{content:attr(data-l);display:block;font-size:var(--fs-2xs);letter-spacing:.12em;text-transform:uppercase;color:var(--concrete);margin-bottom:2px}
+  .ptstable td.wide{grid-column:1/-1}
+  .ptstable td.empty-m{display:none}
+}
 .done .hold-note{font-size:var(--fs-lead);margin:12px 0 20px;max-width:46ch}
 .tmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line)}
 .tmap{position:relative;min-width:600px;line-height:0}
@@ -903,6 +938,7 @@ const S={flyDate:"",flyWeek:"",db:null,user:null,assets:null,canEdit:false,canWr
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   tonight:{iso:"",dj:""},djs:{},dj:{text:"",name:"",for:""},
+  join:null,ptsForm:{},memberSeen:{},pq:{phone:"",busy:false,member:undefined,list:[],msg:"",note:"",leave:false,shown:""},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false}};
 
 const app=document.getElementById("app");
@@ -1020,6 +1056,7 @@ function route(){
   if(/^voucher-\d$/.test(h)&&WEEKLY_PROMOS[+h.slice(8)])return {view:"voucher",dow:+h.slice(8)};
   if(h.startsWith("idol-")||h.startsWith("book-"))return {view:"book",id:h.slice(5)};
   if(h.startsWith("table-"))return {view:"table",id:h.slice(6)};
+  if(h==="tham-gia")return {view:"join"}; // trang khách tham gia tích điểm (mã qr ở quán)
   if(h==="admin")return {view:"admin"};
   return {view:"lineup"};
 }
@@ -1058,10 +1095,10 @@ function renderFoot(v){
 
 function setTabs(v){
   renderFoot(v);
-  const bc=document.body.classList;bc.toggle("paper",v==="book"||v==="voucher"); // lineup từ 10/11 nền đen + tờ flyer vàng
-  ["lineup","book","voucher","table","admin"].forEach(k=>bc.toggle("v-"+k,k===v));
+  const bc=document.body.classList;bc.toggle("paper",v==="book"||v==="voucher"||v==="join"); // lineup từ 10/11 nền đen + tờ flyer vàng
+  ["lineup","book","voucher","join","table","admin"].forEach(k=>bc.toggle("v-"+k,k===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{
-    const on=a.dataset.tab===v||((v==="book"||v==="voucher")&&a.dataset.tab==="lineup");
+    const on=a.dataset.tab===v||((v==="book"||v==="voucher"||v==="join")&&a.dataset.tab==="lineup");
     if(on)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
   });
   document.getElementById("adminTab").hidden=!S.canEdit;
@@ -1072,6 +1109,7 @@ function render(){
   if(r.view!=="lineup"){const d=document.getElementById("sdlg");if(d&&d.open){d._nav=true;d.close()}} // rời lineup thì đóng khung hồ sơ
   if(r.view==="book")return renderBook(r.id);
   if(r.view==="voucher")return renderVoucher(r.dow);
+  if(r.view==="join")return renderJoin();
   if(r.view==="table")return renderTable(r.id);
   if(r.view==="admin")return renderAdmin();
   return renderLineup();
@@ -1736,7 +1774,8 @@ function renderTable(bid){
     const tip=tableTips(b);
     app.innerHTML=`<section class="done"><div class="eyebrow">bàn ${esc(b.table||"")} · ${esc(guestLabel(b))}</div><h1 class="display">CẢM ƠN<span class="y">.</span></h1>
     <p class="lede">${tip?`tip ${vnd(tip)} sẽ được cộng vào bill khi bạn thanh toán. `:""}keep it loud. see you out there.</p>
-    ${GOOGLE_REVIEW_URL?`<div class="gqr"><img src="${esc(GOOGLE_REVIEW_QR)}" alt="mã qr mở trang đánh giá blk46 trên google" width="148" height="148" onerror="this.closest('.gqr').remove()"><p><b>tối nay thế nào?</b>quét mã bằng điện thoại của bạn, kể cho google nghe.</p></div>`:""}
+    <div class="qrs">${GOOGLE_REVIEW_URL?`<div class="gqr"><img src="${esc(GOOGLE_REVIEW_QR)}" alt="mã qr mở trang đánh giá blk46 trên google" width="148" height="148" onerror="this.closest('.gqr').remove()"><p><b>tối nay thế nào?</b>quét mã bằng điện thoại của bạn, kể cho google nghe.</p></div>`:""}
+    ${joinQrFor(b)?`<div class="gqr"><img src="${esc(LOYALTY_QR)}" alt="mã qr mở trang tham gia tích điểm BLK46" width="148" height="148" onerror="this.closest('.gqr').remove()"><p><b>tích điểm</b>quét mã, bấm tham gia. bill tối nay được cộng điểm, lần tới trừ thẳng vào bill.</p></div>`:""}</div>
     <p class="note" style="margin-top:40px">dành cho nhân viên: <a href="#admin">về quản lý</a></p></section>`;return;
   }
   const i=idolById(R.idolId);const rows=computeBoard();const r=rows.find(x=>x.idol.id===R.idolId)||{n:0};
@@ -1825,6 +1864,95 @@ async function submitRating(b){
 const addDaysIso=(iso,n)=>{const [y,m,d]=iso.split("-").map(Number);const t=new Date(Date.UTC(y,m-1,d+n));return t.toISOString().slice(0,10)};
 const nextDowIso=dow=>{let d=nightInfo().iso;for(let k=0;k<7&&dowOfIso(d)!==dow;k++)d=addDaysIso(d,1);return d};
 const VC_SIZES={4:["2","3","4+"],0:["1","2","3","4","5","6+"]};
+/* ---------- tích điểm (anh Minh 16–17/11). giai đoạn 1: chưa có tin zalo, khách hỏi điểm ở quầy ----------
+   - 100.000đ trên bill (trước VAT, phí dịch vụ, không tính tip) = 1 điểm, làm tròn xuống.
+   - 1 điểm = 1.000đ trừ thẳng vào bill, chỉ dùng điểm của những lần tới trước: điểm bill tối nay dùng từ lần sau.
+   - bill có dùng điểm thì tích theo số tiền sau khi trừ điểm.
+   - điểm của mỗi bill hết hạn sau 6 tháng tính từ ngày bill đó.
+   members/{sđt}: khách tự bấm tham gia. points/{id}: sổ điểm, chỉ quản lý đọc ghi, không sửa dòng cũ (sai thì ghi dòng sửa). */
+const PTS_PER=100000,PTS_VND=1000,PTS_MONTHS=6,PTS_WAIT_H=12,PTS_MAX_BILL=2e9;
+/* câu đồng ý khách thấy ngay trên nút tham gia. không sửa câu của bản đã dùng: đổi câu thì thêm bản mới (v2) và sửa luật firebase cho nhận v2 */
+const JOIN_V="v1",JOIN_TEXT={v1:"bấm tham gia là bạn xác nhận đủ 18 tuổi và đồng ý cho BLK46 lưu số điện thoại, số tiền chi để tích điểm và báo điểm qua zalo."};
+/* đổi link thì chạy lại: python3 tools/tao-qr.py */
+const LOYALTY_JOIN_URL="https://blk46club.github.io/promoter/#tham-gia",LOYALTY_QR="brand/tham-gia-qr.svg";
+/* số điện thoại về một dạng: 10 số bắt đầu bằng 0 (gõ 84… hay thiếu số 0 đầu vẫn nhận). sai dạng trả "" */
+const normPhone=v=>{let d=String(v||"").replace(/\D/g,"");if(/^84\d{9}$/.test(d))d="0"+d.slice(2);else if(/^[1-9]\d{8}$/.test(d))d="0"+d;return /^0\d{9}$/.test(d)?d:""};
+const phoneTail=p=>String(p||"").slice(-3);
+const digits=v=>Number(String(v||"").replace(/\D/g,"")||0);
+const ptsOf=amount=>Math.floor(Math.max(0,amount)/PTS_PER);
+/* cộng tháng theo lịch Hà Nội; ngày 31 sang tháng ít ngày hơn thì lấy ngày cuối tháng */
+function addMonths(ms,n){
+  const d=vnDate(ms),y=d.getUTCFullYear(),m=d.getUTCMonth()+n,last=new Date(Date.UTC(y,m+1,0)).getUTCDate();
+  return Date.UTC(y,m,Math.min(d.getUTCDate(),last),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds())-VN_MS;
+}
+const fmtDay=ms=>{if(!ms)return "";const s=isoOfVN(ms);return s.slice(8)+"/"+s.slice(5,7)+"/"+s.slice(0,4)};
+/* số dư theo từng lô điểm (mỗi bill một lô, hết hạn riêng). trừ điểm thì trừ lô sắp hết hạn trước.
+   điểm của bill trong 12 giờ qua là "chờ": chưa dùng được tối nay. dòng dùng điểm chỉ trừ lô đã dùng được lúc đó;
+   dòng sửa điểm (trừ) trừ được cả lô đang chờ, để sửa ngay khi gõ nhầm tổng bill. */
+function ptsBalance(list,now=Date.now()){
+  const wait=PTS_WAIT_H*3600e3,lots=[];
+  list.slice().sort((a,b)=>(a.at||0)-(b.at||0)).forEach(e=>{
+    const n=Math.round(Number(e.points)||0);
+    if(n>0){lots.push({at:e.at,exp:e.exp||addMonths(e.at,PTS_MONTHS),left:n});return}
+    let need=-n;
+    lots.slice().sort((a,b)=>a.exp-b.exp).forEach(l=>{
+      if(!need||!l.left||l.exp<=e.at||l.at>(e.kind==="use"?e.at-wait:e.at))return;
+      const t=Math.min(l.left,need);l.left-=t;need-=t;
+    });
+  });
+  let usable=0,pending=0,next=null;
+  lots.sort((a,b)=>a.exp-b.exp).forEach(l=>{
+    if(!l.left||l.exp<=now)return;
+    if(l.at>now-wait)pending+=l.left;else usable+=l.left;
+    if(!next)next={exp:l.exp,n:l.left};else if(isoOfVN(l.exp)===isoOfVN(next.exp))next.n+=l.left;
+  });
+  return {usable,pending,next};
+}
+/* màn cảm ơn trên tablet: hiện mã tham gia khi số trên đặt bàn chưa là thành viên (hỏi một lần mỗi số) */
+function joinQrFor(b){
+  if(!LOYALTY_JOIN_URL||b.pts)return false;
+  const ph=normPhone(b.phone);if(!ph||!S.db||!S.db.memberOf)return true;
+  if(!(ph in S.memberSeen)){S.memberSeen[ph]=null;S.db.memberOf(ph).then(m=>{S.memberSeen[ph]=!!m},()=>{S.memberSeen[ph]=false}).then(()=>{if(route().view==="table")render()})}
+  return S.memberSeen[ph]===false;
+}
+function renderJoin(){
+  if(!S.join)S.join={phone:"",err:"",busy:false,done:false,tail:""};
+  const J=S.join;
+  if(J.done){
+    app.innerHTML=`<section class="done"><div class="eyebrow">đã vào sổ điểm · số đuôi ${esc(J.tail)}</div><h1 class="display done-hold">ĐÃ THAM GIA<span class="y">.</span></h1>
+      <p class="lede">bill hôm nay được cộng điểm khi thanh toán: đọc số này cho thu ngân. muốn biết mình có bao nhiêu điểm, hỏi quầy thu ngân.</p>
+      <div class="rowbtns"><a class="cta" href="#lineup">về trang chính</a><button type="button" class="linkbtn" id="joinAgain">thêm số khác</button></div></section>`;
+    document.getElementById("joinAgain").onclick=()=>{S.join=null;render()};return}
+  const can=!!(S.db&&S.db.joinLoyalty);
+  app.innerHTML=`${banner()}<a class="back" href="#lineup">← về trang chính</a>
+  <div class="book-wrap solo"><section class="tk vc join" aria-label="tham gia tích điểm BLK46">
+    <div class="tk-head"><div class="tk-who"><p class="tk-pre">THAM GIA</p><h1 class="tk-name">TÍCH ĐIỂM</h1><p class="tk-meta">mỗi 100.000đ trên bill được 1 điểm. từ lần tới quán sau, mỗi điểm trừ 1.000đ vào bill.</p></div></div>
+    <div class="tk-row"><p>100K = 1 ĐIỂM</p><p>1 ĐIỂM = 1.000Đ</p><p>ĐIỂM GIỮ 6 THÁNG</p></div>
+    <form class="idol" id="joinForm">
+      <div class="fields vf">
+        <label class="f wide">số điện thoại có zalo *<input id="j_phone" required inputmode="tel" maxlength="18" autocomplete="tel" placeholder="vd 09xx xxx xxx" value="${esc(J.phone)}"></label>
+      </div>
+      <div class="err" id="jErr" role="alert">${esc(J.err)}</div>
+      <p class="join-ok" id="joinOk">${esc(JOIN_TEXT[JOIN_V])}</p>
+      <button class="cta" type="submit" aria-describedby="joinOk" ${!can||J.busy?"disabled":""}>${J.busy?"ĐANG GỬI…":"THAM GIA"}</button>
+      <p class="tk-after">không cần tài khoản, không mật khẩu. muốn rời chương trình và xoá số, báo quầy thu ngân hoặc gọi <a class="call-nu" href="tel:${HOTLINE}">${HOTLINE_SHOW}</a>.</p>
+    </form>
+  </section></div>`;
+  const ph=document.getElementById("j_phone");ph.oninput=()=>{J.phone=ph.value};
+  document.getElementById("joinForm").onsubmit=async ev=>{
+    ev.preventDefault();J.phone=val("j_phone");
+    const phone=normPhone(J.phone);
+    if(!phone){J.err="số điện thoại chưa đúng: 10 số, bắt đầu bằng 0.";return render()}
+    J.busy=true;J.err="";render();
+    try{
+      // máy quản lý đọc được sổ: số đã có thì thôi, không ghi đè ngày tham gia cũ
+      if(!(S.canEdit&&await S.db.memberOf(phone)))await S.db.joinLoyalty(phone,{phone,joinedAt:Date.now(),consent:JOIN_V,...(SRC?{src:SRC}:{})});
+      S.memberSeen[phone]=true;
+      Object.assign(J,{busy:false,done:true,tail:phoneTail(phone),phone:""});render();
+    }catch(_){J.busy=false;J.err="chưa gửi được, kiểm tra mạng rồi bấm lại.";render()}
+  };
+}
+
 function renderVoucher(dow){
   const p=WEEKLY_PROMOS[dow];
   if(!S.vc||S.vc.dow!==dow)S.vc={dow,name:"",phone:"",dateText:isoToDM(nextDowIso(dow)),time:"",mode:"",size:"",err:"",busy:false,done:false};
@@ -2137,6 +2265,7 @@ function adminBookings(p){
   p.querySelectorAll("[data-bconfirm]").forEach(x=>x.onclick=()=>{const b=S.bookings.find(y=>y.id===x.dataset.bconfirm);const f=b?fullIdols(b.date,b.idolIds,b.id):[];if(f.length){x.textContent=loadFullMsg(f,b.date);return}bookPatch(x,x.dataset.bconfirm,{status:"confirmed"})});
   p.querySelectorAll("[data-bcancel]").forEach(x=>{let armed=false;x.onclick=()=>{if(!armed){armed=true;x.textContent="bấm lần nữa để huỷ";return}bookPatch(x,x.dataset.bcancel,{status:"cancelled"})}});
   p.querySelectorAll("[data-bseat]").forEach(x=>x.onclick=()=>seatBooking(x,x.dataset.bseat));
+  armPts(p);
   const ts=document.getElementById("tblSave");if(ts)ts.onclick=async()=>{const list=parseTables(document.getElementById("tblList").value);const m=document.getElementById("tblMsg");ts.disabled=true;
     try{await S.db.doc("venue/tables").set({list,updatedAt:Date.now()});m.textContent=`đã lưu ${list.length} bàn`}catch(_){m.textContent="chưa lưu được, thử lại"}ts.disabled=false};
   armDjCfg();
@@ -2200,6 +2329,7 @@ function bookingCard(b){
       <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">khách để quán xếp promoter</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
+      ${ptsRow(b)}
       <div class="rowbtns">
         ${b.status==="requested"?(fullIdols(b.date,b.idolIds,b.id).length?`<span class="pill bad">${esc(loadFullMsg(fullIdols(b.date,b.idolIds,b.id),b.date))} đổi promoter hoặc huỷ</span>`:`<button class="ghostbtn" data-bconfirm="${esc(b.id)}">xác nhận</button>`):""}
         ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn${tableSelect("seat_"+b.id,b.table,b.id,false,b.date)}</label><button class="cta" data-bseat="${esc(b.id)}" ${(S.tables||[]).length?"":"disabled"}>khách đã đến · tạo mã bàn</button>`:""}
@@ -2269,6 +2399,127 @@ function drawBookForm(){
   };
 }
 
+/* ---------- tích điểm trong trang quản lý ---------- */
+/* thẻ bàn đã có khách: thu ngân gõ tổng bill, web cộng điểm cho số trên đặt bàn (đổi được sang số có zalo khách đưa) */
+function ptsRow(b){
+  if(b.status!=="seated")return "";
+  const F=S.ptsForm[b.id],done=b.pts||(F&&F.done);
+  if(done)return `<div class="rowbtns"><span class="pill warn">đã cộng ${esc(done.points)} điểm · số đuôi ${esc(phoneTail(done.phone))} · bill ${vnd(done.amount)}</span></div>`;
+  const f=F||(S.ptsForm[b.id]={amount:"",phone:normPhone(b.phone)||String(b.phone||""),msg:"",busy:false,qr:false});
+  const amt=digits(f.amount),n=ptsOf(amt),id=esc(b.id);
+  return `<div class="ptsrow">
+    <label class="f">tổng bill trước VAT, phí dịch vụ<input inputmode="numeric" data-pa="${id}" maxlength="15" autocomplete="off" placeholder="vd 10000000" value="${esc(f.amount)}"><small class="dhint" data-pv="${id}">${amt?vnd(amt):""}</small></label>
+    <label class="f">số tích điểm<input inputmode="tel" data-pp="${id}" maxlength="18" autocomplete="off" value="${esc(f.phone)}"><small class="dhint">hỏi lại khách: số đuôi <b data-pt="${id}">${esc(phoneTail(normPhone(f.phone)))||"—"}</b></small></label>
+    <div class="f"><span aria-hidden="true">&nbsp;</span><button type="button" class="ghostbtn" data-pe="${id}" ${f.busy?"disabled":""}>${f.busy?"đang cộng…":n?`cộng ${n} điểm`:"cộng điểm"}</button></div>
+    <p class="note">khách muốn dùng điểm tối nay: trừ điểm ở tab tích điểm trước, rồi gõ số tiền sau khi trừ. <button type="button" class="linkbtn" data-pq="${id}">xem điểm số này</button></p>
+    ${f.msg?`<p class="err" role="alert">${esc(f.msg)}</p>`:""}
+    ${f.qr?`<div class="gqr sm"><img src="${esc(LOYALTY_QR)}" alt="mã qr trang tham gia tích điểm" width="120" height="120"><p><b>chưa tham gia</b>đưa khách quét mã, bấm tham gia, rồi bấm cộng điểm lại.</p></div>`:""}
+  </div>`;
+}
+function armPts(p){
+  const q=(k,id)=>p.querySelector(`[${k}="${CSS.escape(id)}"]`);
+  p.querySelectorAll("[data-pa]").forEach(x=>x.oninput=()=>{const id=x.dataset.pa,F=S.ptsForm[id];if(!F)return;F.amount=x.value;
+    const a=digits(x.value),n=ptsOf(a),btn=q("data-pe",id),pv=q("data-pv",id);
+    if(btn&&!F.busy)btn.textContent=n?`cộng ${n} điểm`:"cộng điểm";if(pv)pv.textContent=a?vnd(a):""});
+  p.querySelectorAll("[data-pp]").forEach(x=>x.oninput=()=>{const id=x.dataset.pp,F=S.ptsForm[id];if(!F)return;F.phone=x.value;
+    const t=q("data-pt",id);if(t)t.textContent=phoneTail(normPhone(x.value))||"—"});
+  p.querySelectorAll("[data-pe]").forEach(x=>x.onclick=()=>earnFor(x.dataset.pe));
+  p.querySelectorAll("[data-pq]").forEach(x=>x.onclick=()=>{const F=S.ptsForm[x.dataset.pq]||{};
+    Object.assign(S.pq,{phone:F.phone||"",member:undefined,list:[],msg:"",note:"",leave:false,auto:true});S.adminTab="points";render();window.scrollTo(0,0)});
+}
+async function earnFor(id){
+  const b=S.bookings.find(x=>x.id===id),F=S.ptsForm[id];if(!b||!F||F.busy)return;
+  const amount=digits(F.amount),phone=normPhone(F.phone),n=ptsOf(amount);
+  const say=m=>{F.msg=m;render()};
+  F.qr=false;
+  if(!amount)return say("gõ tổng bill trước.");
+  if(amount>PTS_MAX_BILL)return say("số tiền quá lớn, kiểm tra lại số 0.");
+  if(!n)return say("bill dưới 100.000đ, chưa có điểm.");
+  if(!phone)return say("số tích điểm chưa đúng: 10 số, bắt đầu bằng 0.");
+  F.busy=true;F.msg="";render();
+  try{
+    if(!await S.db.memberOf(phone)){F.busy=false;F.qr=true;return say(`số đuôi ${phoneTail(phone)} chưa tham gia tích điểm.`)}
+    const at=Date.now();
+    await S.db.earnPoints(id,{kind:"earn",phone,amount,points:n,bookingId:id,code:b.code||"",table:b.table||"",at,exp:addMonths(at,PTS_MONTHS),by:S.authEmail||""});
+    F.busy=false;F.done={points:n,phone,amount};S.memberSeen[phone]=true;render();
+  }catch(e){F.busy=false;say(e&&e.code==="used"?"bàn này đã cộng điểm rồi.":"chưa cộng được. nếu lần đầu dùng, cần dán luật tích điểm vào Firebase trước.")}
+}
+/* tab tích điểm: tra một số, xem điểm dùng được, trừ điểm khi khách dùng, ghi dòng sửa, xoá khi khách xin rời */
+function adminPoints(p){
+  const Q=S.pq;
+  p.innerHTML=`<form class="idol" id="pqForm">
+    <div class="ptsrow" style="border:0;padding:0"><label class="f">số điện thoại khách<input id="pq_phone" inputmode="tel" maxlength="18" autocomplete="off" placeholder="vd 09xx xxx xxx" value="${esc(Q.phone)}"></label>
+      <div class="f"><button class="cta" type="submit" ${Q.busy?"disabled":""}>${Q.busy?"đang tra…":"tra điểm"}</button></div></div>
+    <p class="note" style="margin:0">100.000đ trên bill (trước VAT, phí dịch vụ, không tính tip) = 1 điểm. 1 điểm = 1.000đ trừ vào bill, chỉ dùng điểm của những lần tới trước. điểm mỗi bill giữ 6 tháng. mã cho khách tham gia: <a href="${esc(LOYALTY_QR)}" target="_blank" rel="noopener">mở ảnh mã qr để in</a>.</p>
+  </form>
+  ${Q.note?`<p class="ok-msg" role="status">${esc(Q.note)}</p>`:""}
+  ${pointsOut()}`;
+  const ip=document.getElementById("pq_phone");ip.oninput=()=>{Q.phone=ip.value};
+  const look=async()=>{
+    const phone=normPhone(Q.phone);Q.note="";Q.leave=false;
+    if(!phone){Object.assign(Q,{member:undefined,msg:"số chưa đúng: 10 số, bắt đầu bằng 0."});return render()}
+    Q.busy=true;Q.msg="";render();
+    try{const [m,list]=await Promise.all([S.db.memberOf(phone),S.db.pointsOf(phone)]);Object.assign(Q,{busy:false,member:m||null,list:list||[],shown:phone})}
+    catch(_){Object.assign(Q,{busy:false,member:undefined,msg:"chưa tra được. nếu lần đầu dùng, cần dán luật tích điểm vào Firebase trước."})}
+    render();
+  };
+  document.getElementById("pqForm").onsubmit=ev=>{ev.preventDefault();Q.phone=val("pq_phone");look()};
+  if(Q.auto){Q.auto=false;look();return}
+  const add=async(kind,pts,extra,btn)=>{
+    btn.disabled=true;const at=Date.now();
+    try{await S.db.addPointsEntry(kind+"_"+rid(12),{kind,phone:Q.shown,points:pts,at,by:S.authEmail||"",...(pts>0?{exp:addMonths(at,PTS_MONTHS)}:{}),...extra});
+      await look();Q.note=kind==="use"?`đã trừ ${-pts} điểm: giảm ${vnd(-pts*PTS_VND)} trên bill.`:`đã ghi dòng sửa ${pts>0?"+":""}${pts} điểm.`;render()}
+    catch(_){btn.disabled=false;Q.msg="chưa ghi được, thử lại.";render()}
+  };
+  const uf=document.getElementById("useForm");if(uf)uf.onsubmit=ev=>{ev.preventDefault();
+    const n=digits(val("u_n")),B=ptsBalance(Q.list);
+    if(!n){Q.msg="gõ số điểm khách muốn dùng.";return render()}
+    if(n>B.usable){Q.msg=`khách chỉ có ${B.usable} điểm dùng được tối nay.`;return render()}
+    add("use",-n,{},uf.querySelector("button"))};
+  const ff=document.getElementById("fixForm");if(ff)ff.querySelectorAll("[data-fx]").forEach(btn=>btn.onclick=()=>{
+    const n=digits(val("f_n")),why=val("f_why").slice(0,120);
+    if(!n){Q.msg="gõ số điểm cần sửa.";return render()}
+    if(!why){Q.msg="ghi lý do sửa điểm.";return render()}
+    add("fix",btn.dataset.fx==="-"?-n:n,{reason:why},btn)});
+  const lv=document.getElementById("pqLeave");if(lv)lv.onclick=async()=>{
+    if(!Q.leave){Q.leave=true;lv.textContent="bấm lần nữa: xoá số và toàn bộ điểm";return}
+    lv.disabled=true;
+    try{await S.db.leaveLoyalty(Q.shown);S.memberSeen[Q.shown]=false;Object.assign(Q,{member:undefined,list:[],leave:false,msg:"",note:`đã xoá số đuôi ${phoneTail(Q.shown)} và toàn bộ điểm.`});render()}
+    catch(_){lv.disabled=false;Q.msg="chưa xoá được, thử lại.";render()}
+  };
+}
+function pointsOut(){
+  const Q=S.pq;
+  if(Q.member===undefined)return Q.msg?`<p class="err" role="alert">${esc(Q.msg)}</p>`:"";
+  if(!Q.member)return `<div class="empty"><b>số đuôi ${esc(phoneTail(Q.shown))} chưa tham gia tích điểm.</b><span>đưa khách quét mã bên dưới bằng điện thoại của khách, bấm tham gia, rồi tra lại.</span></div>
+    <div class="gqr sm"><img src="${esc(LOYALTY_QR)}" alt="mã qr trang tham gia tích điểm" width="120" height="120"><p><b>tham gia tích điểm</b>khách tự quét, tự bấm tham gia.</p></div>`;
+  const m=Q.member,B=ptsBalance(Q.list),KIND={earn:"cộng theo bill",use:"dùng điểm",fix:"sửa điểm"};
+  const rows=Q.list.slice().sort((a,b)=>(b.at||0)-(a.at||0));
+  return `<div class="ptsum">
+      <div><span class="muted">dùng được</span><b>${B.usable}</b><span>giảm ${vnd(B.usable*PTS_VND)}</span></div>
+      <div><span class="muted">đang chờ</span><b>${B.pending}</b><span>dùng từ lần sau</span></div>
+      <div><span class="muted">sắp hết hạn</span><b>${B.next?B.next.n:0}</b><span>${B.next?esc(fmtDay(B.next.exp)):"chưa có"}</span></div>
+    </div>
+    <p class="note" style="margin:0">số ${esc(m.phone||Q.shown)} · tham gia ${esc(fmtDay(m.joinedAt))} · đồng ý bản ${esc(m.consent||"—")}. điểm "đang chờ" là bill trong ${PTS_WAIT_H} giờ qua, chưa dùng được tối nay.</p>
+    <div class="ptsforms">
+      <form class="idol" id="useForm"><b>khách dùng điểm</b>
+        <label class="f">số điểm trừ (tối đa ${B.usable})<input id="u_n" inputmode="numeric" maxlength="7" autocomplete="off"></label>
+        <div class="rowbtns"><button class="cta" type="submit" ${B.usable?"":"disabled"}>trừ điểm</button></div>
+        <small class="muted">trừ xong, giảm đúng số tiền đó trên bill ở máy tính tiền.</small></form>
+      <form class="idol" id="fixForm" onsubmit="return false"><b>sửa điểm (gõ nhầm, quên cộng)</b>
+        <label class="f">số điểm<input id="f_n" inputmode="numeric" maxlength="7" autocomplete="off"></label>
+        <label class="f">lý do *<input id="f_why" maxlength="120" autocomplete="off"></label>
+        <div class="rowbtns"><button type="button" class="ghostbtn" data-fx="+">cộng thêm</button><button type="button" class="ghostbtn" data-fx="-">trừ bớt</button></div></form>
+    </div>
+    <div class="err" role="alert">${esc(Q.msg)}</div>
+    ${rows.length?`<div class="table"><table class="ptstable"><thead><tr><th>ngày</th><th>loại</th><th class="num">điểm</th><th>bill, lý do</th><th>hết hạn</th><th>người ghi</th></tr></thead><tbody>${rows.map(e=>`<tr>
+      <td data-l="ngày">${esc(fmtDay(e.at))}</td><td data-l="loại">${esc(KIND[e.kind]||e.kind||"")}</td><td class="num" data-l="điểm">${e.points>0?"+":""}${esc(e.points)}</td>
+      <td class="wide${e.amount||e.reason?"":" empty-m"}" data-l="bill, lý do">${e.amount?vnd(e.amount):""}${e.table?" · bàn "+esc(e.table):""}${e.reason?esc(e.reason):""}</td>
+      <td class="${e.points>0?"":"empty-m"}" data-l="hết hạn">${e.points>0?esc(fmtDay(e.exp||addMonths(e.at,PTS_MONTHS))):""}</td><td class="muted" data-l="người ghi">${esc(e.by||"")}</td></tr>`).join("")}</tbody></table></div>`
+      :`<p class="note">chưa có dòng điểm nào.</p>`}
+    <div class="rowbtns"><button type="button" class="ghostbtn danger" id="pqLeave">${Q.leave?"bấm lần nữa: xoá số và toàn bộ điểm":"khách xin rời chương trình"}</button></div>`;
+}
+
 /* ---------- admin ---------- */
 function renderAdmin(){
   if(!S.canEdit){
@@ -2293,14 +2544,14 @@ function renderAdmin(){
     <div class="hero" style="padding:12px 0 0"><div class="eyebrow">chỉ quản lý thấy</div><h1 class="display admin-title">QUẢN LÝ</h1><div class="rowbtns"><span class="muted">${esc(S.authEmail||"")}</span><button class="ghostbtn" id="adminOut">đăng xuất</button></div></div>
     ${usageBox()}
     <div class="subtabs" role="tablist">
-      ${[["bookings","đặt bàn"],["idols","hồ sơ promoter"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
+      ${[["bookings","đặt bàn"],["points","tích điểm"],["idols","hồ sơ promoter"],["reviews","đánh giá & tip"]].map(([k,l])=>`<button class="chip" role="tab" data-at="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}
     </div>
     <div class="panel" id="panel"></div>
   </section>`;
   app.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{S.adminTab=b.dataset.at;S.editing=null;render()});
   document.getElementById("adminOut").onclick=async()=>{await __backend.logout();location.reload()};
   const p=document.getElementById("panel");
-  if(t==="bookings")adminBookings(p);else if(t==="idols")adminIdols(p);else adminReviews(p);
+  if(t==="bookings")adminBookings(p);else if(t==="points")adminPoints(p);else if(t==="idols")adminIdols(p);else adminReviews(p);
 }
 function adminIdols(p){
   const board=computeBoard();const byId={};board.forEach(r=>byId[r.idol.id]=r);
