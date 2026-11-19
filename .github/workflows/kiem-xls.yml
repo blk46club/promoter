@@ -1,0 +1,14 @@
+name: Kiểm phần đọc file máy bán hàng
+# Chạy tools/kiem-xls.cjs với file mẫu số giả (tools/mau/). Không có file thật nào trong repo.
+on:
+  pull_request:
+    paths: ["public/xls.js", "tools/kiem-xls.cjs", "tools/mau/**"]
+permissions:
+  contents: read
+jobs:
+  kiem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tools/kiem-xls.cjs

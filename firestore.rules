@@ -177,6 +177,13 @@ service cloud.firestore {
       allow read, create, delete: if isStaff();
       allow update: if false;
     }
+    // Chốt sổ đêm: nights/{ngày} { status: closed, bills: {số phiếu: mã đặt bàn}, earned, sendAt, sent }. Chỉ quản lý.
+    // Chốt rồi là khoá: không chốt lại, không xoá (sai thì ghi dòng sửa điểm). Chỉ được đánh dấu đã gửi tin.
+    match /nights/{id} {
+      allow read, create: if isStaff();
+      allow update: if isStaff() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sent', 'sentAt']);
+      allow delete: if false;
+    }
 
     // Đặt bàn: khách gửi yêu cầu (chỉ tạo mới, đúng khuôn), quản lý đọc và xử lý.
     match /bookings/{id} {

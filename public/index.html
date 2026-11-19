@@ -400,6 +400,50 @@ table.ptstable{min-width:0}
   .ptstable td.wide{grid-column:1/-1}
   .ptstable td.empty-m{display:none}
 }
+/* chốt sổ đêm (19/11): tải file máy bán hàng, chọn phiếu cho từng bàn, chốt một lần */
+.night{display:grid;gap:12px;border:1px solid var(--acid);background:var(--card);padding:16px;margin-bottom:22px}
+.night-h{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.night-h b{font-family:var(--display);font-weight:400;font-size:var(--fs-d-xs);text-transform:uppercase;line-height:1.1;flex:1 0 100%}
+.night-h .muted{font-size:var(--fs-sm)}
+.night .note{margin:0}
+.night .banner{margin:0}
+.filebtn{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:44px;width:max-content;max-width:100%;color:var(--paper);border-color:var(--acid)}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.filebtn.busy{opacity:.6}
+.nwarn{margin:0;padding-left:18px;font-size:var(--fs-xs);color:var(--bad-text)}
+.nrow{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr) minmax(130px,180px);gap:8px 14px;align-items:start;border-top:1px dashed var(--line);padding-top:12px}
+.nrow.on{border-top-style:solid;border-top-color:var(--acid)}
+.nrow-h{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.nrow-h b{font-size:var(--fs-lead)}
+.nrow-h .muted{font-size:var(--fs-xs)}
+.nrow input,.nrow select{min-height:44px}
+.nchips{display:flex;flex-wrap:wrap;gap:6px;align-content:start;padding-top:18px}
+.nchips .chip{min-height:36px;font-variant-numeric:tabular-nums}
+.nchips .chip span+span::before{content:" · "}
+.nchips .muted{font-size:var(--fs-xs)}
+.nadd{grid-column:2}
+.nsum{grid-column:3;grid-row:2;display:grid;gap:2px;padding-top:18px;font-size:var(--fs-sm);font-variant-numeric:tabular-nums}
+.nsum b{color:var(--acid);font-size:var(--fs-lead)}
+.nsum .muted{font-size:var(--fs-xs)}
+.nfree summary{cursor:pointer;font-size:var(--fs-sm)}
+.nfree .table{margin-top:8px}
+.nfoot{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px;font-size:var(--fs-ui)}
+.nfoot b{color:var(--acid)}
+.nfoot .cta:disabled{opacity:.5}
+.ptsh{font-size:var(--fs-sm);letter-spacing:.12em;text-transform:uppercase;color:var(--concrete);font-weight:500;margin:0 0 8px}
+details.hand{grid-column:1/-1}
+details.hand summary{cursor:pointer;font-size:var(--fs-xs);color:var(--concrete)}
+details.hand .ptsrow{border-top:0;margin-top:8px}
+@media (max-width:700px){
+  .night{padding:12px}
+  .nrow{grid-template-columns:minmax(0,1fr)}
+  .nadd,.nsum{grid-column:auto;grid-row:auto}
+  .nchips,.nsum{padding-top:0}
+  .nchips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nchips .muted{grid-column:1/-1}
+  .nchips .chip{display:grid;gap:1px;text-align:left;border-radius:10px;padding:6px 10px}
+  .nchips .chip span+span::before{content:none}
+}
 .done .hold-note{font-size:var(--fs-lead);margin:12px 0 20px;max-width:46ch}
 .tmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line)}
 .tmap{position:relative;min-width:600px;line-height:0}
@@ -938,7 +982,7 @@ const S={flyDate:"",flyWeek:"",db:null,user:null,assets:null,canEdit:false,canWr
   loaded:{idols:false,reviews:false,bookings:false,loads:false},stale:false,dbMissing:false,
   period:"month",adminTab:"bookings",editing:null,bookings:[],bookFilter:"today",bookEdit:null,book:{},
   tonight:{iso:"",dj:""},djs:{},dj:{text:"",name:"",for:""},
-  join:null,ptsForm:{},memberSeen:{},pq:{phone:"",busy:false,member:undefined,list:[],msg:"",note:"",leave:false,shown:""},
+  join:null,ptsForm:{},memberSeen:{},night:null,pq:{phone:"",busy:false,member:undefined,list:[],msg:"",note:"",leave:false,shown:""},
   rate:{code:"",bill:null,idolId:null,stars:0,tags:[],comment:"",pub:"",err:"",busy:false,done:false}};
 
 const app=document.getElementById("app");
@@ -2400,30 +2444,42 @@ function drawBookForm(){
 }
 
 /* ---------- tích điểm trong trang quản lý ---------- */
-/* thẻ bàn đã có khách: thu ngân gõ tổng bill, web cộng điểm cho số trên đặt bàn (đổi được sang số có zalo khách đưa) */
+/* thẻ bàn đã có khách (19/11): điểm cộng lúc chốt sổ cuối đêm từ file máy bán hàng, thu ngân không gõ gì.
+   ở đây chỉ đổi số tích điểm (khách đưa số có zalo). máy bán hàng hỏng thì mở phần gõ tay tổng bill;
+   gõ tay trên 10.000.000đ thì chưa cộng, chờ quản lý duyệt lúc chốt sổ đêm. */
 function ptsRow(b){
   if(b.status!=="seated")return "";
   const F=S.ptsForm[b.id],done=b.pts||(F&&F.done);
   if(done)return `<div class="rowbtns"><span class="pill warn">đã cộng ${esc(done.points)} điểm · số đuôi ${esc(phoneTail(done.phone))} · bill ${vnd(done.amount)}</span></div>`;
-  const f=F||(S.ptsForm[b.id]={amount:"",phone:normPhone(b.phone)||String(b.phone||""),msg:"",busy:false,qr:false});
+  const hold=b.ptsHold||(F&&F.hold);
+  if(hold)return `<div class="rowbtns"><span class="pill warn">gõ tay ${vnd(hold.amount)} · số đuôi ${esc(phoneTail(hold.phone))} · chờ duyệt lúc chốt sổ đêm</span></div>`;
+  const f=F||(S.ptsForm[b.id]={amount:"",phone:normPhone(b.ptsPhone||b.phone)||String(b.ptsPhone||b.phone||""),msg:"",note:"",busy:false,qr:false,open:false});
   const amt=digits(f.amount),n=ptsOf(amt),id=esc(b.id);
   return `<div class="ptsrow">
-    <label class="f">tổng bill trước VAT, phí dịch vụ<input inputmode="numeric" data-pa="${id}" maxlength="15" autocomplete="off" placeholder="vd 10000000" value="${esc(f.amount)}"><small class="dhint" data-pv="${id}">${amt?vnd(amt):""}</small></label>
     <label class="f">số tích điểm<input inputmode="tel" data-pp="${id}" maxlength="18" autocomplete="off" value="${esc(f.phone)}"><small class="dhint">hỏi lại khách: số đuôi <b data-pt="${id}">${esc(phoneTail(normPhone(f.phone)))||"—"}</b></small></label>
-    <div class="f"><span aria-hidden="true">&nbsp;</span><button type="button" class="ghostbtn" data-pe="${id}" ${f.busy?"disabled":""}>${f.busy?"đang cộng…":n?`cộng ${n} điểm`:"cộng điểm"}</button></div>
-    <p class="note">khách muốn dùng điểm tối nay: trừ điểm ở tab tích điểm trước, rồi gõ số tiền sau khi trừ. <button type="button" class="linkbtn" data-pq="${id}">xem điểm số này</button></p>
+    <div class="f"><span aria-hidden="true">&nbsp;</span><button type="button" class="ghostbtn" data-ps="${id}" ${f.busy?"disabled":""}>lưu số</button></div>
+    <p class="note">điểm bàn này cộng lúc chốt sổ cuối đêm, tiền lấy từ file máy bán hàng: thu ngân không cần gõ gì. khách đưa số có zalo khác số đặt bàn thì gõ số đó, bấm lưu số. <button type="button" class="linkbtn" data-pq="${id}">xem điểm số này</button></p>
+    ${f.note?`<p class="ok-msg" role="status">${esc(f.note)}</p>`:""}
+    <details class="hand" data-ph="${id}"${f.open?" open":""}><summary>máy bán hàng hỏng: gõ tay tổng bill</summary>
+      <div class="ptsrow">
+        <label class="f">tổng bill trước VAT, phí dịch vụ<input inputmode="numeric" data-pa="${id}" maxlength="15" autocomplete="off" placeholder="vd 10000000" value="${esc(f.amount)}"><small class="dhint" data-pv="${id}">${amt?vnd(amt):""}</small></label>
+        <div class="f"><span aria-hidden="true">&nbsp;</span><button type="button" class="ghostbtn" data-pe="${id}" ${f.busy?"disabled":""}>${f.busy?"đang ghi…":amt>PTS_HAND_MAX?"gửi duyệt":n?`cộng ${n} điểm`:"cộng điểm"}</button></div>
+        <p class="note">khách dùng điểm tối nay: trừ điểm ở tab tích điểm trước, rồi gõ số tiền sau khi trừ. trên ${vnd(PTS_HAND_MAX)} thì chưa cộng ngay, chờ quản lý duyệt lúc chốt sổ đêm.</p>
+      </div></details>
     ${f.msg?`<p class="err" role="alert">${esc(f.msg)}</p>`:""}
-    ${f.qr?`<div class="gqr sm"><img src="${esc(LOYALTY_QR)}" alt="mã qr trang tham gia tích điểm" width="120" height="120"><p><b>chưa tham gia</b>đưa khách quét mã, bấm tham gia, rồi bấm cộng điểm lại.</p></div>`:""}
+    ${f.qr?`<div class="gqr sm"><img src="${esc(LOYALTY_QR)}" alt="mã qr trang tham gia tích điểm" width="120" height="120"><p><b>chưa tham gia</b>đưa khách quét mã, bấm tham gia, rồi bấm lại.</p></div>`:""}
   </div>`;
 }
 function armPts(p){
   const q=(k,id)=>p.querySelector(`[${k}="${CSS.escape(id)}"]`);
   p.querySelectorAll("[data-pa]").forEach(x=>x.oninput=()=>{const id=x.dataset.pa,F=S.ptsForm[id];if(!F)return;F.amount=x.value;
     const a=digits(x.value),n=ptsOf(a),btn=q("data-pe",id),pv=q("data-pv",id);
-    if(btn&&!F.busy)btn.textContent=n?`cộng ${n} điểm`:"cộng điểm";if(pv)pv.textContent=a?vnd(a):""});
+    if(btn&&!F.busy)btn.textContent=a>PTS_HAND_MAX?"gửi duyệt":n?`cộng ${n} điểm`:"cộng điểm";if(pv)pv.textContent=a?vnd(a):""});
   p.querySelectorAll("[data-pp]").forEach(x=>x.oninput=()=>{const id=x.dataset.pp,F=S.ptsForm[id];if(!F)return;F.phone=x.value;
     const t=q("data-pt",id);if(t)t.textContent=phoneTail(normPhone(x.value))||"—"});
   p.querySelectorAll("[data-pe]").forEach(x=>x.onclick=()=>earnFor(x.dataset.pe));
+  p.querySelectorAll("[data-ps]").forEach(x=>x.onclick=()=>savePtsPhone(x.dataset.ps));
+  p.querySelectorAll("details[data-ph]").forEach(x=>x.ontoggle=()=>{const F=S.ptsForm[x.dataset.ph];if(F)F.open=x.open});
   p.querySelectorAll("[data-pq]").forEach(x=>x.onclick=()=>{const F=S.ptsForm[x.dataset.pq]||{};
     Object.assign(S.pq,{phone:F.phone||"",member:undefined,list:[],msg:"",note:"",leave:false,auto:true});S.adminTab="points";render();window.scrollTo(0,0)});
 }
@@ -2440,20 +2496,42 @@ async function earnFor(id){
   try{
     if(!await S.db.memberOf(phone)){F.busy=false;F.qr=true;return say(`số đuôi ${phoneTail(phone)} chưa tham gia tích điểm.`)}
     const at=Date.now();
+    if(amount>PTS_HAND_MAX){
+      const hold={phone,amount,at,by:S.authEmail||""};
+      await S.db.doc("bookings/"+id).update({ptsHold:hold,updatedAt:at});
+      F.busy=false;F.hold=hold;return render();
+    }
     await S.db.earnPoints(id,{kind:"earn",phone,amount,points:n,bookingId:id,code:b.code||"",table:b.table||"",at,exp:addMonths(at,PTS_MONTHS),by:S.authEmail||""});
     F.busy=false;F.done={points:n,phone,amount};S.memberSeen[phone]=true;render();
   }catch(e){F.busy=false;say(e&&e.code==="used"?"bàn này đã cộng điểm rồi.":"chưa cộng được. nếu lần đầu dùng, cần dán luật tích điểm vào Firebase trước.")}
 }
+async function savePtsPhone(id){
+  const b=S.bookings.find(x=>x.id===id),F=S.ptsForm[id];if(!b||!F||F.busy)return;
+  const phone=normPhone(F.phone);F.qr=false;F.note="";
+  if(!phone){F.msg="số tích điểm chưa đúng: 10 số, bắt đầu bằng 0.";return render()}
+  F.busy=true;F.msg="";render();
+  try{
+    await S.db.doc("bookings/"+id).update({ptsPhone:phone,updatedAt:Date.now()});
+    const m=await S.db.memberOf(phone).catch(()=>undefined);
+    F.busy=false;F.phone=phone;
+    if(m===null){F.qr=true;F.note=`đã lưu số đuôi ${phoneTail(phone)}. số này chưa tham gia: đưa khách quét mã bên dưới.`}
+    else F.note=`đã lưu số đuôi ${phoneTail(phone)}: chốt sổ cuối đêm cộng điểm vào số này.`;
+  }catch(_){F.busy=false;F.msg="chưa lưu được số, thử lại."}
+  render();
+}
 /* tab tích điểm: tra một số, xem điểm dùng được, trừ điểm khi khách dùng, ghi dòng sửa, xoá khi khách xin rời */
 function adminPoints(p){
   const Q=S.pq;
-  p.innerHTML=`<form class="idol" id="pqForm">
+  p.innerHTML=`${nightBox()}
+  <h2 class="ptsh">tra điểm một khách</h2>
+  <form class="idol" id="pqForm">
     <div class="ptsrow" style="border:0;padding:0"><label class="f">số điện thoại khách<input id="pq_phone" inputmode="tel" maxlength="18" autocomplete="off" placeholder="vd 09xx xxx xxx" value="${esc(Q.phone)}"></label>
       <div class="f"><button class="cta" type="submit" ${Q.busy?"disabled":""}>${Q.busy?"đang tra…":"tra điểm"}</button></div></div>
     <p class="note" style="margin:0">100.000đ trên bill (trước VAT, phí dịch vụ, không tính tip) = 1 điểm. 1 điểm = 1.000đ trừ vào bill, chỉ dùng điểm của những lần tới trước. điểm mỗi bill giữ 6 tháng. mã cho khách tham gia: <a href="${esc(LOYALTY_QR)}" target="_blank" rel="noopener">mở ảnh mã qr để in</a>.</p>
   </form>
   ${Q.note?`<p class="ok-msg" role="status">${esc(Q.note)}</p>`:""}
   ${pointsOut()}`;
+  armNight(p);
   const ip=document.getElementById("pq_phone");ip.oninput=()=>{Q.phone=ip.value};
   const look=async()=>{
     const phone=normPhone(Q.phone);Q.note="";Q.leave=false;
@@ -2518,6 +2596,182 @@ function pointsOut(){
       <td class="${e.points>0?"":"empty-m"}" data-l="hết hạn">${e.points>0?esc(fmtDay(e.exp||addMonths(e.at,PTS_MONTHS))):""}</td><td class="muted" data-l="người ghi">${esc(e.by||"")}</td></tr>`).join("")}</tbody></table></div>`
       :`<p class="note">chưa có dòng điểm nào.</p>`}
     <div class="rowbtns"><button type="button" class="ghostbtn danger" id="pqLeave">${Q.leave?"bấm lần nữa: xoá số và toàn bộ điểm":"khách xin rời chương trình"}</button></div>`;
+}
+
+/* ---------- chốt sổ đêm (anh Minh 19/11): điểm lấy từ file máy bán hàng, soát rồi mới ghi ----------
+   - thu ngân không gõ gì. cuối đêm quản lý tải file báo cáo bán hàng (.xls) của đêm đó vào đây.
+   - web gộp các phiếu của một bàn, cộng tiền rồi mới làm tròn điểm, ghép với số tích điểm trên đặt bàn.
+   - chưa ghi gì cho tới khi bấm "chốt sổ đêm". chốt rồi thì khoá đêm đó: tải lại file không cộng lần hai.
+     mỗi đặt bàn chỉ có một dòng cộng (points/earn_{mã đặt bàn}), dù cộng tay hay từ file.
+   - phiếu khu BOD không tích điểm. tin zalo (giai đoạn 2) gửi 10h sáng hôm sau; chốt sau 10h thì gửi lúc chốt.
+   - file chỉ đọc trên máy này, không tải lên đâu: chỉ lưu số phiếu, giờ đóng phiếu, tiền tính điểm. */
+const NIGHT_SEND_H=10,PTS_HAND_MAX=1e7,NIGHT_SLACK=30*60e3;
+/* chữ đầu số bàn → tên khu trên máy bán hàng. V = "Khu VIP" em đoán theo tên, chờ anh xác nhận */
+const POS_AREA={SV:"khu sv",V:"khu vip",C:"khu c",D:"khu d"};
+const lc=s=>String(s??"").normalize("NFC").toLowerCase().replace(/\s+/g," ").trim();
+const areaOfTable=t=>{const m=String(t||"").toUpperCase().match(/^(SV|V|C|D)\d/);return m?POS_AREA[m[1]]:""};
+const tableKey=t=>String(t||"").normalize("NFC").toUpperCase().replace(/^BÀN\s*/,"").replace(/\s+/g,"");
+let xlsLoad=null;
+/* phần đọc file .xls nằm riêng (xls.js), chỉ tải khi quản lý chọn file */
+function loadXls(){
+  return xlsLoad||(xlsLoad=new Promise((ok,no)=>{const s=document.createElement("script");s.src="xls.js?v=1";
+    s.onload=()=>window.BLKXLS?ok(window.BLKXLS):no(new Error("xls"));
+    s.onerror=()=>{xlsLoad=null;s.remove();no(Object.assign(new Error("chưa tải được phần đọc file, kiểm tra mạng rồi chọn lại file."),{code:"net"}))};
+    document.head.appendChild(s)}));
+}
+const vnMs=iso=>iso?Date.UTC(+iso.slice(0,4),+iso.slice(5,7)-1,+iso.slice(8,10),+iso.slice(11,13)||0,+iso.slice(14,16)||0,+iso.slice(17,19)||0)-VN_MS:0;
+const hmOf=iso=>iso?iso.slice(11,13)+"h"+iso.slice(14,16):"";
+const nightSendAt=(date,closedAt)=>Math.max(vnMs(date)+864e5+NIGHT_SEND_H*3600e3,closedAt);
+/* đặt bàn của đêm: đã xếp bàn, giờ vào bàn từ 12h trưa ngày đó tới 12h trưa hôm sau */
+function nightBookings(date){
+  const a=vnMs(date)+12*3600e3,z=a+864e5;
+  return S.bookings.filter(x=>x.status==="seated"&&(x.seatedAt?x.seatedAt>=a&&x.seatedAt<z:x.date===date))
+    .sort((x,y)=>String(x.table||"").localeCompare(String(y.table||""),"vi",{numeric:true})||(x.seatedAt||0)-(y.seatedAt||0));
+}
+const nightNew=()=>({file:"",r:null,err:"",busy:false,date:"",done:null,rows:[],walk:[],pick:{},members:{},walkN:0,confirm:false,msg:"",saving:false});
+const billByNo=no=>(S.night.r.bills.find(x=>x.no===no));
+function nightTaken(exceptKey){const t=new Set();for(const k in S.night.pick)if(k!==exceptKey)S.night.pick[k].forEach(n=>t.add(n));return t}
+/* một dòng soát: tổng các phiếu đã chọn (cộng rồi mới làm tròn), số điểm, vì sao không cộng */
+function nightCalc(row){
+  const N=S.night,picks=N.pick[row.key]||[],bills=picks.filter(n=>n!=="~tay").map(billByNo).filter(Boolean);
+  const hand=picks.includes("~tay")&&row.b&&row.b.ptsHold?Math.round(Number(row.b.ptsHold.amount)||0):0;
+  const amount=bills.reduce((s,x)=>s+x.base,0)+hand,mem=row.phone?N.members[row.phone]:false;
+  let why="";
+  if(row.b&&row.b.pts)why=`đã cộng tay ${row.b.pts.points} điểm, không cộng thêm`;
+  else if(!row.phone)why="chưa có số đúng (10 số, bắt đầu bằng 0)";
+  else if(mem===undefined)why="đang kiểm số…";
+  else if(mem===null)why="chưa kiểm được số này";
+  else if(!mem)why=`số đuôi ${phoneTail(row.phone)} chưa tham gia: không cộng`;
+  const points=why?0:ptsOf(amount);
+  return {bills,hand,amount,points,why};
+}
+function nightCheck(phone){
+  const N=S.night;if(!phone||phone in N.members)return;
+  N.members[phone]=undefined;
+  S.db.memberOf(phone).then(m=>{N.members[phone]=!!m},()=>{N.members[phone]=null}).then(()=>{if(S.night===N&&S.adminTab==="points")render()});
+}
+async function nightOpen(file){
+  const N=S.night;
+  Object.assign(N,{busy:true,err:"",file:String(file.name||"").slice(0,80)});render();
+  try{
+    if(file.size>8*1024*1024)throw new Error("file quá lớn (trên 8 MB), không giống file một đêm.");
+    const [X,buf]=await Promise.all([loadXls(),file.arrayBuffer()]);
+    const r=X.readPosFile(buf);
+    if(!r.bizDate)throw new Error("không đọc được ngày trong file.");
+    let done=null;
+    try{done=await S.db.nightOf(r.bizDate)}catch(_){throw new Error("chưa đọc được sổ đêm. nếu lần đầu dùng, cần dán luật tích điểm mới vào Firebase trước.")}
+    Object.assign(N,{r,date:r.bizDate,done,pick:{},walk:[],confirm:false,msg:"",walkN:0});
+    N.rows=nightBookings(r.bizDate).map(b=>{const raw=String(b.ptsPhone||b.phone||"");return {key:b.id,b,raw,phone:normPhone(raw)}});
+    // file có cột số bàn: ghép sẵn phiếu đúng bàn (bàn ngồi hai lượt thì chia theo giờ vào bàn)
+    if(r.bills.some(x=>x.table))N.rows.forEach((row,i)=>{
+      const t=tableKey(row.b.table),next=N.rows.slice(i+1).find(o=>tableKey(o.b.table)===t);
+      N.pick[row.key]=r.bills.filter(x=>x.table&&tableKey(x.table)===t&&vnMs(x.close)>=(row.b.seatedAt||0)-NIGHT_SLACK&&(!next||!next.b.seatedAt||vnMs(x.close)<next.b.seatedAt)).map(x=>x.no);
+    });
+    N.rows.forEach(row=>nightCheck(row.phone));
+  }catch(e){N.err=e&&e.message?e.message:"chưa đọc được file."}
+  N.busy=false;render();
+}
+function nightChip(key,no,on){
+  if(no==="~tay"){const row=S.night.rows.find(x=>x.key===key),h=row.b.ptsHold;
+    return `<button type="button" class="chip" data-nk="${esc(key)}" data-nn="~tay" aria-pressed="${on}"><span>gõ tay, chờ duyệt</span><span>${vnd(h.amount)}</span></button>`}
+  const x=billByNo(no);
+  return `<button type="button" class="chip" data-nk="${esc(key)}" data-nn="${esc(no)}" aria-pressed="${on}"><span>${esc(x.seq||x.no)} · ${esc(hmOf(x.close))}</span><span>${vnd(x.base)}</span></button>`;
+}
+function nightRowHtml(row){
+  const N=S.night,picks=N.pick[row.key]||[],taken=nightTaken(row.key),c=nightCalc(row);
+  let cands=[];
+  if(row.b&&!row.b.pts){
+    const area=areaOfTable(row.b.table),from=(row.b.seatedAt||0)-NIGHT_SLACK;
+    cands=N.r.bills.filter(x=>area&&lc(x.area)===area&&vnMs(x.close)>=from&&!taken.has(x.no)).map(x=>x.no);
+    if(row.b.ptsHold&&!row.b.pts)cands.unshift("~tay");
+  }
+  const shown=[...new Set([...picks,...cands])];
+  const others=N.r.bills.filter(x=>!taken.has(x.no)&&!shown.includes(x.no));
+  const head=row.b?`<b>bàn ${esc(row.b.table||"?")}</b><span class="muted">vào ${row.b.seatedAt?esc(fmtHM(row.b.seatedAt)):"?"}${row.b.guestName?" · "+esc(guestLabel(row.b)):""}</span>`
+    :`<b>khách không đặt bàn</b><button type="button" class="linkbtn" data-nx="${esc(row.key)}">bỏ dòng này</button>`;
+  return `<div class="nrow${c.points?" on":""}">
+    <div class="nrow-h">${head}</div>
+    <label class="f">số tích điểm<input inputmode="tel" maxlength="18" autocomplete="off" data-nph="${esc(row.key)}" value="${esc(row.raw)}"></label>
+    <div class="nchips" role="group" aria-label="phiếu của ${row.b?"bàn "+esc(row.b.table||""):"khách này"}">${shown.map(n=>nightChip(row.key,n,picks.includes(n))).join("")||`<span class="muted">${row.b&&row.b.pts?"bàn này đã cộng tay. phiếu của bàn chọn ở ô bên dưới để khỏi nằm trong phiếu chưa gán.":row.b?"không có phiếu khu này đóng sau giờ vào bàn":"chọn phiếu ở ô bên dưới"}</span>`}</div>
+    ${others.length?`<label class="f nadd">thêm phiếu khác<select data-nadd="${esc(row.key)}"><option value="">chọn phiếu…</option>${others.map(x=>`<option value="${esc(x.no)}">${esc(x.seq||x.no)} · ${esc(x.area)} · ${esc(hmOf(x.close))} · ${vnd(x.base)}</option>`).join("")}</select></label>`:""}
+    <div class="nsum">${c.amount?vnd(c.amount):"chưa chọn phiếu"}${c.points?` → <b>+${c.points} điểm</b>`:c.amount&&!c.why?" → dưới 100.000đ, chưa có điểm":""}${c.why?`<span class="muted">${esc(c.why)}</span>`:""}</div>
+  </div>`;
+}
+function nightBox(){
+  const N=S.night||(S.night=nightNew());
+  if(!N.r)return `<section class="night" aria-label="chốt sổ đêm">
+    <div class="night-h"><b>chốt sổ đêm</b><span class="muted">cuối đêm tải file báo cáo bán hàng (.xls) xuất từ máy bán hàng. soát xong mới bấm chốt: chưa chốt thì chưa cộng điểm cho ai.</span></div>
+    <label class="ghostbtn filebtn${N.busy?" busy":""}">${N.busy?"đang đọc file…":"chọn file .xls của đêm"}<input type="file" id="nightFile" accept=".xls,application/vnd.ms-excel" ${N.busy?"disabled":""}></label>
+    ${N.err?`<p class="err" role="alert">${esc(N.err)}</p>`:""}
+    <p class="note">file chỉ đọc trên máy này, không tải lên đâu. web chỉ lưu số phiếu, giờ đóng phiếu và tiền tính điểm của từng bàn.</p></section>`;
+  const r=N.r,all=r.bills.length+r.skipped.length;
+  const top=`<div class="night-h"><b>chốt sổ đêm ${esc(fmtDate(N.date))}</b><span class="muted">${esc(N.file)} · ${all} phiếu · ${r.skipped.length} phiếu BOD không tích điểm</span>
+    ${r.check?(r.check.ok?`<span class="pill">thành tiền ${vnd(r.check.read)}, khớp dòng tổng cuối file</span>`:`<span class="pill bad">tổng đọc được ${vnd(r.check.read)} khác dòng tổng cuối file ${vnd(r.check.file)}: đừng chốt, gửi file cho em xem</span>`):""}</div>
+    ${r.warn.length?`<ul class="nwarn">${r.warn.slice(0,6).map(w=>`<li>${esc(w)}</li>`).join("")}${r.warn.length>6?`<li>và ${r.warn.length-6} dòng khác</li>`:""}</ul>`:""}`;
+  if(N.done){
+    const d=N.done,e=d.earned||[];
+    return `<section class="night" aria-label="chốt sổ đêm">${top}
+      <div class="banner" data-kind="warn">đêm ${esc(fmtDate(N.date))} đã chốt lúc ${esc(fmtHM(d.closedAt))} ${esc(fmtDay(d.closedAt))}${d.by?" ("+esc(d.by)+")":""}: cộng ${e.reduce((s,x)=>s+(x.points||0),0)} điểm cho ${e.length} khách. tải lại file không cộng lần nữa. sai ở đâu thì tra số đó bên dưới, ghi dòng sửa điểm.</div>
+      ${e.length?`<div class="table"><table class="ptstable"><thead><tr><th>bàn</th><th>số đuôi</th><th class="num">tiền tính điểm</th><th class="num">điểm</th></tr></thead><tbody>${e.map(x=>`<tr><td data-l="bàn">${esc(x.table||"không đặt bàn")}</td><td data-l="số đuôi">${esc(x.tail||"")}</td><td class="num" data-l="tiền">${vnd(x.amount)}</td><td class="num" data-l="điểm">+${esc(x.points)}</td></tr>`).join("")}</tbody></table></div>`:""}
+      <div class="rowbtns"><button type="button" class="ghostbtn" id="nightOther">chọn file khác</button></div></section>`;
+  }
+  const rows=N.rows.concat(N.walk||[]),calcs=rows.map(nightCalc),taken=nightTaken("");
+  const free=r.bills.filter(x=>!taken.has(x.no)),pts=calcs.reduce((s,c)=>s+c.points,0),who=calcs.filter(c=>c.points).length;
+  const busy=Object.values(N.members).some(v=>v===undefined);
+  return `<section class="night" aria-label="chốt sổ đêm">${top}
+    <p class="note">mỗi bàn: bấm chọn các phiếu của bàn đó (đối chiếu số phiếu trên máy bán hàng). gợi ý là phiếu cùng khu, đóng sau giờ vào bàn. một bàn nhiều phiếu thì cộng tiền rồi mới tính điểm.</p>
+    ${rows.length?rows.map(nightRowHtml).join(""):`<div class="empty"><b>đêm ${esc(fmtDate(N.date))} không có bàn nào đã xếp khách.</b><span>khách không đặt bàn mà có tham gia thì thêm dòng bên dưới.</span></div>`}
+    <div class="rowbtns"><button type="button" class="ghostbtn" id="nightWalk">+ khách không đặt bàn có tham gia</button></div>
+    <details class="nfree"${free.length&&free.length<=12?" open":""}><summary>phiếu chưa gán (${free.length}) · ${vnd(free.reduce((s,x)=>s+x.base,0))}: không cộng điểm</summary>
+      ${free.length?`<div class="table"><table class="ptstable"><thead><tr><th>số phiếu</th><th>khu</th><th>giờ đóng</th><th class="num">tiền tính điểm</th></tr></thead><tbody>${free.map(x=>`<tr><td data-l="số phiếu">${esc(x.no)}</td><td data-l="khu">${esc(x.area)}</td><td data-l="giờ đóng">${esc(hmOf(x.close))}</td><td class="num" data-l="tiền">${vnd(x.base)}</td></tr>`).join("")}</tbody></table></div>`:""}</details>
+    ${r.skipped.length?`<details class="nfree"><summary>phiếu BOD (${r.skipped.length}): không tích điểm</summary><div class="table"><table class="ptstable"><tbody>${r.skipped.map(x=>`<tr><td data-l="số phiếu">${esc(x.no)}</td><td data-l="khu">${esc(x.area)}</td><td data-l="giờ đóng">${esc(hmOf(x.close))}</td><td class="num" data-l="tiền">${vnd(x.base)}</td></tr>`).join("")}</tbody></table></div></details>`:""}
+    <div class="nfoot"><span>sẽ cộng <b>${pts} điểm</b> cho ${who} khách. ${nightSendAt(N.date,Date.now())>Date.now()+60e3?`tin báo điểm qua zalo (giai đoạn 2) gửi lúc ${esc(fmtHM(nightSendAt(N.date,Date.now())))} ngày ${esc(fmtDay(nightSendAt(N.date,Date.now())))}.`:"đã qua 10h sáng hôm sau: tin báo điểm qua zalo (giai đoạn 2) gửi ngay khi chốt."}</span>
+      <div class="rowbtns"><button type="button" class="cta" id="nightClose" ${N.saving||busy||(r.check&&!r.check.ok)?"disabled":""}>${N.saving?"đang chốt…":N.confirm?`bấm lần nữa: ghi điểm, khoá đêm ${esc(fmtDate(N.date))}`:`chốt sổ đêm ${esc(fmtDate(N.date))}`}</button><button type="button" class="ghostbtn" id="nightOther">chọn file khác</button></div>
+      ${N.msg?`<p class="err" role="alert">${esc(N.msg)}</p>`:""}</div>
+  </section>`;
+}
+function armNight(p){
+  const N=S.night;if(!N)return;
+  const f=p.querySelector("#nightFile");if(f)f.onchange=()=>{const x=f.files&&f.files[0];if(x)nightOpen(x)};
+  const o=p.querySelector("#nightOther");if(o)o.onclick=()=>{S.night=nightNew();render()};
+  if(!N.r||N.done)return;
+  const rowOf=k=>N.rows.concat(N.walk||[]).find(x=>x.key===k);
+  p.querySelectorAll("[data-nn]").forEach(b=>b.onclick=()=>{const k=b.dataset.nk,n=b.dataset.nn,l=N.pick[k]||(N.pick[k]=[]);
+    const i=l.indexOf(n);if(i>=0)l.splice(i,1);else{if(nightTaken(k).has(n))return;l.push(n)}N.confirm=false;render()});
+  p.querySelectorAll("[data-nadd]").forEach(s=>s.onchange=()=>{const k=s.dataset.nadd,n=s.value;if(!n||nightTaken(k).has(n))return;(N.pick[k]||(N.pick[k]=[])).push(n);N.confirm=false;render()});
+  p.querySelectorAll("[data-nph]").forEach(x=>{const row=rowOf(x.dataset.nph);
+    x.oninput=()=>{row.raw=x.value;row.phone=normPhone(x.value);N.confirm=false};
+    x.onchange=()=>{nightCheck(row.phone);render()}});
+  p.querySelectorAll("[data-nx]").forEach(b=>b.onclick=()=>{N.walk=(N.walk||[]).filter(x=>x.key!==b.dataset.nx);delete N.pick[b.dataset.nx];render()});
+  const w=p.querySelector("#nightWalk");if(w)w.onclick=()=>{(N.walk||(N.walk=[])).push({key:"w"+(++N.walkN),b:null,raw:"",phone:""});render()};
+  const c=p.querySelector("#nightClose");if(c)c.onclick=()=>{if(!N.confirm){N.confirm=true;N.msg="";render();return}nightCommit()};
+}
+async function nightCommit(){
+  const N=S.night;if(N.saving)return;
+  const at=Date.now(),by=S.authEmail||"",bills={},entries=[],earned=[];
+  for(const row of N.rows.concat(N.walk||[])){
+    const c=nightCalc(row);
+    c.bills.forEach(x=>{bills[x.no]=row.b?row.b.id:"khach-le"});
+    if(!c.points)continue;
+    const last=Math.max(0,...c.bills.map(x=>vnMs(x.close)),c.hand?Number(row.b.ptsHold.at)||0:0)||at;
+    const id=row.b?"earn_"+row.b.id:"earn_"+N.date.replace(/-/g,"")+"_"+String(c.bills[0].seq||c.bills[0].no).replace(/[^0-9A-Za-z]/g,"");
+    const entry={kind:"earn",phone:row.phone,amount:c.amount,points:c.points,bookingId:row.b?row.b.id:"",code:row.b&&row.b.code||"",table:row.b&&row.b.table||"",
+      at:last,exp:addMonths(last,PTS_MONTHS),by,src:"file",night:N.date,bills:c.bills.map(x=>x.no)};
+    if(c.hand)entry.hand=c.hand;
+    entries.push({id,entry});earned.push({id,table:entry.table,tail:phoneTail(row.phone),amount:c.amount,points:c.points});
+  }
+  const r=N.r,night={date:N.date,status:"closed",closedAt:at,by,
+    file:{name:N.file,bills:r.bills.length+r.skipped.length,amount:r.check?r.check.read:r.bills.reduce((s,x)=>s+x.amount,0),ok:!!(r.check&&r.check.ok)},
+    bills,earned,sendAt:nightSendAt(N.date,at),sent:false};
+  N.saving=true;N.msg="";render();
+  try{
+    const skipped=await S.db.closeNight(N.date,night,entries);
+    N.done={...night,earned:earned.filter(x=>!skipped.includes(x.id)),skipped};
+  }catch(e){
+    if(e&&e.code==="closed"){try{N.done=await S.db.nightOf(N.date)}catch(_){N.msg="đêm này đã có người chốt rồi."}}
+    else N.msg="chưa chốt được, chưa ghi điểm nào. kiểm tra mạng rồi bấm lại. nếu lần đầu dùng, cần dán luật tích điểm mới vào Firebase trước.";
+  }
+  N.saving=false;N.confirm=false;render();
 }
 
 /* ---------- admin ---------- */

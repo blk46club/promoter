@@ -207,6 +207,25 @@ function makeDb(staff) {
     }),
     // dùng điểm, sửa điểm: thêm một dòng, không sửa dòng cũ
     addPointsEntry: (id, entry) => setDoc(doc(fs, "points/" + id), entry),
+    // chốt sổ đêm (19/11): nights/{ngày} khoá đêm đó. ghi mọi dòng cộng điểm của đêm cùng một lúc;
+    // đặt bàn nào đã có dòng cộng (cộng tay, hoặc chốt trước đó) thì bỏ qua, không cộng lần hai.
+    nightOf: async (date) => { const s = await getDoc(doc(fs, "nights/" + date)); return s.exists() ? s.data() : null; },
+    closeNight: (date, night, entries) => runTransaction(fs, async (tx) => {
+      const nr = doc(fs, "nights/" + date);
+      const cur = await tx.get(nr);
+      if (cur.exists()) { const e = new Error("closed"); e.code = "closed"; throw e; }
+      const refs = entries.map((x) => doc(fs, "points/" + x.id));
+      const snaps = [];
+      for (const r of refs) snaps.push(await tx.get(r));
+      const skipped = [];
+      entries.forEach((x, i) => {
+        if (snaps[i].exists()) { skipped.push(x.id); return; }
+        tx.set(refs[i], x.entry);
+        if (x.entry.bookingId) tx.update(doc(fs, "bookings/" + x.entry.bookingId), { pts: { phone: x.entry.phone, amount: x.entry.amount, points: x.entry.points, at: x.entry.at }, updatedAt: night.closedAt });
+      });
+      tx.set(nr, { ...night, earned: night.earned.filter((x) => !skipped.includes(x.id)), skipped });
+      return skipped;
+    }),
     // khách rời chương trình: xoá hồ sơ và mọi dòng điểm của số đó
     leaveLoyalty: async (phone) => {
       const s = await getDocs(query(collection(fs, "points"), where("phone", "==", phone)));
