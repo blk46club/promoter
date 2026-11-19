@@ -22,6 +22,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="brand/favicon-48.png?v=3">
 <link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="brand/apple-touch-icon.png?v=3">
+<link rel="canonical" href="https://blk46club.github.io/promoter/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"NightClub","name":"BLK46","url":"https://blk46club.github.io/promoter/","image":"https://blk46club.github.io/promoter/brand/share.jpg","telephone":"+84852839239","address":{"@type":"PostalAddress","streetAddress":"Tầng 1, 46 Mã Mây","addressLocality":"Hà Nội","addressCountry":"VN"},"hasMap":"https://share.google/SntJEvVotOjQeHLYL","hasMenu":"https://blkmenu.vercel.app","openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Thursday","Sunday"],"opens":"21:00","closes":"03:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":["Friday","Saturday"],"opens":"21:00","closes":"04:00"}],"sameAs":["https://www.instagram.com/blk.hanoi/","https://www.threads.com/@blk.hanoi","https://www.tiktok.com/@blk.hanoi","https://www.facebook.com/share/1FHCWCqqY9/"]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1298,6 +1299,27 @@ const upcomingEvents=()=>{const from=nightInfo().iso;return EVENTS.filter(e=>e.d
 const pad2=n=>String(n).padStart(2,"0");
 const dowOfIso=iso=>{const [y,m,d]=iso.split("-").map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay()};
 const hoursOf=dow=>CLOSE_AT[dow]!=null?`${OPEN_FROM}.00 – ${CLOSE_AT[dow]}.00`:"QUÁN NGHỈ";
+/* dữ liệu Event cho Google (schema.org), sinh từ EVENTS: mỗi đêm sắp tới thành một sự kiện có giờ mở, giờ đóng, poster, guest dj.
+   không hiện gì trên trang; sửa EVENTS là tự đổi theo (đánh giá claude-seo 19/11). */
+const SITE_URL="https://blk46club.github.io/promoter/";
+function eventsLD(){
+  const place={"@type":"Place","name":"BLK46","address":{"@type":"PostalAddress","streetAddress":"Tầng 1, 46 Mã Mây","addressLocality":"Hà Nội","addressCountry":"VN"}};
+  const list=upcomingEvents().filter(e=>CLOSE_AT[dowOfIso(e.date)]!=null).map(e=>{
+    const [y,m,d]=e.date.split("-").map(Number),nx=new Date(Date.UTC(y,m-1,d+1));
+    const o={"@type":"Event","name":`${e.name} · BLK46`,description:e.line,
+      startDate:`${e.date}T${pad2(OPEN_FROM)}:00:00+07:00`,
+      endDate:`${nx.getUTCFullYear()}-${pad2(nx.getUTCMonth()+1)}-${pad2(nx.getUTCDate())}T${pad2(CLOSE_AT[dowOfIso(e.date)])}:00:00+07:00`,
+      eventStatus:"https://schema.org/EventScheduled",eventAttendanceMode:"https://schema.org/OfflineEventAttendanceMode",
+      location:place,organizer:{"@type":"Organization",name:"BLK46",url:SITE_URL},url:SITE_URL};
+    if(e.poster)o.image=[SITE_URL+e.poster];
+    if(e.dj)o.performer={"@type":"Person",name:"DJ "+e.dj};
+    return o});
+  document.getElementById("events-ld")?.remove();
+  if(!list.length)return;
+  const s=document.createElement("script");s.type="application/ld+json";s.id="events-ld";
+  s.textContent=JSON.stringify({"@context":"https://schema.org","@graph":list});
+  document.head.appendChild(s);
+}
 /* đêm đang nói tới trên tờ rơi (giờ Hà Nội): sau nửa đêm mà quán còn mở thì vẫn là đêm hôm trước; ngày nghỉ thì là đêm mở cửa kế tiếp */
 function nightInfo(now=Date.now()){
   const v=new Date(now+7*3600e3),h=v.getUTCHours(),d=v.getUTCDay(),pd=(d+6)%7;
@@ -2458,6 +2480,7 @@ render();
     db.collection("redeemed").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.redeemed=m;soon()},()=>{});
     db.collection("vouchers").onSnapshot(s=>{S.vouchers=s.docs.map(d=>({...d.data(),id:d.id}));soon()},()=>{}); // chưa dán luật vouchers thì bỏ qua
   }
+  try{eventsLD()}catch(e){}
   render();
 })();
 })();
