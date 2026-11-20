@@ -3,7 +3,7 @@
 // để giao diện không phải viết lại khi đổi backend.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, doc, query, where, onSnapshot, getDoc, setDoc, updateDoc,
+  getFirestore, collection, doc, query, where, onSnapshot, getDoc, getDocs, setDoc, updateDoc,
   deleteDoc, runTransaction, writeBatch, connectFirestoreEmulator, increment,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -184,6 +184,55 @@ function makeDb(staff) {
       b.set(hr, hold);
       try { await b.commit(); }
       catch (e) { const cur = await getDoc(hr).catch(() => null); if (cur && cur.exists() && cur.data().bookingId !== bookingId) throw taken(); throw e; }
+    },
+    // Tích điểm (anh Minh 16–17/11). members/{sđt}: khách tự tham gia, chỉ tạo mới; luật chặn ghi đè và chặn đọc,
+    // nên số đã tham gia rồi cũng báo như vừa tham gia ("had"), người ngoài không dò được số nào là thành viên.
+    joinLoyalty: async (phone, m) => {
+      try { await setDoc(doc(fs, "members/" + phone), m); return "new"; }
+      catch (e) { if (e && (e.code === "permission-denied" || /permission/i.test(String(e.message || "")))) return "had"; throw e; }
+    },
+    // các hàm dưới chỉ quản lý dùng được (luật chặn khách)
+    memberOf: async (phone) => { const s = await getDoc(doc(fs, "members/" + phone)); return s.exists() ? s.data() : null; },
+    pointsOf: async (phone) => {
+      const s = await getDocs(query(collection(fs, "points"), where("phone", "==", phone)));
+      return s.docs.map((d) => ({ ...d.data(), id: d.id }));
+    },
+    // cộng điểm cho một bàn: khoá theo đặt bàn (points/earn_{id}), mỗi bàn một lần; ghi luôn vào đặt bàn để thẻ bàn hiện "đã cộng"
+    earnPoints: (bookingId, entry) => runTransaction(fs, async (tx) => {
+      const r = doc(fs, "points/earn_" + bookingId);
+      const cur = await tx.get(r);
+      if (cur.exists()) { const e = new Error("used"); e.code = "used"; throw e; }
+      tx.set(r, entry);
+      tx.update(doc(fs, "bookings/" + bookingId), { pts: { phone: entry.phone, amount: entry.amount, points: entry.points, at: entry.at }, updatedAt: entry.at });
+    }),
+    // dùng điểm, sửa điểm: thêm một dòng, không sửa dòng cũ
+    addPointsEntry: (id, entry) => setDoc(doc(fs, "points/" + id), entry),
+    // chốt sổ đêm (19/11): nights/{ngày} khoá đêm đó. ghi mọi dòng cộng điểm của đêm cùng một lúc;
+    // đặt bàn nào đã có dòng cộng (cộng tay, hoặc chốt trước đó) thì bỏ qua, không cộng lần hai.
+    nightOf: async (date) => { const s = await getDoc(doc(fs, "nights/" + date)); return s.exists() ? s.data() : null; },
+    closeNight: (date, night, entries) => runTransaction(fs, async (tx) => {
+      const nr = doc(fs, "nights/" + date);
+      const cur = await tx.get(nr);
+      if (cur.exists()) { const e = new Error("closed"); e.code = "closed"; throw e; }
+      const refs = entries.map((x) => doc(fs, "points/" + x.id));
+      const snaps = [];
+      for (const r of refs) snaps.push(await tx.get(r));
+      const skipped = [];
+      entries.forEach((x, i) => {
+        if (snaps[i].exists()) { skipped.push(x.id); return; }
+        tx.set(refs[i], x.entry);
+        if (x.entry.bookingId) tx.update(doc(fs, "bookings/" + x.entry.bookingId), { pts: { phone: x.entry.phone, amount: x.entry.amount, points: x.entry.points, at: x.entry.at }, updatedAt: night.closedAt });
+      });
+      tx.set(nr, { ...night, earned: night.earned.filter((x) => !skipped.includes(x.id)), skipped });
+      return skipped;
+    }),
+    // khách rời chương trình: xoá hồ sơ và mọi dòng điểm của số đó
+    leaveLoyalty: async (phone) => {
+      const s = await getDocs(query(collection(fs, "points"), where("phone", "==", phone)));
+      const b = writeBatch(fs);
+      s.docs.forEach((d) => b.delete(doc(fs, "points/" + d.id)));
+      b.delete(doc(fs, "members/" + phone));
+      await b.commit();
     },
     // Gửi một lượt đánh giá: khoá mã bàn + idol, ghi lời nhắn và điểm trong cùng một giao dịch.
     submitReview: (redeemedId, reviewId, note, review) => runTransaction(fs, async (tx) => {

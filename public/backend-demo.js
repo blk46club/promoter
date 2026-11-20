@@ -126,6 +126,39 @@ function makeDb(staff) {
       if (holdId) col("tableHolds")[holdId] = JSON.parse(JSON.stringify(hold));
       save(); notify("bookings"); notify("tableHolds");
     },
+    // Tích điểm: giống bản Firebase (members/{sđt} chỉ tạo mới, points/ sổ điểm).
+    joinLoyalty: async (phone, m) => { const c = col("members"); if (c[phone]) return "had"; c[phone] = JSON.parse(JSON.stringify(m)); save(); notify("members"); return "new"; },
+    memberOf: async (phone) => col("members")[phone] || null,
+    pointsOf: async (phone) => Object.entries(col("points")).filter(([, x]) => x.phone === phone).map(([id, x]) => ({ ...x, id })),
+    earnPoints: async (bookingId, entry) => {
+      const c = col("points"), id = "earn_" + bookingId;
+      if (c[id]) { const e = new Error("used"); e.code = "used"; throw e; }
+      c[id] = JSON.parse(JSON.stringify(entry));
+      const b = col("bookings")[bookingId];
+      if (b) { b.pts = { phone: entry.phone, amount: entry.amount, points: entry.points, at: entry.at }; b.updatedAt = entry.at; }
+      save(); notify("points"); notify("bookings");
+    },
+    addPointsEntry: async (id, entry) => { col("points")[id] = JSON.parse(JSON.stringify(entry)); save(); notify("points"); },
+    nightOf: async (date) => col("nights")[date] || null,
+    closeNight: async (date, night, entries) => {
+      const n = col("nights"), c = col("points");
+      if (n[date]) { const e = new Error("closed"); e.code = "closed"; throw e; }
+      const skipped = [];
+      entries.forEach((x) => {
+        if (c[x.id]) { skipped.push(x.id); return; }
+        c[x.id] = JSON.parse(JSON.stringify(x.entry));
+        const b = x.entry.bookingId && col("bookings")[x.entry.bookingId];
+        if (b) { b.pts = { phone: x.entry.phone, amount: x.entry.amount, points: x.entry.points, at: x.entry.at }; b.updatedAt = night.closedAt; }
+      });
+      n[date] = JSON.parse(JSON.stringify({ ...night, earned: night.earned.filter((x) => !skipped.includes(x.id)), skipped }));
+      save(); notify("points"); notify("bookings");
+      return skipped;
+    },
+    leaveLoyalty: async (phone) => {
+      const c = col("points");
+      Object.keys(c).forEach((id) => { if (c[id].phone === phone) delete c[id]; });
+      delete col("members")[phone]; save(); notify("points"); notify("members");
+    },
     submitReview: async (redeemedId, reviewId, note, review) => {
       const r = col("redeemed")[redeemedId];
       if (r && r.reviewId) { const e = new Error("used"); e.code = "used"; throw e; }

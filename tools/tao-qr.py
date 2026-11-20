@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Tạo mã QR (SVG) cho link đánh giá Google ở màn cảm ơn trên tablet.
+"""Tạo mã QR (SVG) cho màn cảm ơn trên tablet: link đánh giá Google và trang tham gia tích điểm.
 
 Chạy:  python3 tools/tao-qr.py
-Đọc GOOGLE_REVIEW_URL trong public/index.html, ghi public/brand/google-review-qr.svg.
+Đọc từng cặp link + ảnh trong public/index.html (GOOGLE_REVIEW_URL / GOOGLE_REVIEW_QR,
+LOYALTY_JOIN_URL / LOYALTY_QR) và ghi ảnh SVG tương ứng trong public/.
 Chỉ dùng thư viện chuẩn của Python, không cài gì thêm.
 
 Theo chuẩn QR (ISO/IEC 18004): chế độ byte, mức sửa lỗi M (khôi phục ~15%),
@@ -15,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HTML = ROOT / "public" / "index.html"
-OUT = ROOT / "public" / "brand" / "google-review-qr.svg"
+PAIRS = [("GOOGLE_REVIEW_URL", "GOOGLE_REVIEW_QR"), ("LOYALTY_JOIN_URL", "LOYALTY_QR")]
 
 # ---------- bảng của chuẩn, mức M, phiên bản 1..10 ----------
 EC_PER_BLOCK = [None, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26]
@@ -295,15 +296,22 @@ def svg(m, url, border=4):
 
 def main():
     html = HTML.read_text(encoding="utf-8")
-    hit = re.search(r'const GOOGLE_REVIEW_URL="([^"]*)"', html)
-    if not hit:
-        sys.exit("không thấy GOOGLE_REVIEW_URL trong public/index.html")
-    url = hit.group(1)
-    if not url:
-        sys.exit("GOOGLE_REVIEW_URL đang để trống: điền link trước rồi chạy lại")
-    ver, mask, m = build(url)
-    OUT.write_text(svg(m, url), encoding="utf-8")
-    print(f"đã ghi {OUT.relative_to(ROOT)}: phiên bản {ver}, mặt nạ {mask}, {len(m)}x{len(m)} ô, link {url}")
+    done = 0
+    for k_url, k_img in PAIRS:
+        hit = re.search(r'const ' + k_url + r'="([^"]*)",' + k_img + r'="([^"]*)"', html)
+        if not hit:
+            sys.exit(f"không thấy {k_url} trong public/index.html")
+        url, img = hit.group(1), hit.group(2)
+        if not url:
+            print(f"{k_url} đang để trống: bỏ qua")
+            continue
+        out = ROOT / "public" / img
+        ver, mask, m = build(url)
+        out.write_text(svg(m, url), encoding="utf-8")
+        done += 1
+        print(f"đã ghi {out.relative_to(ROOT)}: phiên bản {ver}, mặt nạ {mask}, {len(m)}x{len(m)} ô, link {url}")
+    if not done:
+        sys.exit("không có link nào để tạo mã")
 
 
 if __name__ == "__main__":
