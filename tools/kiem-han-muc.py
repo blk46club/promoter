@@ -5,7 +5,8 @@ Chạy từ thư mục gốc repo:  python3 tools/kiem-han-muc.py
 
 Lệnh này chỉ ĐỌC. Nó gửi 3 truy vấn runQuery và 1 lệnh GET tới Firestore, không ghi, không xoá gì.
 Nó không đăng nhập, nên chỉ đọc được đúng những gì trang web công khai vẫn đọc: idols, idolPhotos,
-reviews, visits. Mỗi lần chạy tốn khoảng (số promoter + số ảnh to + 1 + số ngày trong tháng) lượt đọc,
+reviews. Từ 21/11 visits chỉ quản lý đọc, nên lệnh nhận mã 403 ở visits là đúng và không tự ước tính
+dung lượng tải ra nữa (số đó xem ở ô đầu trang quản lý). Mỗi lần chạy tốn khoảng (số promoter + số ảnh to + 1 + số ngày trong tháng) lượt đọc,
 rất nhỏ so với 50.000 lượt mỗi ngày của gói miễn phí.
 
 Việc kiểm tra mỗi tối (22:47 giờ Hà Nội) chạy trên GitHub Actions: .github/workflows/kiem-han-muc.yml.
@@ -123,8 +124,10 @@ def phan_tich(thu_muc, hom_nay, dau_thang):
         return ma[t] == "429" or "RESOURCE_EXHAUSTED" in txt[t] or "quota" in txt[t].lower()
 
     het = [t for t in ("idols", "idolPhotos", "reviews") if het_han_muc(t)]
-    luat_cu = [t for t in ("idolPhotos", "visits") if ma[t] == "403"]
-    loi = [t for t in TEN if ma[t] != "200" and t not in het and t not in luat_cu]
+    luat_cu = [t for t in ("idolPhotos",) if ma[t] == "403"]
+    # từ 21/11 visits chỉ quản lý đọc: mã 403 là đúng, lệnh này không còn tự ước tính được dung lượng tải ra.
+    visits_khoa = ma["visits"] == "403"
+    loi = [t for t in TEN if ma[t] != "200" and t not in het and t not in luat_cu and not (t == "visits" and visits_khoa)]
 
     idols = cac_doc(txt["idols"])
     anh = cac_doc(txt["idolPhotos"])
@@ -165,8 +168,14 @@ def phan_tich(thu_muc, hom_nay, dau_thang):
     print(f"idolPhotos: mã {ma['idolPhotos']}, {len(anh)} doc ảnh ({len(nho)} ảnh nhỏ), "
           f"ước tính {ngan(tb_anh)} byte ảnh mỗi lượt mở (6 ảnh nhỏ + 1 hồ sơ)")
     print(f"reviews: mã {ma['reviews']}")
+    if visits_khoa:
+        print("visits: đã khoá, chỉ quản lý đọc (đúng như luật từ 21/11). "
+              "Số lượt mở và dung lượng tải ra xem ở ô đầu trang quản lý.")
+        return thoat
     print(f"visits: mã {ma['visits']}, từ {dau_thang}: {ngan(tong)} lượt mở, "
           f"hôm nay {hom_nay}: {ngan(ngay.get(hom_nay, 0))}")
+    if ma["visits"] == "200":
+        print("visits vẫn đọc công khai được: luật Firestore ngày 21/11 chưa được dán.")
     print(f"ước tính dữ liệu tải ra tháng này: {gb(uoc_tinh)} trên {HAN_MUC_GB} GB "
           "(ước tính, thấp hơn thật: khách xem nhiều promoter thì tải thêm ảnh to)")
     if uoc_tinh >= CANH_BAO_GB * 1e9:

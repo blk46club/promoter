@@ -169,6 +169,17 @@ function makeDb(staff) {
     watchLoads: (fromDate, next, err) => onSnapshot(
       query(collection(fs, "idolLoad"), where("date", ">=", fromDate)),
       (s) => next(s.docs.map((d) => { const x = d.data(); return { date: x.date, counts: x.counts || {} }; })), err),
+    // Dọn số công khai của các ngày đã qua (idolLoad, tableHolds) để người ngoài không đọc được lịch sử đặt bàn.
+    // Chỉ quản lý xoá được (luật Firestore). Trả về số doc đã xoá.
+    pruneBefore: async (name, date) => {
+      const s = await getDocs(query(collection(fs, name), where("date", "<", date)));
+      for (let i = 0; i < s.docs.length; i += 400) {
+        const b = writeBatch(fs);
+        s.docs.slice(i, i + 400).forEach((d) => b.delete(d.ref));
+        await b.commit();
+      }
+      return s.docs.length;
+    },
     // Khách đăng ký voucher ưu đãi hằng tuần (vouchers/{id}): khách chỉ được tạo, chỉ quản lý đọc.
     createVoucher: (id, v) => setDoc(doc(fs, "vouchers/" + id), v),
     // Khách gửi đặt bàn kèm bàn muốn ngồi: ghi đặt bàn + giữ bàn trong một lần.

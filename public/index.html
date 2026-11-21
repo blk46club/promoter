@@ -1202,7 +1202,8 @@ function specLine(i){
    - đếm theo ngày khách đặt, mỗi promoter tối đa LOAD_MAX khách một ngày;
    - đủ rồi: ảnh tối lại, không đặt được ngày đó nữa, vẫn bấm vào xem và đặt ngày khác;
    - số đếm công khai ở idolLoad/{ngày} { date, counts:{idolId:n} }: chỉ có con số, không tên, không số điện thoại.
-     máy quản lý tự tính lại từ danh sách đặt bàn mỗi khi có thay đổi rồi ghi vào đó. */
+     máy quản lý tự tính lại từ danh sách đặt bàn mỗi khi có thay đổi rồi ghi vào đó.
+   - ngày đã qua thì máy quản lý xoá (pruneOld bên dưới, anh Minh 21/11). */
 const LOAD_MAX=2;
 const loadLabel=n=>`${n} guest${n>1?"s":""} pre-booked${n>=LOAD_MAX?" · fully booked":""}`;
 const loadTile=n=>n>=LOAD_MAX?"fully booked":`${n} pre-booked`;
@@ -1228,6 +1229,15 @@ function syncLoads(){
     for(const d of dates){const w=want[d]||{};if(same(w,S.loads[d]||{}))continue;
       try{await S.db.doc("idolLoad/"+d).set({date:d,counts:w,updatedAt:Date.now()})}catch(e){console.warn("chưa ghi được số khách đặt trước",d,e)}}
   },400);
+}
+
+/* idolLoad và tableHolds ai cũng đọc được, nên máy quản lý xoá số của các ngày đã qua để người ngoài
+   không đọc được lịch sử đặt bàn (anh Minh 21/11). giữ lại hôm qua vì đêm kéo qua 0h. mỗi phiên làm 1 lần. */
+let pruned=false;
+function pruneOld(){
+  if(pruned||!S.canEdit||!S.db||!S.db.pruneBefore)return;pruned=true;
+  const cut=isoOfVN(Date.now()-24*3600e3);
+  ["idolLoad","tableHolds"].forEach(c=>S.db.pruneBefore(c,cut).catch(e=>console.warn("chưa dọn được số ngày cũ",c,e)));
 }
 
 /* ---------- lượt mở trang + ước tính dung lượng tải ra (anh Minh 07/11/2026) ----------
@@ -2984,6 +2994,7 @@ render();
     db.collection("venue").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="tables");S.tables=d?(d.data().list||[]):DEFAULT_TABLES.slice();S.loaded.tables=true;soon()},()=>{S.tables=DEFAULT_TABLES.slice();S.loaded.tables=true});
     db.collection("redeemed").onSnapshot(s=>{const m={};s.docs.forEach(d=>m[d.id]=d.data());S.redeemed=m;soon()},()=>{});
     db.collection("vouchers").onSnapshot(s=>{S.vouchers=s.docs.map(d=>({...d.data(),id:d.id}));soon()},()=>{}); // chưa dán luật vouchers thì bỏ qua
+    pruneOld();
   }
   try{eventsLD()}catch(e){}
   render();
