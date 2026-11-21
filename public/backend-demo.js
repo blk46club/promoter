@@ -115,6 +115,13 @@ function makeDb(staff) {
       setTimeout(fire, 0);
       return () => { subs.idolLoad = (subs.idolLoad || []).filter((f) => f !== fire); };
     },
+    // Dọn số công khai của các ngày đã qua (idolLoad, tableHolds), giống bản Firebase.
+    pruneBefore: async (name, date) => {
+      const c = col(name), old = Object.keys(c).filter((k) => ((c[k] || {}).date || "") < date);
+      old.forEach((k) => delete c[k]);
+      if (old.length) { save(); notify(name); }
+      return old.length;
+    },
     // Khách đăng ký voucher ưu đãi hằng tuần (vouchers/{id}).
     createVoucher: async (id, v) => { col("vouchers")[id] = JSON.parse(JSON.stringify(v)); save(); notify("vouchers"); },
     // Khách gửi đặt bàn kèm bàn muốn ngồi: giữ bàn và tạo đặt bàn cùng lúc, bàn đã có người giữ thì báo "taken".

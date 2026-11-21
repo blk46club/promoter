@@ -18,9 +18,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # Bản đưa lên không có ghi chú trong code (public/ trong repo vẫn giữ nguyên).
+      # Lệnh tự kiểm cú pháp; có gì sai thì dừng ở đây, web đang chạy giữ nguyên bản cũ.
+      - name: Xoá ghi chú trong code
+        run: python3 tools/xoa-ghi-chu.py public _site
+        env:
+          CAN_NODE: "1"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

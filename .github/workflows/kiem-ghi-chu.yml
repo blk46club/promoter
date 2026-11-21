@@ -1,0 +1,22 @@
+name: Kiểm bước xoá ghi chú trước khi đưa web lên
+# Chạy đúng lệnh mà bước đưa web lên sẽ chạy, để lỗi hiện ngay ở PR thay vì lúc merge.
+on:
+  pull_request:
+    paths: ["public/**", "tools/xoa-ghi-chu.py", "tools/kiem-xls.cjs", ".github/workflows/pages.yml"]
+permissions:
+  contents: read
+jobs:
+  kiem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/xoa-ghi-chu.py public _site
+        env:
+          CAN_NODE: "1"
+      # phần đọc file máy bán hàng: chạy lại bài kiểm với bản đã xoá ghi chú
+      - run: |
+          mkdir -p "$RUNNER_TEMP/k"
+          cp -r tools "$RUNNER_TEMP/k/tools"
+          cp -r _site "$RUNNER_TEMP/k/public"
+          node "$RUNNER_TEMP/k/tools/kiem-xls.cjs"
