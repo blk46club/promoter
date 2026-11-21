@@ -1845,7 +1845,7 @@ function renderTable(bid){
   const ids=(b.idolIds||[]).filter(id=>idolById(id));
   const done=ratedSet(b);
   if(R.bid!==bid||!ids.includes(R.idolId)||(done.has(R.idolId)&&!R.done))resetRate(bid,ids.find(id=>!done.has(id))||ids[0]);
-  const allDone=ids.length&&ids.every(id=>done.has(id));
+  const allDone=!ids.length||ids.every(id=>done.has(id)); // bàn không có promoter: vào thẳng màn cảm ơn
   if(allDone||R.done&&ids.every(id=>done.has(id))){
     const tip=tableTips(b);
     app.innerHTML=`<section class="done"><div class="eyebrow">bàn ${esc(b.table||"")} · ${esc(guestLabel(b))}</div><h1 class="display">CẢM ƠN<span class="y">.</span></h1>
@@ -2303,7 +2303,8 @@ async function syncHold(id,prev,next){
     }
   }catch(_){}
 }
-const busyTables=exceptId=>new Set(S.bookings.filter(b=>b.status==="seated"&&b.id!==exceptId&&b.table&&!(b.code&&(b.idolIds||[]).length&&(b.idolIds||[]).every(id=>ratedSet(b).has(id)))).map(b=>String(b.table).toUpperCase()));
+/* bàn khách không cần promoter: không có lượt đánh giá để biết khách về, nên chỉ tính là đang có khách trong đêm đó (trước 8h sáng vẫn là đêm hôm trước) */
+const busyTables=exceptId=>{const nt=isoOfVN(Date.now()-8*3600e3);return new Set(S.bookings.filter(b=>b.status==="seated"&&b.id!==exceptId&&b.table&&(b.noIdol?b.date===nt:!(b.code&&(b.idolIds||[]).length&&(b.idolIds||[]).every(id=>ratedSet(b).has(id))))).map(b=>String(b.table).toUpperCase()))};
 // Sơ đồ bàn BLK46 (theo ảnh sơ đồ anh Minh gửi 05/11/2026): V hàng trên, C giữa, D hai bên DJ, SV.
 const DEFAULT_TABLES=["V1","V2","V3","V4","V5","V6","C1","C2","C3","C4","C5","C6","C7","C8","C9","C10","D1","D2","SV1","SV2","SV3","SV4"];
 const TABLE_ZONES=[["SV","khu SV"],["V","khu V"],["C","khu C"],["D","khu D"]];
@@ -2402,14 +2403,14 @@ function bookingCard(b){
     <div class="bk-main">
       <div class="rowbtns"><b>${b.guestName?esc(guestLabel(b)):"(chưa có tên)"}</b><span class="muted">${esc(b.phone||"")}${b.guests?` · ${esc(b.guests)} người`:""}${b.table?` · bàn ${esc(b.table)}`:""}</span>
         <span class="pill ${cls}">${allRated?"đã đánh giá":st}</span>${b.source==="web"?`<span class="pill off">từ web</span>`:""}${voucherOf(b)?`<span class="pill warn">voucher ${esc(String(voucherOf(b).promo||"").toLowerCase())}</span>`:""}${b.status!=="seated"&&b.status!=="cancelled"&&b.holdUntil?(holdExpired(b)?`<span class="pill bad">quá giờ giữ bàn${b.table?" · bàn đã mở lại":""}</span>`:`<span class="pill warn">giữ đến ${fmtHM(b.holdUntil)}</span>`):""}</div>
-      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">khách để quán xếp promoter</span>`}</div>
+      <div class="bk-idols">${idols.map(i=>`<span class="bk-idol${done.has(i.id)?" ok":""}">${coverId(i)?`<img src="${esc(coverId(i))}" alt="" onerror="this.remove()">`:""}${esc(i.stageName)}${done.has(i.id)?" ✓":""}</span>`).join("")||`<span class="muted">${b.noIdol?"khách không cần promoter":"khách để quán xếp promoter"}</span>`}</div>
       ${b.note?`<div class="muted">${esc(b.note)}</div>`:""}
       ${b.code?`<div class="rowbtns"><span class="bk-code">mã bàn <b>${esc(b.code)}</b></span>${tip?`<span class="pill warn">tip ${vnd(tip)}</span>`:""}</div>`:""}
       ${ptsRow(b)}
       <div class="rowbtns">
         ${b.status==="requested"?(fullIdols(b.date,b.idolIds,b.id).length?`<span class="pill bad">${esc(loadFullMsg(fullIdols(b.date,b.idolIds,b.id),b.date))} đổi promoter hoặc huỷ</span>`:`<button class="ghostbtn" data-bconfirm="${esc(b.id)}">xác nhận</button>`):""}
         ${(b.status==="requested"||b.status==="confirmed")?`<label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">bàn${tableSelect("seat_"+b.id,b.table,b.id,false,b.date)}</label><button class="cta" data-bseat="${esc(b.id)}" ${(S.tables||[]).length?"":"disabled"}>khách đã đến · tạo mã bàn</button>`:""}
-        ${b.status==="seated"&&!allRated?`<a class="cta" href="#table-${esc(b.id)}">mở màn đánh giá</a>`:""}
+        ${b.status==="seated"&&!allRated?`<a class="cta" href="#table-${esc(b.id)}">${idols.length?"mở màn đánh giá":"mở màn cảm ơn"}</a>`:""}
         ${b.status!=="cancelled"&&b.status!=="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">sửa</button><button class="ghostbtn danger" data-bcancel="${esc(b.id)}">huỷ</button>`:""}
         ${b.status==="seated"?`<button class="ghostbtn" data-bedit="${esc(b.id)}">đổi promoter, bàn</button>`:""}
       </div>
@@ -2422,7 +2423,7 @@ async function seatBooking(btn,id){
   if(!(S.tables||[]).includes(table)){btn.textContent="chọn số bàn trên sơ đồ trước";return}
   if(busyTables(id).has(table)){btn.textContent="bàn "+table+" đang có khách";return}
   if(bookedOn(b.date,id).has(table)){btn.textContent="bàn "+table+" đã có khách khác đặt ngày này";return}
-  if(!(b.idolIds||[]).length){btn.textContent="chọn promoter cho bàn trước";return}
+  if(!(b.idolIds||[]).length&&!b.noIdol){btn.textContent="chọn promoter cho bàn trước";return}
   if(!loadCounted(b)){const f=fullIdols(b.date,b.idolIds,b.id);if(f.length){btn.textContent=loadFullMsg(f,b.date)+" đổi promoter trước";return}}
   btn.disabled=true;btn.textContent="đang tạo mã…";
   try{
@@ -2447,6 +2448,7 @@ function drawBookForm(){
       <label class="f">bàn${tableSelect("k_table",e.table,e.id,true,e.date)}</label>
     </div>
     <div class="checks"><span class="muted">promoter đặt trước cho bàn *</span>
+      <div class="tags"><button type="button" class="chip knoidol" aria-pressed="${!!e.noIdol}">khách không cần promoter</button></div>
       <div class="tags">${pub.map(x=>`<button type="button" class="chip kidol" data-id="${esc(x.id)}" aria-pressed="${(e.idolIds||[]).includes(x.id)}">${esc(x.stageName)}</button>`).join("")||`<span class="muted">chưa có hồ sơ promoter nào.</span>`}</div></div>
     <label class="f">ghi chú<input id="k_note" maxlength="160" value="${esc(e.note||"")}"></label>
     <div class="err" id="kErr" role="alert"></div>
@@ -2454,11 +2456,14 @@ function drawBookForm(){
   </form>`;
   document.getElementById("bkClose").onclick=()=>{S.bookEdit=null;slot.innerHTML=""};
   slot.querySelectorAll(".ksal").forEach(x=>x.onclick=()=>{e.salutation=e.salutation===x.dataset.v?"":x.dataset.v;slot.querySelectorAll(".ksal").forEach(y=>{const on=y.dataset.v===e.salutation;y.setAttribute("aria-pressed",on);y.setAttribute("aria-checked",on)})});
-  slot.querySelectorAll(".kidol").forEach(x=>x.onclick=()=>{const id=x.dataset.id;const a=e.idolIds||(e.idolIds=[]);const k=a.indexOf(id);if(k>=0)a.splice(k,1);else a.push(id);x.setAttribute("aria-pressed",k<0)});
+  /* khách ghi chú không muốn có promoter thì quản lý bấm nút này thay cho chọn promoter (anh Minh 21/11). không bấm thì vẫn phải chọn, để quản lý nhớ xếp người */
+  const noBtn=slot.querySelector(".knoidol");
+  noBtn.onclick=()=>{e.noIdol=!e.noIdol;noBtn.setAttribute("aria-pressed",e.noIdol);if(e.noIdol){e.idolIds=[];slot.querySelectorAll(".kidol").forEach(y=>y.setAttribute("aria-pressed",false))}};
+  slot.querySelectorAll(".kidol").forEach(x=>x.onclick=()=>{const id=x.dataset.id;const a=e.idolIds||(e.idolIds=[]);const k=a.indexOf(id);if(k>=0)a.splice(k,1);else a.push(id);x.setAttribute("aria-pressed",k<0);if(a.length&&e.noIdol){e.noIdol=false;noBtn.setAttribute("aria-pressed",false)}});
   document.getElementById("bkForm").onsubmit=async ev=>{
     ev.preventDefault();const err=document.getElementById("kErr");const btn=document.getElementById("kSave");
     const name=val("k_name");if(!name){err.textContent="cần tên khách.";return}
-    if(!(e.idolIds||[]).length){err.textContent="chọn ít nhất một promoter cho bàn.";return}
+    if(!(e.idolIds||[]).length&&!e.noIdol){err.textContent="chọn ít nhất một promoter cho bàn. khách ghi chú không cần promoter thì bấm \"khách không cần promoter\".";return}
     const kdate=dmToIso(val("k_date"));if(!kdate){err.textContent="ngày chưa đúng, gõ kiểu 08/11.";return}
     if(val("k_time")&&!okTime(val("k_time"))){err.textContent="giờ đến chưa đúng, gõ kiểu 22:30.";return}
     if(e.status==="seated"&&!(S.tables||[]).includes(val("k_table").toUpperCase())){err.textContent="bàn đang ngồi phải là số bàn trên sơ đồ.";return}
@@ -2466,10 +2471,11 @@ function drawBookForm(){
     {const st=e.status==="requested"?"confirmed":(e.status||"confirmed");if(loadCounted({status:st})){const f=fullIdols(kdate,e.idolIds,e.id);if(f.length){err.textContent=loadFullMsg(f,kdate)+" chọn promoter khác.";return}}}
     btn.disabled=true;btn.textContent="đang lưu…";
     const id=e.id||("b"+rid(12));
-    const body={guestName:capName(name).slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:kdate,time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:e.idolIds.slice(0,6),note:val("k_note").slice(0,160),
+    const body={guestName:capName(name).slice(0,40),phone:val("k_phone").replace(/\D/g,""),date:kdate,time:val("k_time"),guests:val("k_guests").replace(/\D/g,""),table:val("k_table").slice(0,10),idolIds:(e.idolIds||[]).slice(0,6),note:val("k_note").slice(0,160),
       status:e.status==="requested"?"confirmed":(e.status||"confirmed"),source:e.source||"admin",code:e.code||"",createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
     if(e.seatedAt)body.seatedAt=e.seatedAt;
     if(e.salutation)body.salutation=e.salutation;
+    if(e.noIdol&&!body.idolIds.length)body.noIdol=true;
     if(body.status!=="seated")body.holdUntil=e.holdUntil&&e.date===kdate&&(e.time||"")===body.time?e.holdUntil:holdUntilFor(kdate,body.time,Date.now());
     try{const prev=S.bookings.find(x=>x.id===id);await S.db.doc("bookings/"+id).set(body);await syncHold(id,prev,body);S.bookEdit=null;render()}catch(_){btn.disabled=false;btn.textContent=e.id?"lưu":"tạo đặt bàn";err.textContent="chưa lưu được, thử lại."}
   };
