@@ -726,6 +726,7 @@ html.sdlg-on{overflow:hidden;scrollbar-gutter:stable}
 .sheet-name{margin:-8px 0 0;font-family:var(--display);font-weight:400;font-size:clamp(52px,6.5vw,84px);line-height:1.08;text-transform:uppercase;overflow-wrap:anywhere}
 .sheet-dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 20px;border-top:2px solid var(--paper);padding-top:12px}
 .sheet-dl div{min-width:0}
+.sheet-dl div:first-child:nth-last-child(odd){grid-column:1/-1} /* số ô lẻ (sao, cao, nặng): ô sao nằm riêng một hàng, cao và nặng chung hàng dưới */
 .sheet-dl dt{font-size:var(--fs-2xs);letter-spacing:.16em;color:var(--concrete)}
 .sheet-dl dd{margin:0;font-family:var(--display);font-size:var(--fs-xl);font-variant-numeric:tabular-nums}
 .sheet-dl dd small{font-family:var(--body);font-size:var(--fs-sm);color:var(--concrete)}
@@ -1193,7 +1194,6 @@ function specLine(i){
   const sh=i.show||{};const out=[];
   if(sh.height&&i.height)out.push(`${esc(i.height)} cm`);
   if(sh.weight&&i.weight)out.push(`${esc(i.weight)} kg`);
-  if(sh.measurements&&i.bust&&i.waist&&i.hip)out.push(`${esc(i.bust)}-${esc(i.waist)}-${esc(i.hip)}`);
   return out.join(" · ");
 }
 
@@ -1295,7 +1295,7 @@ function bytesPerVisit(){
   const pub=S.idols.filter(isPublic);
   // mỗi lượt (từ 15/11): hồ sơ công khai (kèm ảnh mờ ~1 KB) của mọi promoter + ảnh nhỏ của 6 thẻ + 3 ảnh to của 1 hồ sơ.
   // khách vuốt, bấm xem thêm hay mở thêm hồ sơ thì tải thêm, nên con số thật có thể cao hơn.
-  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,blur:"x".repeat(1100),talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight,bust:i.bust,waist:i.waist,hip:i.hip}).length+120,0);
+  const idolB=pub.reduce((t,i)=>t+JSON.stringify({stageName:i.stageName,team:i.team,blur:"x".repeat(1100),talents:i.talents,forte:i.forte,show:i.show,height:i.height,weight:i.weight}).length+120,0);
   const avg=f=>pub.length?pub.reduce((t,i)=>t+f(i),0)/pub.length:0;
   const thB=Math.min(6,pub.length)*(avg(i=>(i.thumb||"").length)+200);
   const spotB=pub.length?Math.round(avg(i=>{const p=photosOf(i);return (p.close||"").length+(p.full||"").length+(p.side||"").length}))+600:0;
@@ -1543,11 +1543,10 @@ function sheetHTML(r,ghost){
   const g=ghost?"?":grade(r),sh=i.show||{};
   const pics=ghost?[]:sheetPics(i);
   const dl=[["SAO",r&&r.n?`${fmt1(r.avg)} <small>/5 · ${r.n} lượt</small>`:`— <small>chưa có lượt chấm</small>`]];
-  if(ghost)dl.push(["CAO","—"],["NẶNG","—"],["SỐ ĐO","—"]);
+  if(ghost)dl.push(["CAO","—"],["NẶNG","—"]);
   else{
     if(sh.height&&i.height)dl.push(["CAO",esc(i.height)+" cm"]);
     if(sh.weight&&i.weight)dl.push(["NẶNG",esc(i.weight)+" kg"]);
-    if(sh.measurements&&i.bust&&i.waist&&i.hip)dl.push(["SỐ ĐO",`${esc(i.bust)}-${esc(i.waist)}-${esc(i.hip)}`]);
   }
   const stats=r?statVals(r):STATS.map(([,l])=>[l,0]);
   const enough=r&&r.statN>=MIN_FOR_STATS;
@@ -1780,7 +1779,6 @@ function renderIdol(id){
   const specs=[];
   if(sh.height&&i.height)specs.push(`<div><dt>chiều cao</dt><dd>${esc(i.height)}<small>cm</small></dd></div>`);
   if(sh.weight&&i.weight)specs.push(`<div><dt>cân nặng</dt><dd>${esc(i.weight)}<small>kg</small></dd></div>`);
-  if(sh.measurements&&i.bust&&i.waist&&i.hip)specs.push(`<div><dt>số đo</dt><dd>${esc(i.bust)}-${esc(i.waist)}-${esc(i.hip)}</dd></div>`);
   const maxD=Math.max(1,...r.dist.slice(1));
   const badges=r.topTags.filter(([,c])=>c>=BADGE_AT);
   const comments=r.list.filter(x=>x.comment).slice(0,8);
@@ -2856,7 +2854,7 @@ function adminIdols(p){
     ${list.map(i=>{const r=byId[i.id];const sh=i.show||{};return `<tr>
       <td>${coverId(i)?`<img class="thumb" src="${esc(coverId(i))}" alt="" onerror="this.style.visibility='hidden'">`:`<div class="thumb"></div>`}</td>
       <td><b>${esc(i.stageName)}</b></td><td>${esc(i.team||"")}</td>
-      <td class="muted">${[sh.height&&"cao",sh.weight&&"nặng",sh.measurements&&"số đo"].filter(Boolean).join(", ")||"ẩn hết"}</td>
+      <td class="muted">${[sh.height&&"cao",sh.weight&&"nặng"].filter(Boolean).join(", ")||"ẩn hết"}</td>
       <td class="num">${r&&r.n?fmt1(r.avg):"—"}</td><td class="num">${r?r.n:0}</td>
       <td>${isPublic(i)?`<span class="pill">đang hiện</span>`:i.active===false?`<span class="pill off">nghỉ</span>`:`<span class="pill warn">chưa đồng ý</span>`}</td>
       <td><button class="ghostbtn" data-edit="${esc(i.id)}">sửa</button></td></tr>`}).join("")}
@@ -2869,7 +2867,7 @@ function adminIdols(p){
 }
 function drawForm(){
   const slot=document.getElementById("formSlot");if(!slot)return;
-  const e=S.editing||{};const sh=e.show||{height:true,weight:true,measurements:true};const c=e.consent||{};
+  const e=S.editing||{};const sh=e.show||{height:true,weight:true};const c=e.consent||{};
   slot.innerHTML=`<form class="idol" id="idolForm">
     <div class="rowbtns" style="justify-content:space-between"><b>${e.id?"sửa hồ sơ":"hồ sơ mới"}</b><button type="button" class="ghostbtn" id="closeForm">đóng</button></div>
     <div class="fields">
@@ -2877,9 +2875,6 @@ function drawForm(){
       <label class="f">team<input id="f_team" maxlength="40" value="${esc(e.team||"")}"></label>
       <label class="f">chiều cao (cm)<input id="f_h" inputmode="numeric" maxlength="3" value="${esc(e.height||"")}"></label>
       <label class="f">cân nặng (kg)<input id="f_w" inputmode="numeric" maxlength="3" value="${esc(e.weight||"")}"></label>
-      <label class="f">vòng 1 (cm)<input id="f_b" inputmode="numeric" maxlength="3" value="${esc(e.bust||"")}"></label>
-      <label class="f">vòng 2 (cm)<input id="f_wa" inputmode="numeric" maxlength="3" value="${esc(e.waist||"")}"></label>
-      <label class="f">vòng 3 (cm)<input id="f_hi" inputmode="numeric" maxlength="3" value="${esc(e.hip||"")}"></label>
     </div>
     <div class="checks"><span class="muted">ảnh 3 góc (jpg, png). ảnh cận làm ảnh bìa trên thẻ lineup.</span></div>
     <div class="angles">${ANGLES.map(([k,l])=>{const pid=photosOf(e)[k];return `<label class="angle">${pid?`<img src="${esc(pid)}" alt="" onerror="this.style.visibility='hidden'">`:`<div class="blank">chưa có ảnh</div>`}<b style="color:var(--paper)">góc ${esc(l)}</b><input id="f_ph_${k}" type="file" accept="image/*"></label>`}).join("")}</div>
@@ -2888,7 +2883,6 @@ function drawForm(){
     <div class="checks"><span class="muted">cho khách thấy:</span>
       <label><input type="checkbox" id="s_h" ${sh.height?"checked":""}> chiều cao</label>
       <label><input type="checkbox" id="s_w" ${sh.weight?"checked":""}> cân nặng</label>
-      <label><input type="checkbox" id="s_m" ${sh.measurements?"checked":""}> số đo 3 vòng</label>
     </div>
     <div class="consent"><strong>đồng ý hiển thị</strong>
       <div class="checks">
@@ -2929,10 +2923,12 @@ async function saveIdol(ev){
     const prevConsent=e.consent||{};
     const signed=ck("c_s"),adult=ck("c_a");
     const body={id,stageName:name.slice(0,40),team:v("f_team").slice(0,40),
-      height:num(v("f_h")),weight:num(v("f_w")),bust:num(v("f_b")),waist:num(v("f_wa")),hip:num(v("f_hi")),
+      height:num(v("f_h")),weight:num(v("f_w")),
+      /* web không hiện số đo 3 vòng nữa (anh Minh 23/11): bỏ ô nhập, số đã nhập trước đó giữ nguyên trong hồ sơ nội bộ */
+      bust:e.bust||"",waist:e.waist||"",hip:e.hip||"",
       talents:v("f_tal").split(",").map(s=>s.trim()).filter(Boolean).slice(0,12),
       forte:v("f_forte").split(",").map(s=>s.trim()).filter(Boolean).slice(0,4),
-      show:{height:ck("s_h"),weight:ck("s_w"),measurements:ck("s_m")},
+      show:{height:ck("s_h"),weight:ck("s_w"),measurements:!!(e.show&&e.show.measurements)},
       consent:{signed,adult,at:(signed&&adult)?(prevConsent.signed&&prevConsent.adult?prevConsent.at:Date.now()):null},
       active:ck("c_act"),photos,createdAt:e.createdAt||Date.now(),updatedAt:Date.now()};
     await S.db.doc("idols/"+id).set(body);
