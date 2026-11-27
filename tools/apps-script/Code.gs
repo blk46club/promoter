@@ -23,6 +23,8 @@
  *   Cần bật 1 lần: trình soạn code → Dịch vụ (+) → Drive API → Thêm.
  *   File đã có từ trước: chạy chiaSeFileCu() một lần.
  * Script chỉ THÊM quyền xem cho đúng email đó, không đổi quyền nào khác, không bật chia sẻ bằng link.
+ *
+ * Nhắn Zalo xác nhận đặt bàn (thêm 27/11/2026): xem phần "Zalo" bên dưới. Mặc định tắt.
  */
 
 const CFG = {
@@ -298,6 +300,165 @@ const todayVN_ = () => Utilities.formatDate(new Date(), CFG.tz, "yyyy-MM-dd");
 const isoAdd_ = (iso, n) => { const p = iso.split("-").map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2] + n)).toISOString().slice(0, 10); };
 const mondayOf_ = (iso) => { const p = iso.split("-").map(Number); const dow = new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay(); return isoAdd_(iso, -((dow + 6) % 7)); };
 const dmy_ = (iso) => iso.slice(8) + "-" + iso.slice(5, 7) + "-" + iso.slice(0, 4);
+
+/* ---------- Zalo: nhắn xác nhận đặt bàn cho khách (thêm 27/11/2026) ----------
+ * Khi quản lý bấm "xác nhận" một đặt bàn trên web, trong vòng ~5 phút khách nhận 1 tin Zalo
+ * theo mẫu đã được Zalo duyệt (ZBS template, trước gọi là ZNS). Mỗi đặt bàn chỉ gửi 1 lần.
+ * Mặc định TẮT: thiếu Script Properties bên dưới thì không gửi gì, không báo lỗi.
+ *
+ * Script Properties (Project Settings → Script Properties). Không dán các giá trị này vào chat hay repo:
+ *   ZALO_APP_ID      App ID của app trên developers.zalo.me
+ *   ZALO_SECRET      Khóa bí mật (Secret Key) của app đó
+ *   ZALO_REFRESH     Refresh Token lấy ở API Explorer. Script tự thay bằng token mới mỗi lần làm mới
+ *   ZNS_TEMPLATE_ID  ID mẫu "xác nhận đặt bàn" sau khi Zalo duyệt
+ *   ZNS_CHI_GUI      chạy thử: chỉ gửi cho các số này (cách nhau dấu phẩy), số khác bỏ qua
+ *   ZNS_BAT          = co  → gửi cho mọi khách. Chưa có dòng này thì chỉ gửi cho số trong ZNS_CHI_GUI
+ * Script tự ghi thêm: ZALO_ACCESS, ZALO_ACCESS_HET (token dùng tạm, 25 giờ) và ZNS_<mã đặt bàn> (đã gửi chưa).
+ *
+ * Cách bật: thuZaloMot() gửi 1 tin mẫu tới số đầu tiên trong ZNS_CHI_GUI → nhận được thì chạy caiDatZalo()
+ * (lịch 5 phút/lần). Tắt hẳn: chạy tatZalo().
+ */
+const ZNS = {
+  sendUrl: "https://business.openapi.zalo.me/message/template",
+  tokenUrl: "https://oauth.zaloapp.com/v4/oa/access_token",
+  lookbackMin: 90,        // xem lại các đặt bàn được sửa trong 90 phút gần nhất (lịch chạy 5 phút, dư phòng khi lỡ lượt)
+  maxDaysAhead: 7,        // Zalo chỉ cho gửi trong 7 ngày quanh ngày giao dịch
+  maxTries: 3,            // gửi lỗi thì thử lại tối đa 3 lượt rồi thôi
+  keepDays: 10,           // xoá dấu "đã gửi" cũ hơn 10 ngày cho gọn Script Properties
+};
+
+/** Lịch 5 phút/lần: tìm đặt bàn vừa được xác nhận và nhắn Zalo. */
+function guiZaloXacNhan() {
+  const p = PropertiesService.getScriptProperties();
+  const cfg = znsCfg_(p);
+  if (!cfg) return;                                        // chưa cài đủ → không làm gì
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return;                         // lượt trước chưa chạy xong
+  try {
+    const now = Date.now(), today = todayVN_(), last = isoAdd_(today, ZNS.maxDaysAhead);
+    const token = dangNhapNhanh_();
+    const list = layKhoang_(token, "bookings", "updatedAt",
+      { integerValue: String(now - ZNS.lookbackMin * 60e3) }, { integerValue: String(now + 60e3) });
+    let gui = 0, loi = 0, bo = 0;
+    list.forEach((b) => {
+      if (b.status !== "confirmed" || !b.date || b.date < today || b.date > last) return;
+      if (!arrivalMs_(b) || arrivalMs_(b) <= now) return;  // giờ đến đã qua (khách vãng lai quản lý tạo lúc xếp bàn)
+      const key = "ZNS_" + b.id, st = JSON.parse(p.getProperty(key) || "{}");
+      if (st.ok || (st.n || 0) >= ZNS.maxTries) return;
+      const phone = phone84_(b.phone);
+      if (!phone) { p.setProperty(key, JSON.stringify({ at: now, n: ZNS.maxTries, err: "số điện thoại không hợp lệ" })); bo++; return; }
+      if (!cfg.all && !cfg.only.includes(phone)) return;  // đang chạy thử: số khác bỏ qua, không đánh dấu
+      const r = guiMau_(p, cfg, phone, duLieuMau_(b), b.id);
+      p.setProperty(key, JSON.stringify(r.ok ? { at: now, ok: 1 } : { at: now, n: (st.n || 0) + 1, err: r.err }));
+      r.ok ? gui++ : loi++;
+      console.log((r.ok ? "đã gửi Zalo " : "chưa gửi được Zalo ") + b.id + " · " + an_(phone) + (r.ok ? "" : " · " + r.err));
+    });
+    if (gui || loi || bo) console.log("Zalo: " + gui + " gửi được · " + loi + " lỗi · " + bo + " số sai");
+    donDauCu_(p, now);
+  } finally { lock.releaseLock(); }
+}
+
+/** Chạy tay sau khi Zalo duyệt mẫu: gửi 1 tin mẫu (dữ liệu giả) tới số đầu tiên trong ZNS_CHI_GUI. */
+function thuZaloMot() {
+  const p = PropertiesService.getScriptProperties();
+  const cfg = znsCfg_(p);
+  if (!cfg) throw new Error("chưa đủ Script Properties: ZALO_APP_ID, ZALO_SECRET, ZALO_REFRESH, ZNS_TEMPLATE_ID");
+  if (!cfg.only.length) throw new Error("điền số của anh vào ZNS_CHI_GUI trước, ví dụ 0912345678");
+  const d = new Date(Date.now() + 24 * 3600e3), iso = Utilities.formatDate(d, CFG.tz, "yyyy-MM-dd");
+  const mau = { id: "bthuzalo" + Utilities.formatDate(new Date(), CFG.tz, "HHmmss"), salutation: "Mr", guestName: "Thử Zalo",
+    date: iso, time: "22:30", guests: "4", table: "V1", holdUntil: new Date(iso + "T23:00:00+07:00").getTime() };
+  const r = guiMau_(p, cfg, cfg.only[0], duLieuMau_(mau), mau.id);
+  console.log(r.ok ? "đã gửi tin thử tới " + an_(cfg.only[0]) + ". mở Zalo trên máy đó để xem." : "chưa gửi được: " + r.err);
+}
+
+/** Chạy 1 lần để bật lịch 5 phút/lần. Chạy lại không tạo trùng. */
+function caiDatZalo() {
+  tatZalo();
+  ScriptApp.newTrigger("guiZaloXacNhan").timeBased().everyMinutes(5).create();
+  console.log("đã đặt lịch gửi Zalo 5 phút/lần");
+}
+
+/** Tắt gửi Zalo (xoá lịch). Script Properties giữ nguyên. */
+function tatZalo() {
+  ScriptApp.getProjectTriggers().filter((t) => t.getHandlerFunction() === "guiZaloXacNhan").forEach((t) => ScriptApp.deleteTrigger(t));
+}
+
+/* tên tham số phải trùng đúng tên trong mẫu đăng ký với Zalo */
+function duLieuMau_(b) {
+  const ngay = b.date.slice(8) + "/" + b.date.slice(5, 7) + "/" + b.date.slice(0, 4);
+  return {
+    ten_khach: ((b.salutation ? b.salutation + " " : "") + (b.guestName || "")).trim().slice(0, 30) || "quý khách",
+    ma_dat: String(b.id).slice(-6).toUpperCase(),
+    ngay_den: ngay,
+    gio_den: b.time || "",
+    so_khach: String(b.guests || "").slice(0, 3) || "chưa rõ",
+    ban: String(b.table || "").toUpperCase().slice(0, 10) || "xếp khi đến",
+    giu_den: b.holdUntil ? Utilities.formatDate(new Date(Number(b.holdUntil)), CFG.tz, "HH:mm") : (b.time || ""),
+  };
+}
+
+function znsCfg_(p) {
+  const v = (k) => String(p.getProperty(k) || "").trim();
+  if (!v("ZALO_APP_ID") || !v("ZALO_SECRET") || !v("ZALO_REFRESH") || !v("ZNS_TEMPLATE_ID")) return null;
+  return { appId: v("ZALO_APP_ID"), template: v("ZNS_TEMPLATE_ID"), all: v("ZNS_BAT").toLowerCase() === "co",
+    only: v("ZNS_CHI_GUI").split(/[,;\n]+/).map(phone84_).filter(Boolean) };   // số có dấu cách vẫn được
+}
+
+/* gửi 1 tin; token hết hạn giữa chừng thì làm mới và thử lại 1 lần */
+function guiMau_(p, cfg, phone, data, trackingId) {
+  for (let lan = 0; lan < 2; lan++) {
+    const r = UrlFetchApp.fetch(ZNS.sendUrl, { method: "post", contentType: "application/json", muteHttpExceptions: true,
+      headers: { access_token: tokenZalo_(p, lan > 0) },
+      payload: JSON.stringify({ phone, template_id: cfg.template, template_data: data, tracking_id: String(trackingId).slice(0, 48) }) });
+    let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) { j = { error: "http" + r.getResponseCode(), message: r.getContentText().slice(0, 120) }; }
+    if (Number(j.error) === 0) return { ok: true, msgId: (j.data || {}).msg_id };
+    const tokenLoi = /token/i.test(String(j.message || "")) || [-124, -216].includes(Number(j.error));
+    if (!tokenLoi || lan > 0) return { ok: false, err: String(j.error) + " " + String(j.message || "").slice(0, 120) };
+  }
+}
+
+/* access token dùng tạm 25 giờ; còn dưới 1 giờ thì đổi refresh token lấy cặp mới (refresh token cũ hết dùng được) */
+function tokenZalo_(p, ep) {
+  const het = Number(p.getProperty("ZALO_ACCESS_HET") || 0);
+  if (!ep && p.getProperty("ZALO_ACCESS") && het - Date.now() > 3600e3) return p.getProperty("ZALO_ACCESS");
+  const r = UrlFetchApp.fetch(ZNS.tokenUrl, { method: "post", muteHttpExceptions: true,
+    contentType: "application/x-www-form-urlencoded", headers: { secret_key: p.getProperty("ZALO_SECRET") },
+    payload: { refresh_token: p.getProperty("ZALO_REFRESH"), app_id: p.getProperty("ZALO_APP_ID"), grant_type: "refresh_token" } });
+  let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) { /* để báo lỗi bên dưới */ }
+  if (!j.access_token || !j.refresh_token) {
+    // không in token ra nhật ký; chỉ in mã lỗi Zalo trả về
+    throw new Error("không làm mới được token Zalo (" + (j.error || r.getResponseCode()) + " " + String(j.error_description || j.message || "").slice(0, 120) +
+      "). lấy Refresh Token mới ở API Explorer rồi dán đè vào ZALO_REFRESH.");
+  }
+  p.setProperties({ ZALO_ACCESS: j.access_token, ZALO_REFRESH: j.refresh_token,
+    ZALO_ACCESS_HET: String(Date.now() + (Number(j.expires_in) || 90000) * 1000) });
+  return j.access_token;
+}
+
+/* đăng nhập Firebase, nhớ 50 phút để lịch 5 phút không phải đăng nhập lại mỗi lượt */
+function dangNhapNhanh_() {
+  const c = CacheService.getScriptCache(), t = c.get("BLK_ID_TOKEN");
+  if (t) return t;
+  const token = dangNhap_();
+  c.put("BLK_ID_TOKEN", token, 50 * 60);
+  return token;
+}
+
+/* 0912345678 / +84 912 345 678 / 84912345678 → 84912345678; sai thì "" */
+function phone84_(s) {
+  let d = String(s || "").replace(/\D/g, "");
+  if (/^0\d{9}$/.test(d)) d = "84" + d.slice(1);
+  return /^84\d{9}$/.test(d) ? d : "";
+}
+const an_ = (phone) => phone.slice(0, 4) + "•••" + phone.slice(-3);   // nhật ký không in đủ số khách
+const arrivalMs_ = (b) => /^\d{2}:\d{2}$/.test(b.time || "") ? new Date(b.date + "T" + b.time + ":00+07:00").getTime() : 0;
+
+function donDauCu_(p, now) {
+  const all = p.getProperties();
+  Object.keys(all).filter((k) => k.indexOf("ZNS_") === 0 && k !== "ZNS_TEMPLATE_ID" && k !== "ZNS_CHI_GUI" && k !== "ZNS_BAT").forEach((k) => {
+    try { if (now - (JSON.parse(all[k]).at || 0) > ZNS.keepDays * 864e5) p.deleteProperty(k); } catch (e) { /* bỏ qua dòng lạ */ }
+  });
+}
 
 /* ---------- phần bên dưới không cần sửa ---------- */
 
