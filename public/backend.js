@@ -64,7 +64,9 @@ const authReady = new Promise((resolve) => {
 //    Mỗi ảnh một doc, khách chỉ tải ảnh của thẻ đang (sắp) hiện và hồ sơ đang mở. Cùng luật idolPhotos/{id} đã chạy
 //    (khách đọc được khi public == true, quản lý ghi), không phải dán luật mới.
 //  - idolPhotos/{id} (không có hậu tố): kiểu cũ, 3 ảnh to chung một doc. Lưu lại hồ sơ theo kiểu mới thì doc này bị xoá.
-export const THUMB_V = 4; // tăng (hoặc đổi) số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+export const THUMB_V = 5; // tăng (hoặc đổi) số này khi đổi cách làm ảnh nhỏ hoặc hồ sơ công khai, máy quản lý sẽ tự lưu lại
+// v5 (23/11): hồ sơ công khai không còn số đo 3 vòng (anh Minh 23/11: bỏ phần hiển thị số đo). Máy quản lý lưu lại để xoá số đo
+//   khỏi idols/{id}; idolsPrivate giữ nguyên. Quay lại: revert, THUMB_V 4 thì máy quản lý lưu lại theo kiểu cũ.
 // v4 (15/11): tách ảnh khỏi danh sách promoter, mỗi ảnh một doc (anh Minh 15/11: web nhẹ hơn mà vẫn mượt).
 //   Quay lại kiểu cũ: revert về THUMB_V 3, máy quản lý thấy số khác nên tự lưu lại theo kiểu cũ.
 // v3 (13/11): idolPhotos thêm close = ảnh cận cỡ to, vì hồ sơ giờ hiện từng ảnh một, khung to, ảnh nhỏ 320px bị mờ
@@ -87,12 +89,11 @@ function publicIdol(body, blur, hasThumb, hasSpot) {
   const isPublic = !!(body.consent && body.consent.signed && body.consent.adult && body.active !== false);
   const out = {
     stageName: body.stageName || "", team: body.team || "", blur: blur || "", tb: !!hasThumb, hasSpot: !!hasSpot, ang: angOf(body.photos || {}),
-    talents: body.talents || [], forte: body.forte || [], show: sh,
+    talents: body.talents || [], forte: body.forte || [], show: { height: !!sh.height, weight: !!sh.weight },
     active: body.active !== false, public: isPublic, updatedAt: Date.now(),
   };
   if (sh.height) out.height = body.height || "";
   if (sh.weight) out.weight = body.weight || "";
-  if (sh.measurements) { out.bust = body.bust || ""; out.waist = body.waist || ""; out.hip = body.hip || ""; }
   return out;
 }
 

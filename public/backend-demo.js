@@ -33,7 +33,7 @@ function seed() {
     const id = "demo" + (k + 1);
     idols[id] = {
       id, stageName: name, team: "dữ liệu mẫu", height: h, weight: w, bust: b, waist: wa, hip: hi,
-      talents, forte, photos: {}, show: { height: true, weight: k % 2 === 0, measurements: true },
+      talents, forte, photos: {}, show: { height: true, weight: k % 2 === 0 },
       consent: { signed: true, adult: true, at: now }, active: true, createdAt: now, updatedAt: now,
     };
   });

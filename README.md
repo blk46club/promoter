@@ -28,7 +28,8 @@ Chạy thử hợp để chỉnh giao diện, đồ hoạ, tính năng. Không d
 | Dữ liệu | Khách | Quản lý |
 |---|---|---|
 | Lineup, ảnh, sao, chỉ số | thấy | thấy |
-| Chiều cao, cân nặng, số đo | chỉ trường idol bật hiển thị | thấy hết |
+| Chiều cao, cân nặng | chỉ trường idol bật hiển thị | thấy hết |
+| Số đo 3 vòng | không (bỏ từ 23/11/2026) | không có ô nhập, số cũ giữ trong hồ sơ nội bộ |
 | Giấy đồng ý, trường đang ẩn | không | thấy |
 | Đặt bàn, số điện thoại | chỉ gửi yêu cầu mới, không đọc được | thấy, sửa |
 | Lời nhắn, tag góp ý, tip | không | thấy |
